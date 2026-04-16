@@ -23,7 +23,7 @@ export default async function handler(req, res) {
                     'Title': title || 'Esteticar',
                     'Priority': String(priority || 3),
                     'Content-Type': 'text/plain; charset=utf-8',
-                    'Authorization': 'Basic ' + btoa('esteticar2026:Esteticar11.'),
+                    'Authorization': 'Basic ' + Buffer.from('esteticar2026:Esteticar11.').toString('base64'),
                 },
                 body: message || '',
             });
