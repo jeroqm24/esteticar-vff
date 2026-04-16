@@ -196,32 +196,28 @@ const SHEETS_URL = import.meta.env.VITE_SHEETS_WEBHOOK_URL;
 
 export const sheets = {
   pushAppointment: async (appt) => {
-    if (!SHEETS_URL) return;
     try {
-      await fetch(SHEETS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "appointment", ...appt }),
+      await fetch('/api/sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'appointment', ...appt }),
       });
     } catch { }
   },
 
   pushClient: async (client) => {
-    if (!SHEETS_URL) return;
     try {
-      await fetch(SHEETS_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ type: "client", ...client }),
+      await fetch('/api/sheets', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'client', ...client }),
       });
     } catch { }
   },
 
-  // Fechas ya ocupadas según Sheets (el bot no ofrecerá estos días)
   getOccupiedDates: async () => {
-    if (!SHEETS_URL) return [];
     try {
-      const res = await fetch(SHEETS_URL);
+      const res = await fetch('/api/sheets');
       const data = await res.json();
       return data.dates || [];
     } catch { return []; }
@@ -239,20 +235,11 @@ const RESEND_KEY = import.meta.env.VITE_RESEND_API_KEY;
 const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "esteticar.manizales@gmail.com";
 
 export const notifyEmail = async ({ subject, html }) => {
-  if (!RESEND_KEY) return;
   try {
-    await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${RESEND_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "Esteticar Bot <bot@esteticar.co>",
-        to: [ADMIN_EMAIL],
-        subject,
-        html,
-      }),
+    await fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'email', subject, html }),
     });
   } catch { }
 };
@@ -266,14 +253,10 @@ const NTFY_TOPIC = import.meta.env.VITE_NTFY_TOPIC || "esteticar-admin";
 
 export const notifyPush = async ({ title, message, priority = 3 }) => {
   try {
-    await fetch(`https://ntfy.sh/${NTFY_TOPIC}`, {
-      method: "POST",
-      headers: {
-        "Title": title,
-        "Priority": String(priority),
-        "Content-Type": "text/plain",
-      },
-      body: message,
+    await fetch('/api/notify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ type: 'push', title, message, priority }),
     });
   } catch { }
 };
