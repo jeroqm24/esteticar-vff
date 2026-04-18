@@ -511,7 +511,7 @@ Máximo 3-4 líneas por mensaje. Tono de WhatsApp real.
 Emojis: máximo 1-2 por mensaje, nunca al inicio.
 Nunca empieces con "Claro!", "Por supuesto!", "Con gusto!" — varía siempre.
 REGLA: cada mensaje cierra con pregunta o acción concreta.
-REGLA DE REINICIO: Si el cliente saluda de nuevo (hola, buenos días, etc.) después de una conversación previa, trátalo como si fuera la primera vez. Saluda con calidez, no retomes el hilo anterior ni le digas que faltó información. Empieza fresco.
+REGLA DE REINICIO: Si el cliente saluda de nuevo (hola, buenos días, etc.) después de una conversación previa, trátalo como si fuera la primera vez. Saluda con calidez, no retomes el hilo anterior ni le digas que faltó información. Empieza fresco.`;
 };
 
 // ═══════════════════════════════════════════════════════════════════
@@ -598,7 +598,7 @@ export const ai = {
     if (bookingMatch) {
       const block = bookingMatch[1];
       const extract = (key) => {
-        const m = block.match(new RegExp(`${ key }: \\s * (.+)`));
+        const m = block.match(new RegExp(`${key}:\\s*(.+)`));
         return m ? m[1].trim() : null;
       };
 
@@ -644,13 +644,13 @@ export const ai = {
       }
 
       const cleanResponse = rawResponse.replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/, '').trim();
-      return cleanResponse || `Listo ${ clientName }, tu cita quedó registrada! Código: ** ${ code }** 🎉 Te esperamos!`;
+      return cleanResponse || `Listo ${clientName}, tu cita quedó registrada! Código: **${code}** 🎉 Te esperamos!`;
     }
 
     // Escalación
     const escalateMatch = rawResponse.match(/__ESCALATE__:(.+)/);
     if (escalateMatch) {
-      return `${ rawResponse.replace(/__ESCALATE__:.+/, '').trim() } \n__ESCALATE__:${ escalateMatch[1].trim() } `;
+      return `${rawResponse.replace(/__ESCALATE__:.+/, '').trim()}\n__ESCALATE__:${escalateMatch[1].trim()}`;
     }
 
     return rawResponse;
@@ -684,7 +684,7 @@ export const sendConfirmationEmail = async ({ toEmail, serviceName, price, date,
 
 export const email = {
   send: async ({ to, subject, body }) => {
-    console.log(`[Esteticar Email]To: ${ to } `, { subject, body });
+    console.log(`[Esteticar Email] To: ${to}`, { subject, body });
     return true;
   },
 };
