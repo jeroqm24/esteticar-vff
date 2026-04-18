@@ -506,11 +506,20 @@ export default function BotChat({ isOpen, onClose }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.97 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
-            className="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 z-[70] w-[calc(100vw-2rem)] sm:w-[370px] flex flex-col rounded-[10px] overflow-hidden shadow-[0_20px_60px_rgba(0,0,0,0.22)] h-[72vh] max-h-[620px]"
+            className={`fixed z-[70] flex flex-col overflow-hidden shadow-2xl bg-white ${
+              chatStarted 
+                ? "inset-0 w-full h-[100dvh] rounded-none sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:w-[370px] sm:h-[72vh] sm:max-h-[620px] sm:rounded-[10px]" 
+                : "bottom-20 right-4 w-[calc(100vw-2rem)] h-[72vh] max-h-[620px] rounded-[10px] sm:bottom-6 sm:right-6 sm:w-[370px]"
+            }`}
             style={{ fontFamily: "'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif" }}
           >
             {/* Header */}
-            <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: "#128C7E" }}>
+            <div className="flex items-center gap-3 px-3 py-3 flex-shrink-0" style={{ background: "#128C7E" }}>
+              <button onClick={onClose} className="text-white hover:text-white/80 transition-colors p-1" title="Cerrar">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M19 12H5M12 19l-7-7 7-7"/>
+                </svg>
+              </button>
               <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-white/20 bg-[#25D366]/30">
                 <img
                   src={advisor.photo}
@@ -528,36 +537,21 @@ export default function BotChat({ isOpen, onClose }) {
                   </p>
                 </div>
               </div>
-              <div className="flex items-center gap-3">
-                {chatStarted && (
-                  <button
-                    onClick={handleClear}
-                    className="text-white/70 hover:text-white transition-colors"
-                    title="Nuevo chat"
-                  >
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8" />
-                      <path d="M3 3v5h5" />
-                    </svg>
-                  </button>
-                )}
-                <button
-                  onClick={onClose}
-                  className="text-white/70 hover:text-white transition-colors text-lg leading-none font-light"
-                >
-                  ✕
-                </button>
-              </div>
             </div>
 
             {/* Body */}
             <div
-              className="flex-1 overflow-y-auto flex flex-col min-h-0"
+              className="flex-1 overflow-y-auto flex flex-col min-h-0 relative"
               style={{
-                background: "#E5DDD5",
-                backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='60' viewBox='0 0 60 60'%3E%3Cpath d='M30 0 L60 30 L30 60 L0 30 Z' fill='none' stroke='rgba(0,0,0,0.03)' stroke-width='1'/%3E%3C/svg%3E")`,
+                backgroundColor: "#efeae2",
+                backgroundImage: `url("https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png")`,
+                backgroundRepeat: "repeat",
+                backgroundSize: "400px",
+                backgroundBlendMode: "overlay",
               }}
             >
+              <div className="absolute inset-0 bg-white/20 pointer-events-none" />
+              <div className="relative z-10 flex-1 flex flex-col min-h-0">
               {!chatStarted ? (
                 <ConnectingSplash
                   advisor={advisor}
@@ -576,6 +570,7 @@ export default function BotChat({ isOpen, onClose }) {
                   <div ref={messagesEndRef} />
                 </div>
               )}
+              </div>
             </div>
 
             {/* Input bar */}
