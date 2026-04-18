@@ -62,9 +62,11 @@ function SafeMarkdown({ content }) {
 // ─── WhatsApp timestamp ───────────────────────────────────────────
 function Timestamp({ ts }) {
   const date = ts ? new Date(ts) : new Date();
-  const h = date.getHours().toString().padStart(2, "0");
+  let h = date.getHours();
   const m = date.getMinutes().toString().padStart(2, "0");
-  return <span className="text-[10px] text-black/30 ml-1">{h}:{m}</span>;
+  const ampm = h >= 12 ? 'p. m.' : 'a. m.';
+  h = h % 12 || 12;
+  return <span className="text-[10px] text-black/40 ml-1">{h}:{m} {ampm}</span>;
 }
 
 // ─── WhatsApp escalation button ───────────────────────────────────
