@@ -309,7 +309,7 @@ export default function BotChat({ isOpen, onClose }) {
       document.body.style.overflow = "";
       document.removeEventListener('touchmove', preventScroll);
     };
-  }, [isOpen]);
+  }, [isOpen, adminMode]);
 
   // ── Prefill listener ──────────────────────────────────────────
   useEffect(() => {
