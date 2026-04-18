@@ -121,7 +121,7 @@ export default function AdminDashboard({ onClose }) {
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="max-w-6xl mx-auto">
-                {activeTab === "stats" && <AdminStats />}
+                {activeTab === "stats" && <AdminStats onNavigate={setActiveTab} />}
                 {activeTab === "appointments" && <AdminAppointments />}
                 {activeTab === "calendar" && <CalendarSection isAdmin={true} />}
                 {activeTab === "bot" && <AdminBotConfig />}

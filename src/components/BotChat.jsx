@@ -130,22 +130,20 @@ function MessageBubble({ message }) {
             style={{ borderWidth: "0 0 8px 8px", borderColor: "transparent transparent transparent #D9FDD3", borderStyle: "solid" }} />
         )}
 
-        <div className="relative pb-1">
+        <div className="relative pb-[18px]">
           {isUser ? (
-            <p className="font-body text-[14.5px] leading-[1.3] inline-block">
+            <p className="font-body text-[14.5px] leading-[19px]">
               {message.content}
-              <span className="inline-block w-[55px] h-[10px]" />
             </p>
           ) : (
-            <div className="text-[14.5px] leading-[1.4]">
+            <div className="text-[14.5px] leading-[19px]">
               <SafeMarkdown content={cleanContent} />
               {hasEscalation && <EscalateButton question={message.escalationQuestion} />}
-              <div className="inline-block w-[45px] h-[5px]" />
             </div>
           )}
         </div>
 
-        <div className="absolute right-2 bottom-1.5 flex items-center justify-end gap-[3px]">
+        <div className="absolute right-2 bottom-[5px] flex items-center justify-end gap-[3px]">
           <Timestamp ts={message.timestamp} />
           {isUser && (
             <img src="/visto.png?v=3" alt="Visto" className="w-[17px] h-auto shrink-0 mb-[1px] animate-fade-in transition-all duration-300" />
