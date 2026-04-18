@@ -344,7 +344,7 @@ export default function BotChat({ isOpen, onClose }) {
     if (existing.length === 0) {
       const greeting = {
         role: "assistant",
-        content: `${getGreeting()}, bienvenido/a a **Esteticar**. Estoy aquí para atenderle. ¿En qué le puedo ayudar?`,
+        content: `${getGreeting()}! Bienvenido a **Esteticar** 😊 Te pregunto, estás buscando un servicio para tu carro o para tu moto?`,
         timestamp: new Date().toISOString(),
       };
 
@@ -406,7 +406,7 @@ export default function BotChat({ isOpen, onClose }) {
     try {
       const responsePromise = ai.invoke(msg, advisor.name);
       const timeoutPromise = new Promise((_, rej) =>
-        setTimeout(() => rej(new Error("timeout")), 15000) // 15s para Claude API
+        setTimeout(() => rej(new Error("timeout")), 55000) // 55s — incluye delay orgánico
       );
       const response = await Promise.race([responsePromise, timeoutPromise]);
 
@@ -597,7 +597,7 @@ export default function BotChat({ isOpen, onClose }) {
                     }}
                     placeholder="Escribe un mensaje..."
                     disabled={loading}
-                    className="flex-1 text-[14px] text-[#111B21] outline-none bg-transparent placeholder:text-[#8696A0] disabled:opacity-60 resize-none py-1"
+                    className="flex-1 text-[16px] text-[#111B21] outline-none bg-transparent placeholder:text-[#8696A0] disabled:opacity-60 resize-none py-1"
                     maxLength={500}
                     rows={2}
                   />

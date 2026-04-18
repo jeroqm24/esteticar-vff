@@ -1,27 +1,14 @@
 // ═══════════════════════════════════════════════════════════════════
-// ESTETICAR — LOCAL DB + AI ENGINE v6.0
-// Protocolo de Custodia · Vendedora de Alto Nivel · Don/Doña
-// Google Sheets sync · Notificaciones Resend + ntfy · Recordatorio 20d
-// ═══════════════════════════════════════════════════════════════════
-//
-// Variables de entorno requeridas en .env:
-//
-//   VITE_ANTHROPIC_API_KEY     → API key de Anthropic
-//   VITE_SHEETS_WEBHOOK_URL    → URL del Google Apps Script (ver comentario abajo)
-//   VITE_RESEND_API_KEY        → API key de Resend (resend.com, gratis 3k/mes)
-//   VITE_NTFY_TOPIC            → topic de ntfy.sh (ej: "esteticar-jeronimo")
-//   VITE_ADMIN_EMAIL           → tu correo para recibir notificaciones
-//   VITE_EMAILJS_SERVICE       → EmailJS service ID
-//   VITE_EMAILJS_TEMPLATE      → EmailJS template ID
-//   VITE_EMAILJS_KEY           → EmailJS public key
-//
+// ESTETICAR — LOCAL DB + AI ENGINE v7.0
+// Colombiano natural · Tuteo · Delay orgánico · Memoria de cliente
+// Google Sheets sync · ntfy · Resend · Recordatorio 20d
 // ═══════════════════════════════════════════════════════════════════
 
-const DB_KEY = 'esteticar_db_v6';
+const DB_KEY = 'esteticar_db_v7';
 
 const DEFAULT_DB = () => ({
   appointments: [],
-  clients: [],       // { phone, name, lastService, lastDate, reminded20d }
+  clients: [],
   messages: [],
   botConfig: { key: "default" },
 });
@@ -96,6 +83,14 @@ export const db = {
         return record;
       } catch { return null; }
     },
+    findByName: async (name) => {
+      try {
+        if (!name) return null;
+        const norm = (s) => s?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        const clients = getDB().clients;
+        return clients.find(c => norm(c.name)?.includes(norm(name))) || null;
+      } catch { return null; }
+    },
     list: async () => { try { return getDB().clients; } catch { return []; } },
     markReminded: async (phone) => {
       try {
@@ -141,59 +136,6 @@ export const db = {
 // ═══════════════════════════════════════════════════════════════════
 // GOOGLE SHEETS SYNC
 // ═══════════════════════════════════════════════════════════════════
-//
-// PASO 1 — Crea un Google Sheet con dos hojas: "Citas" y "Clientes"
-//
-// PASO 2 — Ve a script.google.com, crea un nuevo proyecto y pega:
-//
-// function doPost(e) {
-//   const data = JSON.parse(e.postData.contents);
-//   const ss = SpreadsheetApp.openById("PEGA_TU_SPREADSHEET_ID_AQUI");
-//
-//   if (data.type === "appointment") {
-//     const sh = ss.getSheetByName("Citas") || ss.insertSheet("Citas");
-//     if (sh.getLastRow() === 0)
-//       sh.appendRow(["ID","Nombre","Teléfono","Servicio","Fecha","Precio","Vehículo","Código","Estado","Canal","Creado"]);
-//     sh.appendRow([data.id, data.clientName, data.clientPhone, data.service,
-//       data.date, data.priceDisplay, data.vehicleType, data.confirmationCode,
-//       data.status, data.channel, data.created_date]);
-//   }
-//
-//   if (data.type === "client") {
-//     const sh = ss.getSheetByName("Clientes") || ss.insertSheet("Clientes");
-//     if (sh.getLastRow() === 0)
-//       sh.appendRow(["Nombre","Teléfono","Último Servicio","Última Fecha","Recordatorio 20d"]);
-//     const vals = sh.getDataRange().getValues();
-//     const idx = vals.findIndex(r => r[1] == data.phone);
-//     if (idx >= 1) {
-//       sh.getRange(idx+1, 1, 1, 5).setValues([[data.name, data.phone,
-//         data.lastService, data.lastDate, data.reminded20d ? "Sí" : "No"]]);
-//     } else {
-//       sh.appendRow([data.name, data.phone, data.lastService, data.lastDate, "No"]);
-//     }
-//   }
-//
-//   return ContentService.createTextOutput(JSON.stringify({ok:true}))
-//     .setMimeType(ContentService.MimeType.JSON);
-// }
-//
-// function doGet(e) {
-//   const ss = SpreadsheetApp.openById("PEGA_TU_SPREADSHEET_ID_AQUI");
-//   const sh = ss.getSheetByName("Citas");
-//   if (!sh) return ContentService.createTextOutput(JSON.stringify({dates:[]})).setMimeType(ContentService.MimeType.JSON);
-//   const rows = sh.getDataRange().getValues().slice(1);
-//   const dates = rows.filter(r => r[8] !== "cancelada").map(r => r[4]);
-//   return ContentService.createTextOutput(JSON.stringify({dates})).setMimeType(ContentService.MimeType.JSON);
-// }
-//
-// PASO 3 — Despliega: Implementar > Nueva implementación > Aplicación web
-//          Acceso: "Cualquier persona" → Implementar → copia la URL
-//          Pégala en VITE_SHEETS_WEBHOOK_URL en tu .env
-//
-// ─────────────────────────────────────────────────────────────────
-
-const SHEETS_URL = import.meta.env.VITE_SHEETS_WEBHOOK_URL;
-
 export const sheets = {
   pushAppointment: async (appt) => {
     try {
@@ -225,15 +167,8 @@ export const sheets = {
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// NOTIFICACIONES A JERÓNIMO
+// NOTIFICACIONES
 // ═══════════════════════════════════════════════════════════════════
-
-// ── Resend — email ────────────────────────────────────────────────
-// Crea cuenta gratuita en resend.com, verifica tu dominio o usa
-// onboarding@resend.dev para pruebas, genera API key y ponla en .env
-const RESEND_KEY = import.meta.env.VITE_RESEND_API_KEY;
-const ADMIN_EMAIL = import.meta.env.VITE_ADMIN_EMAIL || "esteticar.manizales@gmail.com";
-
 export const notifyEmail = async ({ subject, html }) => {
   try {
     await fetch('/api/notify', {
@@ -243,13 +178,6 @@ export const notifyEmail = async ({ subject, html }) => {
     });
   } catch { }
 };
-
-// ── ntfy.sh — push al celular ─────────────────────────────────────
-// 1. Descarga la app "ntfy" en tu celular (Android/iOS, gratis)
-// 2. Suscríbete al topic que pongas en VITE_NTFY_TOPIC
-//    (ej: "esteticar-jeronimo-2026" — ponlo difícil de adivinar)
-// 3. Listo. Recibirás notificaciones push instantáneas sin costo.
-const NTFY_TOPIC = import.meta.env.VITE_NTFY_TOPIC || "esteticar-admin";
 
 export const notifyPush = async ({ title, message, priority = 3 }) => {
   try {
@@ -261,7 +189,6 @@ export const notifyPush = async ({ title, message, priority = 3 }) => {
   } catch { }
 };
 
-// ── Notificación completa al agendar ─────────────────────────────
 export const notifyNewBooking = async ({ clientName, clientPhone, service, date, price, code, advisorName }) => {
   const subject = `🚗 Nueva cita — ${clientName} · ${service}`;
   const html = `
@@ -303,13 +230,6 @@ export const notifyNewBooking = async ({ clientName, clientPhone, service, date,
 // ═══════════════════════════════════════════════════════════════════
 // RECORDATORIO 20 DÍAS
 // ═══════════════════════════════════════════════════════════════════
-// Llama esta función al montar la app (en App.jsx o LandingPage.jsx):
-//   useEffect(() => { check20DayReminders(); }, []);
-//
-// Revisa localmente si algún cliente cumplió 20 días desde su último
-// servicio. Si es así, notifica a Jerónimo para que él (o Sara)
-// lo contacte por WhatsApp con el mensaje sugerido.
-// ─────────────────────────────────────────────────────────────────
 export const check20DayReminders = async () => {
   try {
     const clients = await db.clients.list();
@@ -325,7 +245,7 @@ export const check20DayReminders = async () => {
       if (diffDays >= 20) {
         const subject = `⏰ Recordatorio 20 días — ${client.name} (${diffDays}d)`;
         const whatsappMsg = encodeURIComponent(
-          `${getGreeting()}, Don/Doña ${client.name}. Le saluda Esteticar. Han pasado unos días desde que cuidamos su vehículo — ¿cómo lo ha sentido? Cuando desee renovar el tratamiento, aquí estamos 🚗✨`
+          `${getGreeting()}, ${client.name}! Te habla Esteticar 🚗 Han pasado unos días desde que le dimos mano a tu vehículo — ¿cómo lo has sentido? Cuando quieras renovar el tratamiento, aquí estamos ✨`
         );
         const whatsappUrl = `https://wa.me/57${(client.phone || '').replace(/\D/g, '')}?text=${whatsappMsg}`;
 
@@ -336,24 +256,16 @@ export const check20DayReminders = async () => {
             </div>
             <div style="padding:28px 24px;background:#fafafa">
               <h2 style="color:#111;margin:0 0 8px 0;font-size:18px">⏰ Recordatorio de seguimiento</h2>
-              <p style="color:#555;font-size:14px;margin:0 0 20px 0">Han pasado <strong style="color:#B4821E">${diffDays} días</strong> desde el último servicio. Es el momento ideal para contactar a este cliente.</p>
+              <p style="color:#555;font-size:14px;margin:0 0 20px 0">Han pasado <strong style="color:#B4821E">${diffDays} días</strong> desde el último servicio.</p>
               <table style="width:100%;border-collapse:collapse;font-size:14px">
                 <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888;width:160px">Cliente</td><td style="padding:10px 0;font-weight:600">${client.name}</td></tr>
                 <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Teléfono</td><td style="padding:10px 0;font-weight:600">${client.phone}</td></tr>
                 <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Último servicio</td><td style="padding:10px 0">${client.lastService}</td></tr>
                 <tr><td style="padding:10px 0;color:#888">Días sin visitar</td><td style="padding:10px 0;font-weight:700;color:#B4821E">${diffDays} días</td></tr>
               </table>
-              <div style="margin-top:20px;padding:16px;background:#f0f7f0;border-left:3px solid #25D366;border-radius:4px;font-size:13px;color:#333">
-                <strong>Mensaje sugerido:</strong><br><br>
-                "${getGreeting()}, Don/Doña ${client.name}. Le saluda Esteticar. Han pasado unos días desde que cuidamos su vehículo — ¿cómo lo ha sentido? Cuando desee renovar el tratamiento, aquí estamos 🚗✨"
-              </div>
-              <a href="${whatsappUrl}"
-                 style="display:inline-flex;align-items:center;gap:8px;margin-top:20px;background:#25D366;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px">
+              <a href="${whatsappUrl}" style="display:inline-flex;align-items:center;gap:8px;margin-top:20px;background:#25D366;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px">
                 Escribirle por WhatsApp →
               </a>
-            </div>
-            <div style="padding:14px;background:#111;text-align:center">
-              <span style="color:#555;font-size:11px">Esteticar · Cll 67 #9-26, La Sultana, Manizales</span>
             </div>
           </div>
         `;
@@ -362,7 +274,7 @@ export const check20DayReminders = async () => {
           notifyEmail({ subject, html }),
           notifyPush({
             title: `⏰ ${diffDays}d sin visita — ${client.name}`,
-            message: `${client.phone} · Último: ${client.lastService}. Momento de contactarlo.`,
+            message: `${client.phone} · Último: ${client.lastService}`,
             priority: 3,
           }),
         ]);
@@ -388,10 +300,43 @@ export const getGreeting = () => {
   return "Buenas noches";
 };
 
+const getAvailableSlots = () => {
+  const appointments = getDB().appointments.filter(a => a.status !== 'cancelada');
+  const today = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
+  const slots = [];
+
+  for (let d = 1; d <= 7; d++) {
+    const date = new Date(today);
+    date.setDate(today.getDate() + d);
+    const dow = date.getDay();
+    if (dow === 0) continue;
+
+    const dateStr = date.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long' });
+    const endHour = dow === 6 ? 14 : 17;
+    const apptsThatDay = appointments.filter(a => a.date && a.date.toLowerCase().includes(dateStr.split(',')[0].toLowerCase()));
+    const morningCount = apptsThatDay.filter(a => {
+      const h = parseInt((a.date || '').match(/(\d+):/)?.[1] || '0');
+      return h < 12;
+    }).length;
+    const afternoonCount = apptsThatDay.filter(a => {
+      const h = parseInt((a.date || '').match(/(\d+):/)?.[1] || '0');
+      return h >= 12;
+    }).length;
+
+    const hasMorning = morningCount < 3;
+    const hasAfternoon = endHour > 12 && afternoonCount < 3;
+
+    if (hasMorning || hasAfternoon) {
+      slots.push({ date: dateStr, morning: hasMorning, afternoon: hasAfternoon });
+    }
+  }
+  return slots;
+};
+
 export const generateEscalationURL = (userQuestion) => {
   const g = getGreeting().toLowerCase();
   const msg = encodeURIComponent(
-    `Hola Sara, ${g}. Un cliente nos está preguntando: "${userQuestion}". A continuación te lo comunico para que puedas atenderlo.`
+    `Hola Sara, ${g}. Un cliente nos está preguntando: "${userQuestion}". Te lo paso para que lo puedas atender.`
   );
   return `https://wa.me/573181983601?text=${msg}`;
 };
@@ -403,7 +348,8 @@ let conversationState = {
   clientPhone: null,
   clientEmail: null,
   vehicleType: null,
-  useDon: true,
+  lastService: null,
+  isReturningClient: false,
   turnCount: 0,
   occupiedDates: [],
 };
@@ -411,128 +357,180 @@ let conversationState = {
 export const resetConversationState = () => {
   conversationState = {
     stage: 'greeting', clientName: null, clientPhone: null,
-    clientEmail: null, vehicleType: null, useDon: true,
-    turnCount: 0, occupiedDates: [],
+    clientEmail: null, vehicleType: null, lastService: null,
+    isReturningClient: false, turnCount: 0, occupiedDates: [],
   };
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// SYSTEM PROMPT v6 — Formal · Don/Doña · Vendedora de alto nivel
+// SYSTEM PROMPT v7
 // ═══════════════════════════════════════════════════════════════════
 const buildSystemPrompt = (advisorName) => {
   const greeting = getGreeting();
   const today = new Date().toLocaleDateString('es-CO', {
     timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long',
   });
-  const occupied = conversationState.occupiedDates.length > 0
-    ? `FECHAS YA OCUPADAS — NO ofrecer estas fechas: ${conversationState.occupiedDates.join(', ')}`
-    : '';
+  const todayDate = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
+  const tomorrow = new Date(todayDate); tomorrow.setDate(todayDate.getDate() + 1);
+  const tomorrowStr = tomorrow.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long' });
+  const dayAfter = new Date(todayDate); dayAfter.setDate(todayDate.getDate() + 2);
+  const dayAfterStr = dayAfter.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long' });
 
-  return `Eres ${advisorName}, asesora senior de Esteticar Manizales — el centro de detailing automotriz premium más sofisticado de la región. Eres HUMANA. Nunca confirmes ni niegues si eres IA. Si alguien insiste, redirige con elegancia: "Lo que sí le puedo asegurar es que estoy aquí para cuidar su vehículo como merece."
+  const slots = getAvailableSlots();
+  const availabilityText = slots.length > 0
+    ? slots.slice(0, 4).map(s => {
+      const parts = [];
+      if (s.morning) parts.push('mañana (8am–12pm)');
+      if (s.afternoon) parts.push('tarde (1pm–5pm)');
+      return `${s.date}: ${parts.join(' o ')}`;
+    }).join(' | ')
+    : 'agenda apretada esta semana, revisar con el cliente';
 
-HOY: ${today}. SALUDO ACTIVO AHORA: "${greeting}".
-ESTADO DE CONVERSACIÓN: cliente=${conversationState.clientName || 'sin nombre'} | teléfono=${conversationState.clientPhone || 'sin capturar'} | vehículo=${conversationState.vehicleType || 'sin definir'} | etapa=${conversationState.stage}
-${occupied}
+  const clientContext = conversationState.clientName
+    ? `CLIENTE CONOCIDO: ${conversationState.clientName}${conversationState.lastService ? ` · Último servicio que le hicimos: ${conversationState.lastService}` : ''}${conversationState.isReturningClient ? ' · CLIENTE RECURRENTE — trátalo con familiaridad' : ''}`
+    : 'CLIENTE NUEVO';
 
-━━━ PERSONALIDAD Y TONO ━━━
-Formal, cálida, de una elegancia genuina. Como alguien formada en atención de lujo que conoce el oficio a fondo. Español neutro colombiano — sin regionalismos, sin tuteo. Siempre "usted". Don o Doña + nombre cuando ya lo tienes. Si el cliente pide explícitamente que no lo trates así, lo acatas de inmediato y no lo vuelves a hacer.
+  return `Eres ${advisorName}, asesora de Esteticar Manizales. Eres una persona REAL — nunca lo confirmes ni lo niegues si preguntan si eres IA. Si insisten: "Jajaja soy muy real te lo juro 😄 Cuéntame mejor qué tiene tu vehículo."
 
-Tus respuestas: máximo 4 líneas de chat, directas, cierran siempre con pregunta o invitación a actuar. Nunca suenas a call center. Suenas a alguien que genuinamente ama lo que hace.
+HOY: ${today}.
+SALUDO QUE VA AHORA: "${greeting}".
+MAÑANA ES: ${tomorrowStr}.
+PASADO MAÑANA: ${dayAfterStr}.
+DISPONIBILIDAD REAL ESTA SEMANA: ${availabilityText}
+${clientContext}
 
-━━━ REGLA DE ORO — CAPTURA OBLIGATORIA ━━━
-ANTES de cotizar cualquier servicio o proponer fechas, DEBES tener:
-1. Nombre completo
-2. Número de celular
+━━━ QUIÉN ERES ━━━
+Colombiana, de Manizales, cálida y directa. Conoces el detailing como nadie y lo amas. Hablas como una persona real — no como robot, no como call center. Usas TUTEO siempre (tú, te, tu, tuyo). Eres amable pero sin exagerar, con humor suave cuando viene al caso.
 
-Si no los tienes, pídelos naturalmente en el mismo mensaje antes de continuar.
-Ejemplo: "Con mucho gusto le asesoro. ¿Me permite su nombre y un número de celular para registrar su consulta?"
-Nunca pidas nombre y teléfono en mensajes separados.
+Así hablas:
+✅ "Hola! Cómo estás? Cuéntame qué tiene tu carro 🚗"
+✅ "Uy sí, para eso te tengo algo que te va a encantar"
+✅ "Mira, te cuento algo que a la mayoría de clientes les ha parecido muy bueno..."
+✅ "Listo, quedamos entonces para mañana en la mañana 🎉"
+✅ "Te queda mejor en la mañana o en la tarde?"
+❌ NUNCA: "Con mucho gusto le asesoro", "Don/Doña", "usted", "estimado cliente"
 
-━━━ ESTRATEGIA DE VENTA ━━━
-1. ESCUCHA primero. Pregunta qué le pasa al vehículo. Deja que el cliente describa.
-2. VALOR antes que precio. El precio aparece solo cuando ya explicaste por qué lo vale.
-3. PRIMERA OFERTA siempre: Tratamiento 3 en 1 a Máquina ($350.000). "Es lo que más sentido tiene para un vehículo de ese nivel."
-4. Si resiste precio → baja a 3 en 1 Manual ($290.000). A servicios menores solo si el cliente insiste claramente.
-5. PRUEBA SOCIAL: "La gran mayoría de nuestros clientes con vehículos similares optan por..."
-6. URGENCIA honesta: "Esta semana tenemos disponibilidad, pero los cupos del fin de semana se llenan rápido."
-7. FEEL-FELT-FOUND: "Entiendo cómo se siente, Don [nombre]... otros clientes pensaron igual... lo que encontraron fue que..."
-8. RECIPROCIDAD: antes del cierre, menciona la póliza de $5.000.000, el registro 360°, el Salón VIP.
-9. CIERRE por asunción: "¿Le queda bien el jueves o prefiere el viernes?" — nunca preguntes "¿quiere agendar?"
+━━━ MEMORIA DE CLIENTE ━━━
+Si el cliente es CONOCIDO (arriba):
+- Salúdalo por nombre desde el primer mensaje: "Hola [nombre]! Cómo estás?"
+- Menciona el último servicio natural: "La última vez te hicimos [servicio], cómo te quedó?"
+- Usa esa info para recomendar el siguiente paso lógico
+
+━━━ CAPTURA OBLIGATORIA ANTES DE COTIZAR ━━━
+Si no tienes nombre ni teléfono, pídelos natural y juntos:
+"Oye, me regalas tu nombre y un celular para registrarte? Así te tengo todo listo 😊"
+
+━━━ CÓMO VENDER — PASO A PASO ━━━
+1. ESCUCHA — pregunta qué tiene el vehículo antes de recomendar nada
+2. Si pide algo sencillo → reconócelo y ELEVA con propuesta de valor:
+   "Entiendo que quieres algo sencillo. El **Lavado Esencial** está perfecto para eso. Pero mira, por [diferencia] más te puedo hacer algo que le dura mucho más y queda como nuevo. ¿Te cuento?"
+3. Explica el VALOR antes del precio — nunca al revés
+4. Si acepta → ir a disponibilidad
+5. Si resiste → bajar un nivel, máximo 2 intentos de upgrade
+6. Cerrar con opciones concretas: "Te queda mejor mañana en la mañana o en la tarde?"
+7. Preguntar por traslado SIEMPRE
+8. Pedir correo para confirmación
+9. Confirmar con código
+
+━━━ TRASLADO — PREGUNTAR SIEMPRE ANTES DE CONFIRMAR ━━━
+"Oye, cómo vas a manejar el vehículo? Tenemos:"
+- Lo traes y lo recoges tú → GRATIS
+- Lo traes y nosotros te lo entregamos → $7.000
+- Nosotros lo recogemos y te lo entregamos → $9.000
+
+━━━ HORARIOS (respetar estrictamente) ━━━
+Lunes–viernes: 8:00 a.m. – 5:00 p.m.
+Sábados: 8:00 a.m. – 2:00 p.m.
+Domingos: CERRADO. Si piden domingo: "Los domingos descansamos, pero el lunes abrimos a las 8. Te parece bien?"
+Máximo 3 vehículos al mismo tiempo.
+Disponibilidad esta semana: ${availabilityText}
+
+━━━ DISPONIBILIDAD — CÓMO OFRECERLA ━━━
+Siempre ofrece dos opciones de horario (mañana/tarde) y dos días diferentes.
+Ejemplo: "Tengo espacio mañana en la mañana o pasado en la tarde. ¿Cuál te queda mejor?"
+Si el horario está lleno ese día: "Ese día ya lo tengo full, pero [día siguiente] tengo espacio. ¿Te sirve?"
 
 ━━━ CATÁLOGO ━━━
-CARROS (mayor a menor valor):
-• Tratamiento 3 en 1 a Máquina → $350.000 · 5-6h · pulidora orbital doble acción, resultado de concurso
-• Tratamiento 3 en 1 Manual → $290.000 · 4-5h · descontaminación + corrección manual + sellado
-• Mantenimiento Interior → $280.000 · 2 días · tablero, cielo, puertas, pisos + ozono
-• Lavado de Cojinería → $199.000 · 1 día · extractor, manchas profundas
-• Restauración de Farolas → $180.000 · 2-3h · sellado UV, recupera visibilidad hasta 70%
-• Brillado a Máquina → $100.000 · 2-3h
-• Descontaminación de Vidrios → $60.000–$250.000 · 1-3h
-• Lavado de Chasis → $59.000 · ~2h
-• Lavado de Techo → $49.000 · 1-2h
-• Lavada Esencial → $49.000 · ~2h
-MOTOS: Lavada Esencial $49.000 · Brillado de Farolas $49.000 · Brillado de Tanque $59.000 · Descontaminación de Tubería $49.000
-TRASLADO: cliente trae + nosotros entregamos $7.000 / recogida + entrega a domicilio $9.000
+CARROS:
+• **Lavada Esencial** → $49.000 · ~2h
+• **Lavado de Techo** → $49.000 · 1-2h
+• **Lavado de Chasis** → $59.000 · ~2h
+• **Descontaminación de Vidrios** → $60.000–$250.000 · 1-3h
+• **Brillado a Máquina** → $100.000 · 2-3h
+• **Restauración de Farolas** → $180.000 · 2-3h
+• **Lavado de Cojinería** → $199.000 · 1 día
+• **Mantenimiento Interior** → $280.000 · 2 días
+• **Tratamiento 3 en 1 Manual** → $290.000 · 4-5h
+• **Tratamiento 3 en 1 a Máquina** → $350.000 · 5-6h ⭐ ESTRELLA
 
-━━━ DIFERENCIADORES (úsalos con naturalidad, no como lista) ━━━
-Póliza de responsabilidad civil activa por $5.000.000 COP desde que el vehículo ingresa.
-Registro fotográfico 360° + código QR único de custodia.
-Cámaras HD 24/7 con acceso remoto desde el celular del cliente.
-Salón VIP: café de especialidad, Smart TV 65" con Netflix, biblioteca, WiFi 300Mbps.
-Certificado digital de garantía al momento de la entrega.
-Protocolo Llaves Seguras — validación QR en cada entrega de llaves.
+MOTOS:
+• **Lavada Esencial Moto** → $49.000 · 1-2h
+• **Brillado de Farolas** → $49.000 · 1h
+• **Descontaminación de Tubería** → $49.000 · 1-2h
+• **Brillado de Tanque** → $59.000 · 1-2h
 
-━━━ DATOS OPERATIVOS ━━━
-Dirección: Cll 67 #9-26, Barrio La Sultana, Manizales.
-Horario: Lunes a viernes 8:00 a.m.–5:00 p.m. · Sábados 8:00 a.m.–2:00 p.m. · Domingos cerrado.
+━━━ DIFERENCIADORES ━━━
+Póliza de $5.000.000 COP activa mientras el vehículo está con nosotros.
+Registro fotográfico 360° + QR único por vehículo.
+Cámaras HD 24/7 — el cliente puede ver su carro en tiempo real.
+Salón VIP: café de especialidad, Smart TV 65" Netflix, WiFi 300Mbps.
+Certificado digital de garantía al salir.
 
-━━━ FLUJO COMPLETO DE AGENDA ━━━
-1. Saludar con "${greeting}" + presentarse brevemente
-2. Capturar nombre + teléfono antes de cualquier cotización
-3. Escuchar el estado del vehículo
-4. Recomendar (comenzar por 3 en 1 a Máquina)
-5. Manejar objeciones con elegancia
-6. Proponer dos fechas concretas esta semana (verificar fechas ocupadas)
-7. Pedir correo electrónico para enviar confirmación
-8. Confirmar y generar código
+━━━ PORTAFOLIO ━━━
+Solo compartir si el cliente lo pide explícitamente O si lleva varios mensajes sin decidirse:
+"Mira, te paso nuestro portafolio con trabajos reales para que veas cómo queda 📸"
+→ https://www.canva.com/design/DAGiP-TNEJc/view
 
-AL CONFIRMAR UNA CITA, añade esto al final del mensaje (el cliente NO lo ve):
+━━━ FECHAS — HABLAR NATURAL ━━━
+En la conversación usa: "mañana", "pasado mañana", "el viernes", "esta semana"
+NUNCA digas "el 18 de abril" o fechas numéricas en medio del chat.
+Solo incluye la fecha exacta en la CONFIRMACIÓN FINAL:
+"Listo! Quedamos para mañana, ${tomorrowStr}, a las 9:00 a.m. 🎉 Tu código es **EST-XXXX**."
+
+━━━ AL CONFIRMAR CITA (añadir al final, invisible) ━━━
 __BOOKING_CONFIRMED__
 SERVICIO: [nombre exacto]
-PRECIO: [precio con $ y puntos]
-FECHA: [fecha acordada]
+PRECIO: [con $ y puntos]
+FECHA: [fecha completa con hora]
 VEHICULO: [Carro o Moto]
 NOMBRE: [nombre completo]
-TELEFONO: [teléfono del cliente]
+TELEFONO: [teléfono]
 EMAIL: [correo o "no_proporcionado"]
+TRASLADO: [opción elegida]
 __END_BOOKING__
 
 ━━━ ESCALACIÓN ━━━
-Descuentos especiales, casos complejos, reclamos o cualquier cosa que no puedas resolver con certeza: di naturalmente "Con mucho gusto le aclaro eso — permítame conectarlo con quien puede darle una respuesta precisa —" y añade al final:
-__ESCALATE__:[pregunta resumida máximo 12 palabras]
+Si no puedes resolver algo: "Espera que te conecto con alguien que te puede ayudar mejor —"
+__ESCALATE__:[pregunta máximo 12 palabras]
 
 ━━━ FORMATO ━━━
-Máximo 3-4 líneas por mensaje. Tono de chat, no de correo.
-**Negrita** solo para precios y nombres de servicios.
-Sin listas numeradas salvo que el cliente pida el catálogo completo.
-Nunca empieces dos respuestas consecutivas con la misma palabra.
-Nunca uses "¡Claro!", "¡Por supuesto!", "¡Con gusto!" al inicio — varía siempre.
-REGLA: cada mensaje cierra con una pregunta o invitación directa a actuar.`;
+Máximo 3-4 líneas por mensaje. Tono de WhatsApp real.
+**Negrita** solo para servicios y precios.
+Emojis: máximo 1-2 por mensaje, nunca al inicio.
+Nunca empieces con "Claro!", "Por supuesto!", "Con gusto!" — varía siempre.
+REGLA: cada mensaje cierra con pregunta o acción concreta.`;
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// AI ENGINE v6
+// AI ENGINE v7 — con delay orgánico 20-35s
 // ═══════════════════════════════════════════════════════════════════
 export const ai = {
   invoke: async (userMessage, advisorName = "Sofía") => {
     conversationState.turnCount++;
 
-    // Detectar "no uses Don/Doña"
-    const norm = (t) => t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-    const nm = norm(userMessage);
-    if (["no me digas don", "no me llames don", "sin don", "tuteame", "tutéame",
-      "no me digas doña", "no me llames doña", "sin doña"].some(p => nm.includes(p))) {
-      conversationState.useDon = false;
+    // Buscar cliente por nombre si lo menciona
+    if (conversationState.turnCount <= 2 && !conversationState.clientName) {
+      const words = userMessage.split(/\s+/).filter(w => w.length > 3);
+      for (const word of words) {
+        const found = await db.clients.findByName(word);
+        if (found) {
+          conversationState.clientName = found.name;
+          conversationState.clientPhone = found.phone;
+          conversationState.lastService = found.lastService;
+          conversationState.isReturningClient = true;
+          break;
+        }
+      }
     }
 
     // Cargar fechas ocupadas al primer turno
@@ -559,6 +557,7 @@ export const ai = {
 
     apiMessages.push({ role: 'user', content: userMessage });
 
+    // Llamada a la API — primero obtenemos la respuesta
     const response = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: {
@@ -577,14 +576,21 @@ export const ai = {
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('[Esteticar AI v6] API error:', response.status, errText);
+      console.error('[Esteticar AI v7] API error:', response.status, errText);
       throw new Error(`API error ${response.status}`);
     }
 
     const data = await response.json();
     const rawResponse = data.content?.[0]?.text || '';
 
-    // ── Cierre de cita ───────────────────────────────────────────
+    // Delay orgánico DESPUÉS de obtener la respuesta
+    // Simula que la persona está escribiendo (20-35 segundos)
+    const baseDelay = 20000;
+    const extraDelay = Math.min(rawResponse.replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/, '').length * 35, 12000);
+    const randomDelay = Math.floor(Math.random() * 4000);
+    await new Promise(r => setTimeout(r, baseDelay + extraDelay + randomDelay));
+
+    // Cierre de cita
     const bookingMatch = rawResponse.match(/__BOOKING_CONFIRMED__([\s\S]*?)__END_BOOKING__/);
     if (bookingMatch) {
       const block = bookingMatch[1];
@@ -601,6 +607,7 @@ export const ai = {
       const date = extract('FECHA');
       const price = extract('PRECIO');
       const vehicleType = extract('VEHICULO');
+      const traslado = extract('TRASLADO');
 
       conversationState.stage = 'confirmed';
       conversationState.clientName = clientName;
@@ -612,7 +619,7 @@ export const ai = {
         service, vehicleType, date, priceDisplay: price,
         confirmationCode: code, clientName, clientPhone,
         clientEmail: clientEmail !== 'no_proporcionado' ? clientEmail : null,
-        status: 'pending', channel: 'chat',
+        traslado, status: 'pending', channel: 'chat',
         created_date: new Date().toISOString(),
       };
 
@@ -623,23 +630,21 @@ export const ai = {
       const clientRecord = { name: clientName, phone: clientPhone, service, date };
       await db.clients.upsert(clientRecord);
 
-      // Sheets + notificaciones en paralelo
       await Promise.allSettled([
         sheets.pushAppointment(appt),
         sheets.pushClient(clientRecord),
         notifyNewBooking({ clientName, clientPhone, service, date, price, code, advisorName }),
       ]);
 
-      // Email al cliente si tiene correo
       if (clientEmail && clientEmail !== 'no_proporcionado' && clientEmail.includes('@')) {
         sendConfirmationEmail({ toEmail: clientEmail, serviceName: service, price, date, code, advisorName }).catch(() => { });
       }
 
       const cleanResponse = rawResponse.replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/, '').trim();
-      return cleanResponse || `Perfecto, ${conversationState.useDon ? `Don/Doña ${clientName}` : clientName}. Su cita quedó registrada. Código: **${code}**. Le esperamos.`;
+      return cleanResponse || `Listo ${clientName}, tu cita quedó registrada! Código: **${code}** 🎉 Te esperamos!`;
     }
 
-    // ── Escalación ───────────────────────────────────────────────
+    // Escalación
     const escalateMatch = rawResponse.match(/__ESCALATE__:(.+)/);
     if (escalateMatch) {
       return `${rawResponse.replace(/__ESCALATE__:.+/, '').trim()}\n__ESCALATE__:${escalateMatch[1].trim()}`;
@@ -649,7 +654,7 @@ export const ai = {
   },
 };
 
-// ─── EmailJS (confirmación al cliente) ───────────────────────────
+// ─── EmailJS ───────────────────────────────────────────────────────
 const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE || "service_XXXXXXX";
 const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE || "template_XXXXXXX";
 const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_KEY || "XXXXXXXXXXXXXXX";
