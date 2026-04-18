@@ -56,7 +56,7 @@ function RevealCard({ item, index }) {
       <div className={`grid grid-cols-1 lg:grid-cols-12 gap-12 items-center ${index % 2 === 1 ? "lg:flex-row-reverse" : ""}`}>
         <div className={`lg:col-span-8 ${index % 2 === 1 ? "lg:order-2" : ""}`}>
           <div
-            className="relative overflow-hidden aspect-[16/9] border border-black/[0.08] cursor-ew-resize select-none rounded-sm shadow-[0_8px_40px_rgba(0,0,0,0.1)]"
+            className="relative overflow-hidden aspect-[16/9] touch-none border border-black/[0.08] cursor-ew-resize select-none rounded-sm shadow-[0_8px_40px_rgba(0,0,0,0.1)]"
             onMouseDown={() => setIsDragging(true)}
             onMouseUp={() => setIsDragging(false)}
             onMouseLeave={() => setIsDragging(false)}
