@@ -580,7 +580,7 @@ export const ai = {
     if (!response.ok) {
       const errText = await response.text();
       console.error('[Esteticar AI v7] API error:', response.status, errText);
-      throw new Error(`API error ${ response.status } `);
+      throw new Error(`API error ${response.status}`);
     }
 
     const data = await response.json();
