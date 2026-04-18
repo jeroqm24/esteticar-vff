@@ -284,6 +284,18 @@ export default function BotChat({ isOpen, onClose }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
+  // ── Lock body scroll ──────────────────────────────────────────
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [isOpen]);
+
   // ── Prefill listener ──────────────────────────────────────────
   useEffect(() => {
     const handlePrefill = (e) => {
@@ -563,7 +575,7 @@ export default function BotChat({ isOpen, onClose }) {
                   onRetry={() => startChat(true)}
                 />
               ) : (
-                <div className="flex-1 py-3 space-y-2 overflow-y-auto">
+                <div className="flex-1 py-3 space-y-2 overflow-y-auto overscroll-none touch-pan-y px-3">
                   {messages.map((m, i) => (
                     <MessageBubble key={`${m.timestamp}-${i}`} message={m} />
                   ))}
