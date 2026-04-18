@@ -508,18 +508,13 @@ export default function BotChat({ isOpen, onClose }) {
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
             className={`fixed z-[70] flex flex-col overflow-hidden shadow-2xl bg-white ${
               chatStarted 
-                ? "inset-0 w-full h-[100dvh] rounded-none sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:w-[370px] sm:h-[72vh] sm:max-h-[620px] sm:rounded-[10px]" 
+                ? "inset-0 w-full h-full rounded-none sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:w-[370px] sm:h-[72vh] sm:max-h-[620px] sm:rounded-[10px]" 
                 : "bottom-20 right-4 w-[calc(100vw-2rem)] h-[72vh] max-h-[620px] rounded-[10px] sm:bottom-6 sm:right-6 sm:w-[370px]"
             }`}
             style={{ fontFamily: "'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif" }}
           >
             {/* Header */}
-            <div className="flex items-center gap-3 px-3 py-3 flex-shrink-0" style={{ background: "#128C7E" }}>
-              <button onClick={onClose} className="text-white hover:text-white/80 transition-colors p-1" title="Cerrar">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M19 12H5M12 19l-7-7 7-7"/>
-                </svg>
-              </button>
+            <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: "#128C7E" }}>
               <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-white/20 bg-[#25D366]/30">
                 <img
                   src={advisor.photo}
@@ -537,6 +532,13 @@ export default function BotChat({ isOpen, onClose }) {
                   </p>
                 </div>
               </div>
+              <button
+                onClick={onClose}
+                className="text-white hover:text-white/80 transition-colors text-2xl leading-none font-light p-1 ml-2"
+                title="Cerrar"
+              >
+                ✕
+              </button>
             </div>
 
             {/* Body */}
@@ -576,31 +578,36 @@ export default function BotChat({ isOpen, onClose }) {
             {/* Input bar */}
             {chatStarted && (
               <div
-                className="flex items-center gap-2 px-3 py-2 flex-shrink-0"
+                className="flex items-end gap-2 px-2 py-2 flex-shrink-0"
                 style={{ background: "#F0F2F5" }}
               >
-                <div className="flex-1 flex items-center gap-2 bg-white rounded-full px-4 py-2 shadow-sm">
+                <div className="flex-1 flex items-end gap-2 bg-white rounded-[24px] px-4 py-1.5 shadow-sm border border-transparent">
                   <textarea
                     ref={inputRef}
                     value={input}
-                    onChange={(e) => setInput(e.target.value)}
+                    onChange={(e) => {
+                      setInput(e.target.value);
+                      e.target.style.height = "auto";
+                      e.target.style.height = Math.min(e.target.scrollHeight, 100) + "px";
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
                         sendMessage();
                       }
                     }}
-                    placeholder="Escribe un mensaje..."
+                    placeholder="Mensaje"
                     disabled={loading}
-                    className="flex-1 text-[16px] text-[#111B21] outline-none bg-transparent placeholder:text-[#8696A0] disabled:opacity-60 resize-none py-1"
+                    className="flex-1 text-[16px] text-[#111B21] outline-none bg-transparent placeholder:text-[#8696A0] disabled:opacity-60 resize-none py-1 focus:ring-0 focus:outline-none"
                     maxLength={500}
-                    rows={2}
+                    rows={1}
+                    style={{ minHeight: "28px" }}
                   />
                 </div>
                 <button
                   onClick={() => sendMessage()}
                   disabled={!input.trim() || loading}
-                  className="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-40 active:scale-95"
+                  className="w-10 h-10 rounded-full flex shrink-0 items-center justify-center transition-all duration-200 disabled:opacity-40 active:scale-95 shadow-sm mb-[2px]"
                   style={{ background: input.trim() && !loading ? "#128C7E" : "#8696A0" }}
                 >
                   {loading ? (
