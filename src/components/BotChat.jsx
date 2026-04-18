@@ -416,7 +416,8 @@ export default function BotChat({ isOpen, onClose }) {
       setMessages((prev) => [...prev, botMsg]);
       setLoading(false);
       await new Promise((r) => setTimeout(r, 1200));
-      setAdminMode(true);
+      onClose();
+      window.dispatchEvent(new Event('open-admin'));
       return;
     }
 
@@ -485,35 +486,7 @@ export default function BotChat({ isOpen, onClose }) {
   }, []);
 
   // ── Admin panel ────────────────────────────────────────────────
-  if (adminMode && isOpen) {
-    return (
-      <AnimatePresence>
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[80] bg-ec-white"
-          style={{ overflowY: "scroll", WebkitOverflowScrolling: "touch" }}
-        >
-          <div className="flex items-center justify-between px-6 py-4 border-b border-black/[0.06] bg-white sticky top-0 z-10 shadow-sm">
-            <div className="flex items-center gap-3">
-              <img src={BRAND.logo} alt="Esteticar" className="h-8 object-contain" />
-              <span className="font-ui text-[11px] tracking-[0.3em] text-ec-gold uppercase">Admin Panel</span>
-            </div>
-            <button
-              onClick={() => { setAdminMode(false); onClose(); }}
-              className="font-ui text-[10px] tracking-[0.2em] text-ec-text-muted uppercase hover:text-red-400 transition-colors border border-black/[0.06] px-4 py-2 rounded-sm"
-            >
-              SALIR DEL PANEL
-            </button>
-          </div>
-          <div className="p-6">
-            <AdminDashboard embedded />
-          </div>
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
+  // Admin panel ahora se abre desde App.jsx via evento
 
   return (
     <AnimatePresence>
