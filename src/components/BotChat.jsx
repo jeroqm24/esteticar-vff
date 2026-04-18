@@ -130,19 +130,25 @@ function MessageBubble({ message }) {
             style={{ borderWidth: "0 0 8px 8px", borderColor: "transparent transparent transparent #D9FDD3", borderStyle: "solid" }} />
         )}
 
-        {isUser ? (
-          <p className="font-body">{message.content}</p>
-        ) : (
-          <div>
-            <SafeMarkdown content={cleanContent} />
-            {hasEscalation && <EscalateButton question={message.escalationQuestion} />}
-          </div>
-        )}
+        <div className="relative pb-1">
+          {isUser ? (
+            <p className="font-body text-[14.5px] leading-[1.3] inline-block">
+              {message.content}
+              <span className="inline-block w-[55px] h-[10px]" />
+            </p>
+          ) : (
+            <div className="text-[14.5px] leading-[1.4]">
+              <SafeMarkdown content={cleanContent} />
+              {hasEscalation && <EscalateButton question={message.escalationQuestion} />}
+              <div className="inline-block w-[45px] h-[5px]" />
+            </div>
+          )}
+        </div>
 
-        <div className="flex justify-end mt-1 gap-1 items-center">
+        <div className="absolute right-2 bottom-1.5 flex items-center justify-end gap-[3px]">
           <Timestamp ts={message.timestamp} />
           {isUser && (
-            <img src="/visto.png?v=3" alt="Visto" className="w-[17px] h-auto shrink-0 ml-1 mt-[1px] animate-fade-in transition-all duration-300" />
+            <img src="/visto.png?v=3" alt="Visto" className="w-[17px] h-auto shrink-0 mb-[1px] animate-fade-in transition-all duration-300" />
           )}
         </div>
       </div>
@@ -486,8 +492,8 @@ export default function BotChat({ isOpen, onClose }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[80] bg-ec-white overflow-y-auto overscroll-contain"
-          style={{ WebkitOverflowScrolling: "touch" }}
+          className="fixed inset-0 z-[80] bg-ec-white"
+          style={{ overflowY: "scroll", WebkitOverflowScrolling: "touch" }}
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-black/[0.06] bg-white sticky top-0 z-10 shadow-sm">
             <div className="flex items-center gap-3">
