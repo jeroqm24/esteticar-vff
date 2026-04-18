@@ -286,13 +286,23 @@ export default function BotChat({ isOpen, onClose }) {
 
   // ── Lock body scroll ──────────────────────────────────────────
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    if (!isOpen) return;
+
+    // Fix definitivo para iOS: Evita cualquier arrastre fuera del área de mensajes
+    const preventScroll = (e) => {
+      if (!e.target.closest('.chat-scrollable')) {
+        e.preventDefault();
+      }
+    };
+
+    // Bloqueo de overflow clásico
+    document.body.style.setProperty('overflow', 'hidden', 'important');
+    // Prevenir tirones nativos táctiles
+    document.addEventListener('touchmove', preventScroll, { passive: false });
+
     return () => {
       document.body.style.overflow = "";
+      document.removeEventListener('touchmove', preventScroll);
     };
   }, [isOpen]);
 
@@ -575,7 +585,7 @@ export default function BotChat({ isOpen, onClose }) {
                   onRetry={() => startChat(true)}
                 />
               ) : (
-                <div className="flex-1 py-3 space-y-2 overflow-y-auto overscroll-none touch-pan-y px-3">
+                <div className="chat-scrollable flex-1 py-3 space-y-2 overflow-y-auto overscroll-none touch-pan-y px-3">
                   {messages.map((m, i) => (
                     <MessageBubble key={`${m.timestamp}-${i}`} message={m} />
                   ))}

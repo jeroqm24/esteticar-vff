@@ -141,14 +141,14 @@ function MonthGrid({ currentMonth, selectedDay, appointments, onSelectDay }) {
               onClick={() => !isPast && onSelectDay(day)}
               disabled={isPast}
               className={`relative aspect-square flex flex-col items-center justify-center rounded-sm text-xs transition-all duration-200 ${isSelected
-                  ? "bg-[#F8C840] text-white shadow-[0_4px_12px_rgba(248,200,64,0.35)] scale-105"
-                  : isTod
-                    ? "border border-[#F8C840]/50 bg-[#F8C840]/5 text-[#F8C840] font-bold"
-                    : isPast
-                      ? "opacity-25 cursor-not-allowed text-ec-text-muted"
-                      : isFull
-                        ? "bg-red-50 text-red-400 cursor-not-allowed"
-                        : "hover:bg-ec-cream text-ec-dark hover:scale-105"
+                ? "bg-[#F8C840] text-white shadow-[0_4px_12px_rgba(248,200,64,0.35)] scale-105"
+                : isTod
+                  ? "border border-[#F8C840]/50 bg-[#F8C840]/5 text-[#F8C840] font-bold"
+                  : isPast
+                    ? "opacity-25 cursor-not-allowed text-ec-text-muted"
+                    : isFull
+                      ? "bg-red-50 text-red-400 cursor-not-allowed"
+                      : "hover:bg-ec-cream text-ec-dark hover:scale-105"
                 }`}
             >
               <span className="font-heading text-sm">{format(day, "d")}</span>
@@ -703,7 +703,7 @@ export default function CalendarSection({ isAdmin = false, onOpenChat }) {
 
   // ── Admin view ─────────────────────────────────────────────────
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 w-full overflow-x-hidden">
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
@@ -728,8 +728,8 @@ export default function CalendarSection({ isAdmin = false, onOpenChat }) {
       </div>
 
       {/* View switcher */}
-      <div className="flex items-center justify-between">
-        <div className="flex gap-1 bg-white border border-black/[0.06] p-1 rounded-sm">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+        <div className="flex gap-1 bg-white border border-black/[0.06] p-1 rounded-sm w-full sm:w-auto">
           {[
             { id: "month", label: "Mes" },
             { id: "week", label: "Semana" },
@@ -746,7 +746,7 @@ export default function CalendarSection({ isAdmin = false, onOpenChat }) {
           ))}
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-hidden">
           {view === "month" && (
             <>
               <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="w-9 h-9 border border-black/[0.06] flex items-center justify-center text-[#F8C840] rounded-sm hover:border-[#F8C840]/30 transition-all">←</button>
