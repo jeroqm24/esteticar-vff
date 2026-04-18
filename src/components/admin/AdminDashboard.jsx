@@ -43,7 +43,7 @@ export default function AdminDashboard({ onClose }) {
   const [activeTab, setActiveTab] = useState("stats");
 
   return (
-    <div className="min-h-screen bg-ec-cream flex flex-col lg:flex-row">
+    <div className="h-[100dvh] bg-ec-cream flex flex-col lg:flex-row overflow-hidden">
 
       {/* ── SIDEBAR (desktop only) ── */}
       <div className="hidden lg:flex relative z-20 w-72 xl:w-80 border-r border-black/[0.06] bg-white h-screen flex-col p-8 shadow-[4px_0_30px_rgba(0,0,0,0.03)] flex-shrink-0 sticky top-0">
@@ -110,7 +110,7 @@ export default function AdminDashboard({ onClose }) {
       </div>
 
       {/* ── CONTENT ── */}
-      <main className="flex-1 pb-20 lg:pb-0">
+      <main className="flex-1 overflow-y-auto min-h-0 pb-20 lg:pb-0 touch-pan-y">
         <div className="p-4 sm:p-6 lg:p-10 xl:p-16">
           <AnimatePresence mode="wait">
             <motion.div
