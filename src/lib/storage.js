@@ -585,9 +585,9 @@ export const ai = {
 
     // Delay orgánico DESPUÉS de obtener la respuesta
     // Simula que la persona está escribiendo (20-35 segundos)
-    const baseDelay = 20000;
-    const extraDelay = Math.min(rawResponse.replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/, '').length * 35, 12000);
-    const randomDelay = Math.floor(Math.random() * 4000);
+    const baseDelay = 3000;
+    const extraDelay = Math.min(rawResponse.replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/, '').length * 10, 2000);
+    const randomDelay = Math.floor(Math.random() * 1000);
     await new Promise(r => setTimeout(r, baseDelay + extraDelay + randomDelay));
 
     // Cierre de cita

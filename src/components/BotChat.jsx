@@ -140,9 +140,10 @@ function MessageBubble({ message }) {
         <div className="flex justify-end mt-1 gap-1 items-center">
           <Timestamp ts={message.timestamp} />
           {isUser && (
-            <svg width="14" height="10" viewBox="0 0 18 11" fill="#53BDEB" className="shrink-0">
-              <path d=".3 5.3l1.4-1.4 4 4.1L14.3.3l1.4 1.4-9 9.1z" />
-              <path d="M4.2 9.3l-1-1.1L14.3 0l1.4 1.4z" />
+            <svg width="17" height="12" viewBox="0 0 17 13" fill="none" className="shrink-0 overflow-visible">
+              <path d="M12.27 1.41L10.82 0L5.8 4.88L4.24 3.31L2.79 4.76L5.79 7.82L12.27 1.41Z" fill="#53BDEB"/>
+              <path d="M16.79 1.41L15.34 0L10.3 4.88L11.75 6.33L16.79 1.41Z" fill="#53BDEB"/>
+              <path d="M5.79 11L9.3 7.46L7.85 6.01L4.34 9.55L1.3 6.5L-0.15 7.95L4.34 12.45L5.79 11Z" fill="#53BDEB"/>
             </svg>
           )}
         </div>
