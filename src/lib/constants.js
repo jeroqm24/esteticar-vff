@@ -348,8 +348,8 @@ export const TRANSFORMATIONS = [
     ],
   },
   {
-    before: "/motos/sucia.png",
-    after: "/motos/limpia.png",
+    before: "/motos/sucia.png?v=2",
+    after: "/motos/limpia.png?v=2",
     label: "Motocicletas — Detallado y Protección",
     tag: "LAVADO Y DETALLADO DE MOTOS",
     price: "$49.000 - $150.000",
