@@ -140,7 +140,7 @@ function MessageBubble({ message }) {
         <div className="flex justify-end mt-1 gap-1 items-center">
           <Timestamp ts={message.timestamp} />
           {isUser && (
-            <img src="/visto.png" alt="Visto" className="w-[16px] h-auto shrink-0 ml-1 mt-[1px]" />
+            <img src="/visto.png?v=3" alt="Visto" className="w-[17px] h-auto shrink-0 ml-1 mt-[1px] animate-fade-in transition-all duration-300" />
           )}
         </div>
       </div>
@@ -484,7 +484,8 @@ export default function BotChat({ isOpen, onClose }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[80] bg-ec-white overflow-y-auto"
+          className="fixed inset-0 z-[80] bg-ec-white overflow-y-auto overscroll-contain"
+          style={{ WebkitOverflowScrolling: "touch" }}
         >
           <div className="flex items-center justify-between px-6 py-4 border-b border-black/[0.06] bg-white sticky top-0 z-10 shadow-sm">
             <div className="flex items-center gap-3">
@@ -517,6 +518,7 @@ export default function BotChat({ isOpen, onClose }) {
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[60] bg-black/25"
             onClick={onClose}
+            style={{ touchAction: "none" }}
           />
 
           {/* Chat window */}
@@ -525,11 +527,10 @@ export default function BotChat({ isOpen, onClose }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.97 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
-            className={`fixed z-[70] flex flex-col overflow-hidden shadow-2xl bg-white ${
-              chatStarted 
-                ? "inset-0 w-full h-full rounded-none sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:w-[370px] sm:h-[72vh] sm:max-h-[620px] sm:rounded-[10px]" 
-                : "bottom-20 right-4 w-[calc(100vw-2rem)] h-[72vh] max-h-[620px] rounded-[10px] sm:bottom-6 sm:right-6 sm:w-[370px]"
-            }`}
+            className={`fixed z-[70] flex flex-col overflow-hidden shadow-2xl bg-white ${chatStarted
+              ? "inset-0 w-full h-full rounded-none sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:w-[370px] sm:h-[72vh] sm:max-h-[620px] sm:rounded-[10px]"
+              : "bottom-20 right-4 w-[calc(100vw-2rem)] h-[72vh] max-h-[620px] rounded-[10px] sm:bottom-6 sm:right-6 sm:w-[370px]"
+              }`}
             style={{ fontFamily: "'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif" }}
           >
             {/* Header */}
@@ -573,24 +574,24 @@ export default function BotChat({ isOpen, onClose }) {
             >
               <div className="absolute inset-0 bg-white/20 pointer-events-none" />
               <div className="relative z-10 flex-1 flex flex-col min-h-0">
-              {!chatStarted ? (
-                <ConnectingSplash
-                  advisor={advisor}
-                  onStart={() => startChat(false)}
-                  isLoading={splashLoading}
-                  hasError={connectionError}
-                  onRetry={() => startChat(true)}
-                />
-              ) : (
-                <div className="chat-scrollable flex-1 py-3 space-y-2 overflow-y-auto overscroll-none touch-pan-y px-3">
-                  {messages.map((m, i) => (
-                    <MessageBubble key={`${m.timestamp}-${i}`} message={m} />
-                  ))}
+                {!chatStarted ? (
+                  <ConnectingSplash
+                    advisor={advisor}
+                    onStart={() => startChat(false)}
+                    isLoading={splashLoading}
+                    hasError={connectionError}
+                    onRetry={() => startChat(true)}
+                  />
+                ) : (
+                  <div className="chat-scrollable flex-1 py-3 space-y-2 overflow-y-auto overscroll-none touch-pan-y px-3">
+                    {messages.map((m, i) => (
+                      <MessageBubble key={`${m.timestamp}-${i}`} message={m} />
+                    ))}
 
-                  {loading && <TypingIndicator name={advisor.name} />}
-                  <div ref={messagesEndRef} />
-                </div>
-              )}
+                    {loading && <TypingIndicator name={advisor.name} />}
+                    <div ref={messagesEndRef} />
+                  </div>
+                )}
               </div>
             </div>
 
