@@ -517,36 +517,36 @@ export default function BotChat({ isOpen, onClose }) {
               }`}
             style={{ fontFamily: "'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif" }}
           >
-            {/* Header — solo visible en la pantalla de inicio, no durante el chat */}
-            {!chatStarted && (
-              <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: "#128C7E" }}>
-                <button
-                  onClick={() => setPhotoOpen(true)}
-                  className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-white/20 bg-[#25D366]/30 focus:outline-none active:opacity-80"
-                >
-                  <img
-                    src={advisor.photo}
-                    alt={advisor.name}
-                    className="w-full h-full object-cover"
-                    onError={(e) => { e.target.style.display = "none"; }}
-                  />
-                </button>
-                <div className="flex-1 min-w-0">
-                  <p className="text-white font-semibold text-[15px] leading-tight">{advisor.name}</p>
-                  <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-[#25D366]" />
-                    <p className="text-white/75 text-[12px]">Asesora Esteticar</p>
-                  </div>
+            {/* Header — siempre visible, ancla la foto de la asesora */}
+            <div className="flex items-center gap-3 px-4 py-2.5 flex-shrink-0" style={{ background: "#128C7E" }}>
+              <button
+                onClick={() => setPhotoOpen(true)}
+                className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border-2 border-white/30 bg-[#25D366]/30 focus:outline-none active:opacity-80"
+              >
+                <img
+                  src={advisor.photo}
+                  alt={advisor.name}
+                  className="w-full h-full object-cover"
+                  onError={(e) => { e.target.style.display = "none"; }}
+                />
+              </button>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-semibold text-[15px] leading-tight">{advisor.name}</p>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-[#25D366]" />
+                  <p className="text-white/75 text-[12px]">
+                    {chatStarted ? "En línea · Asesora Esteticar" : "Asesora Esteticar"}
+                  </p>
                 </div>
-                <button
-                  onClick={onClose}
-                  className="text-white hover:text-white/80 transition-colors text-2xl leading-none font-light p-1 ml-2"
-                  title="Cerrar"
-                >
-                  ✕
-                </button>
               </div>
-            )}
+              <button
+                onClick={onClose}
+                className="text-white hover:text-white/80 transition-colors text-2xl leading-none font-light p-1 ml-2"
+                title="Cerrar"
+              >
+                ✕
+              </button>
+            </div>
 
             {/* Modal foto ampliada */}
             <AnimatePresence>
@@ -580,22 +580,6 @@ export default function BotChat({ isOpen, onClose }) {
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* Barra de contacto — fija, siempre visible durante la conversación */}
-            {chatStarted && (
-              <div className="flex-shrink-0 flex items-center justify-between px-3 py-2 bg-white/80 backdrop-blur border-b border-black/5 shadow-sm z-10">
-                <button onClick={() => setPhotoOpen(true)} className="flex items-center gap-2.5 focus:outline-none active:opacity-70">
-                  <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#128C7E]/30 bg-[#25D366]/20 flex-shrink-0">
-                    <img src={advisor.photo} alt={advisor.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = "none"; }} />
-                  </div>
-                  <div className="text-left">
-                    <p className="text-[#111B21] font-semibold text-[13px] leading-tight">{advisor.name}</p>
-                    <p className="text-[#25D366] text-[11px] font-medium">● En línea</p>
-                  </div>
-                </button>
-                <button onClick={onClose} className="w-8 h-8 rounded-full bg-black/8 flex items-center justify-center text-[#555] text-lg font-light hover:bg-black/15 transition-colors" title="Cerrar">✕</button>
-              </div>
-            )}
 
             {/* Body */}
             <div
