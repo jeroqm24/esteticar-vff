@@ -112,7 +112,16 @@ export default function Navigation({ onBookingClick, cartCount }) {
               <motion.a
                 key={item.label}
                 href={item.href}
-                onClick={() => setMobileOpen(false)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setMobileOpen(false);
+                  setTimeout(() => {
+                    const target = document.querySelector(item.href);
+                    if (target) {
+                      target.scrollIntoView({ behavior: 'smooth' });
+                    }
+                  }, 400);
+                }}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
@@ -125,7 +134,10 @@ export default function Navigation({ onBookingClick, cartCount }) {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              onClick={() => { setMobileOpen(false); onBookingClick(); }}
+              onClick={() => { 
+                setMobileOpen(false); 
+                setTimeout(() => onBookingClick(), 400); 
+              }}
               className="btn-gold rounded-sm mt-4"
             >
               RESERVAR AHORA
