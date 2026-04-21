@@ -117,7 +117,7 @@ function MessageBubble({ message }) {
       className={`flex ${isUser ? "justify-end" : "justify-start"} px-3`}
     >
       <div
-        className={`relative max-w-[84%] px-3 py-2 text-sm rounded-[7px] shadow-sm ${isUser
+        className={`relative max-w-[84%] min-w-[88px] px-3 py-2 text-sm rounded-[7px] shadow-sm ${isUser
           ? "bg-[#D9FDD3] text-[#111B21] rounded-tr-[2px]"
           : "bg-white text-[#111B21] rounded-tl-[2px]"
           }`}
@@ -136,11 +136,13 @@ function MessageBubble({ message }) {
           {isUser ? (
             <p className="font-body text-[14.5px] leading-[19px]">
               {message.content}
+              <span className="inline-block w-[72px] h-0 select-none pointer-events-none" aria-hidden="true" />
             </p>
           ) : (
             <div className="text-[14.5px] leading-[19px]">
               <SafeMarkdown content={cleanContent} />
               {hasEscalation && <EscalateButton question={message.escalationQuestion} />}
+              <span className="inline-block w-[72px] h-0 select-none pointer-events-none" aria-hidden="true" />
             </div>
           )}
         </div>
@@ -214,13 +216,19 @@ function ConnectionError({ onRetry }) {
 }
 
 // ─── Splash screen ────────────────────────────────────────────────
+const WhatsAppIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+    <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347zM12 0C5.373 0 0 5.373 0 12c0 2.116.553 4.103 1.523 5.828L.057 23.857a.5.5 0 0 0 .636.607l6.218-1.63A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.953 9.953 0 0 1-5.077-1.384l-.364-.216-3.767.988 1.006-3.665-.236-.377A9.952 9.952 0 0 1 2 12c0-5.514 4.486-10 10-10s10 4.486 10 10-4.486 10-10 10z"/>
+  </svg>
+);
+
 function ConnectingSplash({ advisor, onStart, isLoading, hasError, onRetry }) {
   if (hasError) return <ConnectionError onRetry={onRetry} />;
 
   return (
     <div className="flex-1 flex flex-col items-center justify-center text-center px-6 py-8" style={{ background: "#E5DDD5" }}>
-      <div className="mb-6 relative">
-        <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white shadow-lg mx-auto bg-[#25D366]/20">
+      <div className="mb-5 relative">
+        <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg mx-auto bg-[#25D366]/20">
           <img
             src={advisor.photo}
             alt={advisor.name}
@@ -231,39 +239,33 @@ function ConnectingSplash({ advisor, onStart, isLoading, hasError, onRetry }) {
         <div className="absolute bottom-1 right-1 w-5 h-5 bg-[#25D366] rounded-full border-2 border-white" />
       </div>
 
-      <p className="text-[#111B21] font-semibold text-lg leading-tight">{advisor.name}</p>
-      <p className="text-[#8696A0] text-[12px] mb-4">Esteticar · Asesora de Estética</p>
-
-      <div className="bg-white/80 backdrop-blur rounded-xl p-5 max-w-[280px] shadow-sm mb-6">
-        <p className="text-[#111B21] text-[13px] leading-relaxed mb-1">
-          <span className="font-semibold">Asesoras disponibles ahora mismo</span>
-        </p>
-        <p className="text-[#25D366] font-bold text-[14px]">24 horas / 7 días 🟢</p>
-        <p className="text-[#8696A0] text-[11px] mt-1.5">
-          Respuesta inmediata · Sin esperas
-        </p>
-      </div>
+      <p className="text-[#111B21] font-bold text-xl leading-tight">{advisor.name}</p>
+      <p className="text-[#8696A0] text-[13px] mb-1">Asesora · Esteticar Manizales</p>
+      <p className="text-[#25D366] text-[12px] font-semibold mb-6">● En línea ahora</p>
 
       <motion.button
         whileHover={{ scale: 1.03 }}
         whileTap={{ scale: 0.97 }}
         onClick={onStart}
         disabled={isLoading}
-        className="px-8 py-3.5 rounded-full font-semibold text-[14px] text-white shadow-lg disabled:opacity-70 flex items-center gap-2"
+        className="px-8 py-3.5 rounded-full font-semibold text-[14px] text-white shadow-lg disabled:opacity-80 flex items-center gap-2.5"
         style={{ background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)" }}
       >
         {isLoading ? (
           <>
-            <div className="w-4 h-4 border-2 border-white/50 border-t-white rounded-full animate-spin" />
-            Iniciando...
+            <WhatsAppIcon />
+            Vinculando con asesora...
           </>
         ) : (
-          "Comenzar a chatear"
+          <>
+            <WhatsAppIcon />
+            Chatear con {advisor.name}
+          </>
         )}
       </motion.button>
 
-      <p className="text-[#8696A0] text-[10px] mt-4">
-        Chat directo · Sin esperas · 100% privado
+      <p className="text-[#8696A0] text-[10px] mt-5">
+        🔒 Cifrado de extremo a extremo
       </p>
     </div>
   );
@@ -515,36 +517,36 @@ export default function BotChat({ isOpen, onClose }) {
               }`}
             style={{ fontFamily: "'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif" }}
           >
-            {/* Header */}
-            <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: "#128C7E" }}>
-              <button
-                onClick={() => setPhotoOpen(true)}
-                className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-white/20 bg-[#25D366]/30 focus:outline-none active:opacity-80"
-              >
-                <img
-                  src={advisor.photo}
-                  alt={advisor.name}
-                  className="w-full h-full object-cover"
-                  onError={(e) => { e.target.style.display = "none"; }}
-                />
-              </button>
-              <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold text-[15px] leading-tight">{advisor.name}</p>
-                <div className="flex items-center gap-1.5">
-                  <div className="w-1.5 h-1.5 rounded-full bg-[#25D366]" />
-                  <p className="text-white/75 text-[12px]">
-                    {chatStarted ? "En línea · Asesora Esteticar" : "Asesora Esteticar"}
-                  </p>
+            {/* Header — solo visible en la pantalla de inicio, no durante el chat */}
+            {!chatStarted && (
+              <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: "#128C7E" }}>
+                <button
+                  onClick={() => setPhotoOpen(true)}
+                  className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-white/20 bg-[#25D366]/30 focus:outline-none active:opacity-80"
+                >
+                  <img
+                    src={advisor.photo}
+                    alt={advisor.name}
+                    className="w-full h-full object-cover"
+                    onError={(e) => { e.target.style.display = "none"; }}
+                  />
+                </button>
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-semibold text-[15px] leading-tight">{advisor.name}</p>
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#25D366]" />
+                    <p className="text-white/75 text-[12px]">Asesora Esteticar</p>
+                  </div>
                 </div>
+                <button
+                  onClick={onClose}
+                  className="text-white hover:text-white/80 transition-colors text-2xl leading-none font-light p-1 ml-2"
+                  title="Cerrar"
+                >
+                  ✕
+                </button>
               </div>
-              <button
-                onClick={onClose}
-                className="text-white hover:text-white/80 transition-colors text-2xl leading-none font-light p-1 ml-2"
-                title="Cerrar"
-              >
-                ✕
-              </button>
-            </div>
+            )}
 
             {/* Modal foto ampliada */}
             <AnimatePresence>
