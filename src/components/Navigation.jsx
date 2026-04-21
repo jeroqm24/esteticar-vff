@@ -18,7 +18,7 @@ export default function Navigation({ onBookingClick, cartCount }) {
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className={`fixed top-0 inset-x-0 z-50 transition-all duration-700 ${
+        className={`fixed top-0 inset-x-0 z-[100] transition-all duration-700 ${
           scrolled
             ? "bg-white/90 backdrop-blur-xl border-b border-black/[0.06] shadow-[0_2px_20px_rgba(0,0,0,0.04)]"
             : "bg-transparent"
@@ -80,7 +80,7 @@ export default function Navigation({ onBookingClick, cartCount }) {
           {/* Mobile hamburger */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className={`lg:hidden relative z-10 w-8 h-6 flex flex-col justify-between ${mobileOpen ? "gap-0" : ""}`}
+            className={`lg:hidden relative z-[110] w-8 h-6 flex flex-col justify-between ${mobileOpen ? "gap-0" : ""}`}
           >
             <span className={`block w-full h-px transition-all duration-500 ${
               mobileOpen
@@ -106,7 +106,7 @@ export default function Navigation({ onBookingClick, cartCount }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-40 bg-white/95 backdrop-blur-xl flex flex-col items-center justify-center gap-10"
+            className="fixed inset-0 z-[90] bg-white/95 backdrop-blur-xl flex flex-col items-center justify-start pt-32 pb-10 gap-10 overflow-y-auto"
           >
             {NAV_ITEMS.map((item, i) => (
               <motion.a
