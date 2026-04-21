@@ -512,10 +512,13 @@ export default function BotChat({ isOpen, onClose }) {
             exit={{ opacity: 0, y: 30, scale: 0.97 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
             className={`fixed z-[150] flex flex-col overflow-hidden shadow-2xl bg-white ${chatStarted
-              ? "inset-0 w-full h-full rounded-none sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:w-[370px] sm:h-[72vh] sm:max-h-[620px] sm:rounded-[10px]"
+              ? "top-0 left-0 right-0 w-full rounded-none sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:w-[370px] sm:rounded-[10px]"
               : "bottom-20 right-4 w-[calc(100vw-2rem)] h-[72vh] max-h-[620px] rounded-[10px] sm:bottom-6 sm:right-6 sm:w-[370px]"
               }`}
-            style={{ fontFamily: "'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif" }}
+            style={{
+              fontFamily: "'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif",
+              ...(chatStarted ? { height: '100dvh', maxHeight: '100dvh' } : {}),
+            }}
           >
             {/* Header — siempre visible, ancla la foto de la asesora */}
             <div className="flex items-center gap-3 px-4 py-2.5 flex-shrink-0" style={{ background: "#128C7E" }}>
