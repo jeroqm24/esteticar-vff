@@ -500,7 +500,7 @@ export default function BotChat({ isOpen, onClose }) {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[60] bg-black/25"
+            className="fixed inset-0 z-[140] bg-black/25"
             onClick={onClose}
             style={{ touchAction: "none" }}
           />
@@ -511,7 +511,7 @@ export default function BotChat({ isOpen, onClose }) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 30, scale: 0.97 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
-            className={`fixed z-[70] flex flex-col overflow-hidden shadow-2xl bg-white ${chatStarted
+            className={`fixed z-[150] flex flex-col overflow-hidden shadow-2xl bg-white ${chatStarted
               ? "inset-0 w-full h-full rounded-none sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:w-[370px] sm:h-[72vh] sm:max-h-[620px] sm:rounded-[10px]"
               : "bottom-20 right-4 w-[calc(100vw-2rem)] h-[72vh] max-h-[620px] rounded-[10px] sm:bottom-6 sm:right-6 sm:w-[370px]"
               }`}
@@ -555,7 +555,7 @@ export default function BotChat({ isOpen, onClose }) {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   exit={{ opacity: 0 }}
-                  className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+                  className="fixed inset-0 z-[200] flex items-center justify-center bg-black/80"
                   onClick={() => setPhotoOpen(false)}
                 >
                   <motion.div
