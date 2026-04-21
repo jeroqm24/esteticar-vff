@@ -292,24 +292,31 @@ export default function BotChat({ isOpen, onClose }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
-  // ── Lock body scroll ──────────────────────────────────────────
+  // ── Lock body scroll (fix iOS keyboard scroll) ───────────────
   useEffect(() => {
     if (!isOpen) return;
 
-    // Fix definitivo para iOS: Evita cualquier arrastre fuera del área de mensajes
     const preventScroll = (e) => {
       if (!e.target.closest('.chat-scrollable')) {
         e.preventDefault();
       }
     };
 
-    // Bloqueo de overflow clásico
+    // Fix iOS: position:fixed en el body evita que Safari scrollee la página
+    // cuando el teclado abre, lo que empujaría el header fuera de pantalla
+    const scrollY = window.scrollY;
     document.body.style.setProperty('overflow', 'hidden', 'important');
-    // Prevenir tirones nativos táctiles
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = '100%';
     document.addEventListener('touchmove', preventScroll, { passive: false });
 
     return () => {
       document.body.style.overflow = "";
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      window.scrollTo(0, scrollY);
       document.removeEventListener('touchmove', preventScroll);
     };
   }, [isOpen, adminMode]);
