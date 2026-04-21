@@ -130,18 +130,22 @@ export default function Navigation({ onBookingClick, cartCount }) {
                 {item.label}
               </motion.a>
             ))}
-            <motion.button
+            <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
-              onClick={() => { 
-                setMobileOpen(false); 
-                setTimeout(() => onBookingClick(), 400); 
-              }}
-              className="btn-gold rounded-sm mt-4"
+              className="mt-4"
             >
-              RESERVAR AHORA
-            </motion.button>
+              <button
+                onClick={() => { 
+                  setMobileOpen(false); 
+                  setTimeout(() => onBookingClick(), 400); 
+                }}
+                className="btn-gold rounded-sm"
+              >
+                RESERVAR AHORA
+              </button>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
