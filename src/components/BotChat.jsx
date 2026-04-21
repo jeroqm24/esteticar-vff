@@ -283,9 +283,27 @@ export default function BotChat({ isOpen, onClose }) {
   const [advisor] = useState(() => ADVISORS[Math.floor(Math.random() * ADVISORS.length)]);
   const [adminMode, setAdminMode] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
+  const [vpStyle, setVpStyle] = useState({});
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const startedRef = useRef(false); // ← FIX: evita doble llamada
+
+  // ── Visual viewport fix para iOS (teclado) ───────────────────
+  useEffect(() => {
+    if (!chatStarted) { setVpStyle({}); return; }
+    const update = () => {
+      const vv = window.visualViewport;
+      if (!vv) return;
+      setVpStyle({ top: `${vv.offsetTop}px`, height: `${vv.height}px` });
+    };
+    update();
+    window.visualViewport?.addEventListener('resize', update);
+    window.visualViewport?.addEventListener('scroll', update);
+    return () => {
+      window.visualViewport?.removeEventListener('resize', update);
+      window.visualViewport?.removeEventListener('scroll', update);
+    };
+  }, [chatStarted]);
 
   // ── Scroll to bottom ──────────────────────────────────────────
   useEffect(() => {
@@ -519,12 +537,12 @@ export default function BotChat({ isOpen, onClose }) {
             exit={{ opacity: 0, y: 30, scale: 0.97 }}
             transition={{ type: "spring", damping: 28, stiffness: 320 }}
             className={`fixed z-[150] flex flex-col overflow-hidden shadow-2xl bg-white ${chatStarted
-              ? "top-0 left-0 right-0 w-full rounded-none sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:w-[370px] sm:rounded-[10px]"
+              ? "left-0 right-0 w-full rounded-none sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:w-[370px] sm:rounded-[10px]"
               : "bottom-20 right-4 w-[calc(100vw-2rem)] h-[72vh] max-h-[620px] rounded-[10px] sm:bottom-6 sm:right-6 sm:w-[370px]"
               }`}
             style={{
               fontFamily: "'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif",
-              ...(chatStarted ? { height: '100dvh', maxHeight: '100dvh' } : {}),
+              ...(chatStarted ? vpStyle : {}),
             }}
           >
             {/* Header — siempre visible, ancla la foto de la asesora */}
