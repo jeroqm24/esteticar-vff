@@ -280,6 +280,7 @@ export default function BotChat({ isOpen, onClose }) {
   const [showQuick, setShowQuick] = useState(true);
   const [advisor] = useState(() => ADVISORS[Math.floor(Math.random() * ADVISORS.length)]);
   const [adminMode, setAdminMode] = useState(false);
+  const [photoOpen, setPhotoOpen] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const startedRef = useRef(false); // ← FIX: evita doble llamada
@@ -516,14 +517,17 @@ export default function BotChat({ isOpen, onClose }) {
           >
             {/* Header */}
             <div className="flex items-center gap-3 px-4 py-3 flex-shrink-0" style={{ background: "#128C7E" }}>
-              <div className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-white/20 bg-[#25D366]/30">
+              <button
+                onClick={() => setPhotoOpen(true)}
+                className="w-10 h-10 rounded-full overflow-hidden flex-shrink-0 border border-white/20 bg-[#25D366]/30 focus:outline-none active:opacity-80"
+              >
                 <img
                   src={advisor.photo}
                   alt={advisor.name}
                   className="w-full h-full object-cover"
                   onError={(e) => { e.target.style.display = "none"; }}
                 />
-              </div>
+              </button>
               <div className="flex-1 min-w-0">
                 <p className="text-white font-semibold text-[15px] leading-tight">{advisor.name}</p>
                 <div className="flex items-center gap-1.5">
@@ -541,6 +545,39 @@ export default function BotChat({ isOpen, onClose }) {
                 ✕
               </button>
             </div>
+
+            {/* Modal foto ampliada */}
+            <AnimatePresence>
+              {photoOpen && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="fixed inset-0 z-[100] flex items-center justify-center bg-black/80"
+                  onClick={() => setPhotoOpen(false)}
+                >
+                  <motion.div
+                    initial={{ scale: 0.85 }}
+                    animate={{ scale: 1 }}
+                    exit={{ scale: 0.85 }}
+                    className="relative flex flex-col items-center gap-3"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <div className="w-52 h-52 rounded-full overflow-hidden border-4 border-white shadow-2xl">
+                      <img src={advisor.photo} alt={advisor.name} className="w-full h-full object-cover" />
+                    </div>
+                    <p className="text-white font-semibold text-lg">{advisor.name}</p>
+                    <p className="text-white/60 text-sm">Asesora Esteticar · Manizales</p>
+                    <button
+                      onClick={() => setPhotoOpen(false)}
+                      className="mt-2 w-10 h-10 rounded-full bg-white/20 flex items-center justify-center text-white text-xl font-light hover:bg-white/30 transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </motion.div>
+                </motion.div>
+              )}
+            </AnimatePresence>
 
             {/* Body */}
             <div
@@ -565,6 +602,20 @@ export default function BotChat({ isOpen, onClose }) {
                   />
                 ) : (
                   <div className="chat-scrollable flex-1 py-3 space-y-2 overflow-y-auto overscroll-none touch-pan-y px-3">
+                    {/* Barra de contacto dentro de la conversación */}
+                    <div className="flex items-center justify-between px-2 py-2 mb-1 bg-white/60 backdrop-blur rounded-xl shadow-sm">
+                      <button onClick={() => setPhotoOpen(true)} className="flex items-center gap-2.5 focus:outline-none active:opacity-70">
+                        <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#128C7E]/30 bg-[#25D366]/20 flex-shrink-0">
+                          <img src={advisor.photo} alt={advisor.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = "none"; }} />
+                        </div>
+                        <div className="text-left">
+                          <p className="text-[#111B21] font-semibold text-[13px] leading-tight">{advisor.name}</p>
+                          <p className="text-[#25D366] text-[11px] font-medium">● En línea</p>
+                        </div>
+                      </button>
+                      <button onClick={onClose} className="w-8 h-8 rounded-full bg-black/8 flex items-center justify-center text-[#555] text-lg font-light hover:bg-black/15 transition-colors" title="Cerrar">✕</button>
+                    </div>
+
                     {messages.map((m, i) => (
                       <MessageBubble key={`${m.timestamp}-${i}`} message={m} />
                     ))}
