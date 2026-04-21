@@ -369,7 +369,7 @@ export default function BotChat({ isOpen, onClose }) {
     if (existing.length === 0) {
       const greeting = {
         role: "assistant",
-        content: `${getGreeting()}! Bienvenido a **Esteticar** 😊 Te pregunto, estás buscando un servicio para tu carro o para tu moto?`,
+        content: `${getGreeting()}, ¿cómo estás? 😊 Hablas con **${advisor.name}** de Esteticar. Cuéntame por favor, ¿buscas algún servicio en particular o prefieres que te vaya haciendo preguntas y me cuentes cómo está tu vehículo?`,
         timestamp: new Date().toISOString(),
       };
 
