@@ -15,10 +15,12 @@ const ADVISORS = [
 // ─── Inline markdown renderer ─────────────────────────────────────
 function renderInline(text) {
   if (!text) return null;
-  const parts = text.split(/(\*\*[^*]+\*\*)/g);
+  const parts = text.split(/(\*\*[^*]+\*\*|https?:\/\/[^\s]+)/g);
   return parts.map((part, i) => {
     if (part.startsWith("**") && part.endsWith("**"))
       return <strong key={i} className="font-semibold">{part.slice(2, -2)}</strong>;
+    if (/^https?:\/\//.test(part))
+      return <a key={i} href={part} target="_blank" rel="noopener noreferrer" className="text-[#128C7E] underline break-all">{part}</a>;
     return <span key={i}>{part}</span>;
   });
 }
