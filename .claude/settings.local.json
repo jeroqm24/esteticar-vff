@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python \"C:\\\\Users\\\\grupo.marketing\\\\.claude\\\\skills\\\\skill-creator\\\\scripts\\\\init_skill.py\" esteticar-voice --path \"C:\\\\Users\\\\grupo.marketing\\\\.claude\\\\skills\")",
+      "Bash(py \"C:\\\\Users\\\\grupo.marketing\\\\.claude\\\\skills\\\\skill-creator\\\\scripts\\\\init_skill.py\" esteticar-voice --path \"C:\\\\Users\\\\grupo.marketing\\\\.claude\\\\skills\")",
+      "Bash(node -e \"console.log\\('node ok'\\)\")"
+    ]
+  }
+}
