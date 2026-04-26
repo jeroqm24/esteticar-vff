@@ -192,9 +192,9 @@ export const notifyNewBooking = async ({ clientName, clientPhone, service, date,
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden">
       <div style="background:#000;padding:20px 24px;text-align:center">
-        <span style="color:#F8C840;font-size:20px;font-weight:bold;letter-spacing:4px">ESTETICAR</span>
-        <div style="color:#F8C840;opacity:0.6;font-size:11px;letter-spacing:2px;margin-top:4px">CUSTODIA VEHICULAR PREMIUM</div>
-      </div>
+  <img src="https://esteticar-vff.vercel.app/logo.png" alt="Esteticar" style="height:60px;object-fit:contain;" />
+  <div style="color:#F8C840;opacity:0.6;font-size:11px;letter-spacing:2px;margin-top:8px">CUSTODIA VEHICULAR PREMIUM</div>
+</div>
       <div style="padding:28px 24px;background:#fafafa">
         <h2 style="color:#111;margin:0 0 20px 0;font-size:18px">Nueva cita agendada ✅</h2>
         <table style="width:100%;border-collapse:collapse;font-size:14px">
