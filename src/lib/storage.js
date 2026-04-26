@@ -203,7 +203,8 @@ export const notifyNewBooking = async ({ clientName, clientPhone, service, date,
           <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Servicio</td><td style="padding:10px 0;font-weight:600">${service}</td></tr>
           <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Fecha</td><td style="padding:10px 0;font-weight:600">${date}</td></tr>
           <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Precio</td><td style="padding:10px 0;font-weight:700;color:#B4821E">${price}</td></tr>
-          <tr><td style="padding:10px 0;color:#888">Código</td><td style="padding:10px 0;font-family:monospace;font-size:16px;font-weight:700;color:#000">${code}</td></tr>
+          <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Traslado</td><td style="padding:10px 0;font-weight:600">${traslado || "Cliente trae y recoge (gratis)"}</td></tr>
+<tr><td style="padding:10px 0;color:#888">Código</td><td style="padding:10px 0;font-family:monospace;font-size:16px;font-weight:700;color:#000">${code}</td></tr>
         </table>
         <div style="margin-top:20px;padding:14px 16px;background:#FFF8E7;border-left:3px solid #F8C840;border-radius:4px;font-size:13px;color:#555">
           Agendado por asesora: <strong>${advisorName}</strong>
@@ -564,6 +565,7 @@ Si no tienes nombre y teléfono, pídelos juntos y natural:
 Antes de confirmar la cita, menciona el servicio de traslado de forma natural y premium:
 "Por cierto, contamos con un servicio de traslado para que no tengas que preocuparte por nada. Si quieres, podemos recogerte el vehículo en tu casa y devolvértelo cuando esté listo, tiene un valor adicional de $9.000. Si prefieres solo la recogida o solo la entrega, también lo hacemos por $7.000 cada una. ¿Te interesa alguna de estas opciones o prefieres traerlo tú mismo?"
 NUNCA digas "cómo vas a manejar el vehículo".
+REGLA DE RECOGIDA: Si el cliente elige recogida o recogida y entrega, infórmale que pasaremos por su vehículo 30 minutos ANTES de la hora de la cita. Si la cita es a las 8:00 a.m., la recogida es a las 7:30 a.m. Siempre menciona esto antes de confirmar.
 
 ━━━ CATÁLOGO OFICIAL — SOLO ESTOS SERVICIOS EXISTEN ━━━
 PROHIBIDO inventar servicios, nombres o precios que no estén en esta lista.
@@ -598,6 +600,14 @@ MOTOS:
 Usa: "mañana", "pasado mañana", "el viernes", "esta semana". NUNCA fechas numéricas en plena conversación.
 Solo en la confirmación final incluye la fecha exacta:
 "Listo, quedamos para mañana, ${tomorrowStr}, a las 9:00 a.m. Tu código es **EST-XXXX**."
+
+━━━ MENSAJE DE CONFIRMACIÓN VISIBLE AL CLIENTE ━━━
+Cuando confirmes la cita, el mensaje que ve el cliente debe incluir el desglose así:
+"Listo, tu cita quedó confirmada. Te resumo todo:
+Servicio: [nombre] $[precio]
+Traslado: [opción y valor, o gratis si trae y recoge]
+[Si hay recogida: pasamos por tu vehículo a las [hora de cita menos 30 min]]
+Tu código es **[código]**. Te esperamos."
 
 ━━━ AL CONFIRMAR CITA (añadir al final, invisible para el cliente) ━━━
 __BOOKING_CONFIRMED__
