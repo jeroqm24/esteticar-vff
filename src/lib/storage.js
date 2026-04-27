@@ -167,12 +167,12 @@ export const sheets = {
 // ═══════════════════════════════════════════════════════════════════
 // NOTIFICACIONES
 // ═══════════════════════════════════════════════════════════════════
-export const notifyEmail = async ({ subject, html }) => {
+export const notifyEmail = async ({ subject, html, to }) => {
   try {
     await fetch('/api/notify', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'email', subject, html }),
+      body: JSON.stringify({ type: 'email', subject, html, to }),
     });
   } catch { }
 };
