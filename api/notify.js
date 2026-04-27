@@ -1,6 +1,6 @@
 // api/notify.js
 // Vercel Serverless Function — proxy para ntfy + Resend
-// Evita errores CORS del navegador
+// Soporta email al admin Y al cliente en la misma llamada
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-    const { type, title, message, priority, subject, html } = req.body;
+    const { type, title, message, priority, subject, html, to } = req.body;
 
     const results = {};
 
@@ -38,6 +38,13 @@ export default async function handler(req, res) {
         try {
             const resendKey = process.env.VITE_RESEND_API_KEY;
             const adminEmail = process.env.VITE_ADMIN_EMAIL || 'esteticar.manizales@gmail.com';
+
+            // Destinatarios: siempre el admin, y si hay `to` también el cliente
+            const recipients = [adminEmail];
+            if (to && to.includes('@') && to !== adminEmail) {
+                recipients.push(to);
+            }
+
             const resendRes = await fetch('https://api.resend.com/emails', {
                 method: 'POST',
                 headers: {
@@ -45,13 +52,15 @@ export default async function handler(req, res) {
                     'Authorization': `Bearer ${resendKey}`,
                 },
                 body: JSON.stringify({
-                    from: 'Esteticar Bot <onboarding@resend.dev>',
-                    to: [adminEmail],
+                    from: 'Esteticar <onboarding@resend.dev>',
+                    to: recipients,
                     subject: subject || 'Notificación Esteticar',
                     html: html || message || '',
                 }),
             });
-            results.resend = resendRes.ok ? 'ok' : `error ${resendRes.status}`;
+
+            const resendBody = await resendRes.json();
+            results.resend = resendRes.ok ? 'ok' : `error ${resendRes.status}: ${JSON.stringify(resendBody)}`;
         } catch (e) {
             results.resend = `error: ${e.message}`;
         }

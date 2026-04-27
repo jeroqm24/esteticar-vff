@@ -558,9 +558,14 @@ Si llevan varios mensajes sin decidirse → compartirlo proactivamente.
 ━━━ MEMORIA DE CLIENTE ━━━
 Si es CLIENTE CONOCIDO: salúdalo por nombre, menciona el último servicio, recomienda el paso lógico siguiente.
 
-━━━ CAPTURA ANTES DE CONFIRMAR CITA ━━━
-Si no tienes nombre y teléfono, pídelos juntos y natural:
-"Me regalas tu nombre y un número de celular para registrarte, por favor."
+━━━ CAPTURA OBLIGATORIA ANTES DE CONFIRMAR CITA ━━━
+SIEMPRE antes de confirmar, debes tener estos 4 datos. Pídelos uno a la vez de forma natural:
+1. Nombre completo
+2. Número de cédula
+3. Placa del vehículo
+4. Correo electrónico
+
+Si no tienes alguno, pídelo antes de confirmar. Sin estos 4 datos NO puedes confirmar la cita.
 
 ━━━ TRASLADO — PREGUNTAR SIEMPRE ANTES DE CONFIRMAR ━━━
 Antes de confirmar la cita, menciona el servicio de traslado de forma natural y premium:
@@ -620,6 +625,8 @@ NOMBRE: [nombre completo]
 TELEFONO: [teléfono]
 EMAIL: [correo o "no_proporcionado"]
 TRASLADO: [opción elegida]
+CEDULA: [número de cédula]
+PLACA: [placa del vehículo]
 __END_BOOKING__
 
 ━━━ ESCALACIÓN ━━━
@@ -730,15 +737,17 @@ export const ai = {
       conversationState.clientPhone = clientPhone;
       conversationState.clientEmail = clientEmail;
 
+      const cedula = extract('CEDULA');
+      const placa = extract('PLACA');
+
       const appt = {
         id: Math.random().toString(36).substr(2, 9),
         service, vehicleType, date, priceDisplay: price,
         confirmationCode: code, clientName, clientPhone,
         clientEmail: clientEmail !== 'no_proporcionado' ? clientEmail : null,
-        traslado, status: 'pending', channel: 'chat',
+        traslado, cedula, placa, status: 'pending', channel: 'chat',
         created_date: new Date().toISOString(),
       };
-
       const database = getDB();
       database.appointments.push(appt);
       saveDB(database);
@@ -753,7 +762,37 @@ export const ai = {
       ]);
 
       if (clientEmail && clientEmail !== 'no_proporcionado' && clientEmail.includes('@')) {
-        sendConfirmationEmail({ toEmail: clientEmail, serviceName: service, price, date, code, advisorName }).catch(() => { });
+        const clientHtml = `
+    <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden">
+      <div style="background:#000;padding:20px 24px;text-align:center">
+        <img src="https://esteticar-vff.vercel.app/logo.png" alt="Esteticar" style="height:60px;object-fit:contain;" />
+        <div style="color:#F8C840;opacity:0.6;font-size:11px;letter-spacing:2px;margin-top:8px">CUSTODIA VEHICULAR PREMIUM</div>
+      </div>
+      <div style="padding:28px 24px;background:#fafafa">
+        <h2 style="color:#111;margin:0 0 8px 0;font-size:18px">Tu cita está confirmada ✅</h2>
+        <p style="color:#555;font-size:14px;margin:0 0 20px 0">Hola ${clientName}, aquí está el resumen de tu cita en Esteticar.</p>
+        <table style="width:100%;border-collapse:collapse;font-size:14px">
+          <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888;width:140px">Servicio</td><td style="padding:10px 0;font-weight:600">${service}</td></tr>
+          <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Fecha</td><td style="padding:10px 0;font-weight:600">${date}</td></tr>
+          <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Precio</td><td style="padding:10px 0;font-weight:700;color:#B4821E">${price}</td></tr>
+          <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Traslado</td><td style="padding:10px 0">${traslado || 'Cliente trae y recoge (gratis)'}</td></tr>
+          <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Placa</td><td style="padding:10px 0">${placa || 'No registrada'}</td></tr>
+          <tr><td style="padding:10px 0;color:#888">Código</td><td style="padding:10px 0;font-family:monospace;font-size:16px;font-weight:700;color:#000">${code}</td></tr>
+        </table>
+        <div style="margin-top:20px;padding:14px 16px;background:#FFF8E7;border-left:3px solid #F8C840;border-radius:4px;font-size:13px;color:#555">
+          Dirección: Cll 67 #9-26, Barrio La Sultana, Manizales<br/>WhatsApp: 318 198 3601
+        </div>
+      </div>
+      <div style="padding:14px;background:#111;text-align:center">
+        <span style="color:#555;font-size:11px">Esteticar · Manizales, Colombia</span>
+      </div>
+    </div>
+  `;
+        fetch('/api/notify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'email', subject: `Tu cita en Esteticar — ${code}`, html: clientHtml, to: clientEmail }),
+        }).catch(() => { });
       }
 
       const cleanResponse = rawResponse.replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/, '').trim();
