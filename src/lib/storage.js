@@ -1,66 +1,61 @@
 // ═══════════════════════════════════════════════════════════════════
-// ESTETICAR — LOCAL DB + AI ENGINE v8.0
+// ESTETICAR — SUPABASE DB + AI ENGINE v9.0
 // Tono elegante · Disponibilidad real por franjas · Memoria cliente
-// Google Sheets sync · ntfy · Resend · Recordatorio 20d
+// Supabase · ntfy · Resend · Recordatorio 20d
 // ═══════════════════════════════════════════════════════════════════
 
-const DB_KEY = 'esteticar_db_v7';
+import { supabase } from './supabase.js';
 
-const DEFAULT_DB = () => ({
-  appointments: [],
-  clients: [],
-  messages: [],
-  botConfig: { key: "default" },
+// Mensajes de conversación se mantienen en memoria de sesión (localStorage)
+const MSG_KEY = 'esteticar_messages_v1';
+const getMessages = () => { try { return JSON.parse(localStorage.getItem(MSG_KEY) || '[]'); } catch { return []; } };
+const saveMessages = (msgs) => { try { localStorage.setItem(MSG_KEY, JSON.stringify(msgs)); } catch { } };
+
+// ─── Mappers entre Supabase (snake_case) y app (camelCase) ────────
+const mapAppt = (r) => ({
+  id: r.id, service: r.service, vehicleType: r.vehicle_type,
+  date: r.date, priceDisplay: r.price_display, confirmationCode: r.confirmation_code,
+  clientName: r.client_name, clientPhone: r.client_phone, clientEmail: r.client_email,
+  traslado: r.traslado, cedula: r.cedula, placa: r.placa,
+  status: r.status, channel: r.channel, created_date: r.created_date,
 });
 
-const getDB = () => {
-  try {
-    const raw = localStorage.getItem(DB_KEY);
-    if (!raw) return DEFAULT_DB();
-    const parsed = JSON.parse(raw);
-    if (!parsed || !Array.isArray(parsed.appointments)) return DEFAULT_DB();
-    if (!Array.isArray(parsed.messages)) parsed.messages = [];
-    if (!Array.isArray(parsed.clients)) parsed.clients = [];
-    return parsed;
-  } catch { return DEFAULT_DB(); }
-};
-
-const saveDB = (db) => {
-  try { localStorage.setItem(DB_KEY, JSON.stringify(db)); } catch { }
-};
+const toApptRow = (d) => ({
+  id: d.id, service: d.service, vehicle_type: d.vehicleType,
+  date: d.date, price_display: d.priceDisplay, confirmation_code: d.confirmationCode,
+  client_name: d.clientName, client_phone: d.clientPhone, client_email: d.clientEmail,
+  traslado: d.traslado, cedula: d.cedula, placa: d.placa,
+  status: d.status || 'pending', channel: d.channel || 'chat',
+});
 
 // ═══════════════════════════════════════════════════════════════════
-// DB LOCAL
+// DB SUPABASE
 // ═══════════════════════════════════════════════════════════════════
 export const db = {
   appointments: {
     list: async () => {
-      try { return getDB().appointments.sort((a, b) => new Date(b.created_date) - new Date(a.created_date)); }
-      catch { return []; }
+      try {
+        const { data } = await supabase.from('appointments').select('*').order('created_date', { ascending: false });
+        return (data || []).map(mapAppt);
+      } catch { return []; }
     },
     create: async (data) => {
       try {
-        const database = getDB();
-        const appt = { ...data, id: Math.random().toString(36).substr(2, 9), created_date: new Date().toISOString() };
-        database.appointments.push(appt);
-        saveDB(database);
-        return appt;
+        const row = toApptRow(data);
+        const { data: inserted } = await supabase.from('appointments').insert(row).select().single();
+        return inserted ? mapAppt(inserted) : null;
       } catch { return null; }
     },
     update: async (id, data) => {
       try {
-        const database = getDB();
-        database.appointments = database.appointments.map(a => a.id === id ? { ...a, ...data } : a);
-        saveDB(database);
+        await supabase.from('appointments').update(toApptRow(data)).eq('id', id);
         return true;
       } catch { return false; }
     },
-    filter: async (criteria) => {
+    filter: async () => {
       try {
-        return getDB().appointments.filter(a => {
-          if (criteria.date?.$gte && (a.date < criteria.date.$gte || a.date > criteria.date.$lte)) return false;
-          return true;
-        });
+        const { data } = await supabase.from('appointments').select('*').order('created_date', { ascending: false });
+        return (data || []).map(mapAppt);
       } catch { return []; }
     },
   },
@@ -68,49 +63,44 @@ export const db = {
   clients: {
     upsert: async ({ name, phone, service, date }) => {
       try {
-        const database = getDB();
-        const idx = database.clients.findIndex(c => c.phone === phone);
-        const record = {
-          name, phone,
-          lastService: service,
-          lastDate: date,
-          reminded20d: false,
-          updated: new Date().toISOString(),
-        };
-        if (idx >= 0) database.clients[idx] = { ...database.clients[idx], ...record };
-        else database.clients.push(record);
-        saveDB(database);
-        return record;
+        const record = { phone, name, last_service: service, last_date: date, reminded_20d: false, updated: new Date().toISOString() };
+        await supabase.from('clients').upsert(record, { onConflict: 'phone' });
+        return { name, phone, lastService: service, lastDate: date };
       } catch { return null; }
     },
     findByName: async (name) => {
       try {
         if (!name) return null;
-        const norm = (s) => s?.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-        const clients = getDB().clients;
-        return clients.find(c => norm(c.name)?.includes(norm(name))) || null;
+        const norm = (s) => s?.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").trim();
+        const { data } = await supabase.from('clients').select('*');
+        const found = (data || []).find(c => norm(c.name)?.includes(norm(name)));
+        return found ? { name: found.name, phone: found.phone, lastService: found.last_service, lastDate: found.last_date } : null;
       } catch { return null; }
     },
-    list: async () => { try { return getDB().clients; } catch { return []; } },
-    markReminded: async (phone) => {
+    list: async () => {
       try {
-        const database = getDB();
-        database.clients = database.clients.map(c =>
-          c.phone === phone ? { ...c, reminded20d: true } : c
-        );
-        saveDB(database);
-      } catch { }
+        const { data } = await supabase.from('clients').select('*');
+        return (data || []).map(c => ({ name: c.name, phone: c.phone, lastService: c.last_service, lastDate: c.last_date, reminded20d: c.reminded_20d }));
+      } catch { return []; }
+    },
+    markReminded: async (phone) => {
+      try { await supabase.from('clients').update({ reminded_20d: true }).eq('phone', phone); } catch { }
     },
   },
 
   botConfig: {
-    get: async () => { try { return getDB().botConfig; } catch { return {}; } },
-    update: async (data) => {
+    get: async () => {
       try {
-        const database = getDB();
-        database.botConfig = { ...database.botConfig, ...data };
-        saveDB(database);
-        return database.botConfig;
+        const { data } = await supabase.from('bot_config').select('*').eq('key', 'default').single();
+        return data ? JSON.parse(data.value || '{}') : {};
+      } catch { return {}; }
+    },
+    update: async (updates) => {
+      try {
+        const current = await db.botConfig.get();
+        const merged = { ...current, ...updates };
+        await supabase.from('bot_config').upsert({ key: 'default', value: JSON.stringify(merged) });
+        return merged;
       } catch { return {}; }
     },
   },
@@ -118,23 +108,21 @@ export const db = {
   agents: {
     addMessage: async (role, content) => {
       try {
-        const database = getDB();
+        const msgs = getMessages();
         const msg = { role, content, timestamp: new Date().toISOString() };
-        database.messages.push(msg);
-        if (database.messages.length > 40) database.messages = database.messages.slice(-40);
-        saveDB(database);
+        msgs.push(msg);
+        if (msgs.length > 40) msgs.splice(0, msgs.length - 40);
+        saveMessages(msgs);
         return msg;
       } catch { return null; }
     },
-    getMessages: async () => { try { return getDB().messages; } catch { return []; } },
-    clearMessages: async () => {
-      try { const d = getDB(); d.messages = []; saveDB(d); } catch { }
-    },
+    getMessages: async () => { return getMessages(); },
+    clearMessages: async () => { try { saveMessages([]); } catch { } },
   },
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// GOOGLE SHEETS SYNC
+// GOOGLE SHEETS SYNC (opcional, complementa Supabase)
 // ═══════════════════════════════════════════════════════════════════
 export const sheets = {
   pushAppointment: async (appt) => {
@@ -187,14 +175,14 @@ export const notifyPush = async ({ title, message, priority = 3 }) => {
   } catch { }
 };
 
-export const notifyNewBooking = async ({ clientName, clientPhone, service, date, price, code, advisorName }) => {
+export const notifyNewBooking = async ({ clientName, clientPhone, service, date, price, code, advisorName, traslado }) => {
   const subject = `🚗 Nueva cita — ${clientName} · ${service}`;
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden">
       <div style="background:#000;padding:20px 24px;text-align:center">
-  <img src="https://esteticar-vff.vercel.app/logo.png" alt="Esteticar" style="height:60px;object-fit:contain;" />
-  <div style="color:#F8C840;opacity:0.6;font-size:11px;letter-spacing:2px;margin-top:8px">CUSTODIA VEHICULAR PREMIUM</div>
-</div>
+        <img src="https://esteticar-vff.vercel.app/logo.png" alt="Esteticar" style="height:60px;object-fit:contain;" />
+        <div style="color:#F8C840;opacity:0.6;font-size:11px;letter-spacing:2px;margin-top:8px">CUSTODIA VEHICULAR PREMIUM</div>
+      </div>
       <div style="padding:28px 24px;background:#fafafa">
         <h2 style="color:#111;margin:0 0 20px 0;font-size:18px">Nueva cita agendada ✅</h2>
         <table style="width:100%;border-collapse:collapse;font-size:14px">
@@ -204,7 +192,7 @@ export const notifyNewBooking = async ({ clientName, clientPhone, service, date,
           <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Fecha</td><td style="padding:10px 0;font-weight:600">${date}</td></tr>
           <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Precio</td><td style="padding:10px 0;font-weight:700;color:#B4821E">${price}</td></tr>
           <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Traslado</td><td style="padding:10px 0;font-weight:600">${traslado || "Cliente trae y recoge (gratis)"}</td></tr>
-<tr><td style="padding:10px 0;color:#888">Código</td><td style="padding:10px 0;font-family:monospace;font-size:16px;font-weight:700;color:#000">${code}</td></tr>
+          <tr><td style="padding:10px 0;color:#888">Código</td><td style="padding:10px 0;font-family:monospace;font-size:16px;font-weight:700;color:#000">${code}</td></tr>
         </table>
         <div style="margin-top:20px;padding:14px 16px;background:#FFF8E7;border-left:3px solid #F8C840;border-radius:4px;font-size:13px;color:#555">
           Agendado por asesora: <strong>${advisorName}</strong>
@@ -292,7 +280,6 @@ export const getGreeting = () => {
   return "Buenas noches";
 };
 
-// Duración de cada servicio en horas
 const SERVICE_DURATION_HOURS = {
   "Lavada Esencial": 2,
   "Lavado de Techo": 2,
@@ -333,11 +320,9 @@ const extractHourFromDate = (dateStr) => {
   return null;
 };
 
-// Calcula disponibilidad REAL por franja horaria
-// Lógica: máximo 3 vehículos trabajando SIMULTÁNEAMENTE
-// Un vehículo ocupa un "slot" desde su hora de entrada hasta su hora de salida
-const getAvailableSlots = () => {
-  const appointments = getDB().appointments.filter(a =>
+// Calcula disponibilidad REAL usando citas ya cargadas de Supabase
+const getAvailableSlots = (appointments = []) => {
+  const activeAppts = appointments.filter(a =>
     a.status !== 'cancelada' && a.status !== 'cancelled'
   );
   const today = new Date(new Date().toLocaleString("en-US", { timeZone: "America/Bogota" }));
@@ -346,8 +331,8 @@ const getAvailableSlots = () => {
   for (let d = 1; d <= 7; d++) {
     const date = new Date(today);
     date.setDate(today.getDate() + d);
-    const dow = date.getDay(); // 0=dom
-    if (dow === 0) continue; // domingo cerrado
+    const dow = date.getDay();
+    if (dow === 0) continue;
 
     const isSaturday = dow === 6;
     const dayStart = 8;
@@ -358,28 +343,21 @@ const getAvailableSlots = () => {
     });
     const dayName = dateStr.split(',')[0].toLowerCase();
 
-    // Citas de ese día
-    const dayAppts = appointments.filter(a =>
+    const dayAppts = activeAppts.filter(a =>
       a.date && a.date.toLowerCase().includes(dayName)
     );
 
-    // Para cada franja de entrada posible (cada hora), verificar cuántos
-    // vehículos estarían trabajando simultáneamente
-    const availableMorning = []; // horas disponibles en la mañana
-    const availableAfternoon = []; // horas disponibles en la tarde
+    const availableMorning = [];
+    const availableAfternoon = [];
 
     for (let hour = dayStart; hour < dayEnd; hour++) {
-      // Contar cuántos vehículos estarán trabajando en esta hora
       let concurrent = 0;
       for (const appt of dayAppts) {
         const startHour = extractHourFromDate(appt.date) || extractHourFromDate(appt.time);
         if (startHour === null) continue;
         const duration = getServiceDuration(appt.service);
         const endHour = startHour + duration;
-        // ¿Este vehículo está siendo trabajado en la hora `hour`?
-        if (hour >= startHour && hour < endHour) {
-          concurrent++;
-        }
+        if (hour >= startHour && hour < endHour) concurrent++;
       }
       if (concurrent < 3) {
         if (hour < 12) availableMorning.push(hour);
@@ -388,14 +366,12 @@ const getAvailableSlots = () => {
     }
 
     if (availableMorning.length > 0 || availableAfternoon.length > 0) {
-      const firstMorning = availableMorning[0];
-      const firstAfternoon = availableAfternoon[0];
       slots.push({
         date: dateStr,
         morning: availableMorning.length > 0,
         afternoon: availableAfternoon.length > 0,
-        firstMorningHour: firstMorning ? `${firstMorning}:00 a.m.` : null,
-        firstAfternoonHour: firstAfternoon ? `${firstAfternoon}:00 p.m.` : null,
+        firstMorningHour: availableMorning[0] ? `${availableMorning[0]}:00 a.m.` : null,
+        firstAfternoonHour: availableAfternoon[0] ? `${availableAfternoon[0]}:00 p.m.` : null,
       });
     }
   }
@@ -420,21 +396,20 @@ let conversationState = {
   lastService: null,
   isReturningClient: false,
   turnCount: 0,
-  occupiedDates: [],
 };
 
 export const resetConversationState = () => {
   conversationState = {
     stage: 'greeting', clientName: null, clientPhone: null,
     clientEmail: null, vehicleType: null, lastService: null,
-    isReturningClient: false, turnCount: 0, occupiedDates: [],
+    isReturningClient: false, turnCount: 0,
   };
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// SYSTEM PROMPT v8 — Tono elegante, clase alta, sin informalidades
+// SYSTEM PROMPT v9
 // ═══════════════════════════════════════════════════════════════════
-const buildSystemPrompt = (advisorName) => {
+const buildSystemPrompt = (advisorName, appointments = []) => {
   const greeting = getGreeting();
   const today = new Date().toLocaleDateString('es-CO', {
     timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long',
@@ -445,7 +420,7 @@ const buildSystemPrompt = (advisorName) => {
   const dayAfter = new Date(todayDate); dayAfter.setDate(todayDate.getDate() + 2);
   const dayAfterStr = dayAfter.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long' });
 
-  const slots = getAvailableSlots();
+  const slots = getAvailableSlots(appointments);
   const availabilityText = slots.length > 0
     ? slots.slice(0, 4).map(s => {
       const parts = [];
@@ -642,7 +617,7 @@ Cada mensaje cierra con pregunta o acción concreta.`;
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// AI ENGINE v8
+// AI ENGINE v9
 // ═══════════════════════════════════════════════════════════════════
 export const ai = {
   invoke: async (userMessage, advisorName = "Sofia") => {
@@ -662,9 +637,8 @@ export const ai = {
       }
     }
 
-    if (conversationState.occupiedDates.length === 0 && conversationState.turnCount === 1) {
-      conversationState.occupiedDates = await sheets.getOccupiedDates().catch(() => []);
-    }
+    // Cargar citas de Supabase para calcular disponibilidad real
+    const appointments = await db.appointments.list().catch(() => []);
 
     let history = [];
     try { history = await db.agents.getMessages(); } catch { history = []; }
@@ -696,14 +670,14 @@ export const ai = {
       body: JSON.stringify({
         model: "claude-haiku-4-5-20251001",
         max_tokens: 400,
-        system: buildSystemPrompt(advisorName),
+        system: buildSystemPrompt(advisorName, appointments),
         messages: apiMessages,
       }),
     });
 
     if (!response.ok) {
       const errText = await response.text();
-      console.error('[Esteticar AI v8] API error:', response.status, errText);
+      console.error('[Esteticar AI v9] API error:', response.status, errText);
       throw new Error(`API error ${response.status}`);
     }
 
@@ -732,34 +706,30 @@ export const ai = {
       const price = extract('PRECIO');
       const vehicleType = extract('VEHICULO');
       const traslado = extract('TRASLADO');
+      const cedula = extract('CEDULA');
+      const placa = extract('PLACA');
 
       conversationState.stage = 'confirmed';
       conversationState.clientName = clientName;
       conversationState.clientPhone = clientPhone;
       conversationState.clientEmail = clientEmail;
 
-      const cedula = extract('CEDULA');
-      const placa = extract('PLACA');
-
       const appt = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: Math.random().toString(36).slice(2, 11),
         service, vehicleType, date, priceDisplay: price,
         confirmationCode: code, clientName, clientPhone,
         clientEmail: clientEmail !== 'no_proporcionado' ? clientEmail : null,
         traslado, cedula, placa, status: 'pending', channel: 'chat',
-        created_date: new Date().toISOString(),
       };
-      const database = getDB();
-      database.appointments.push(appt);
-      saveDB(database);
+
+      // Guardar en Supabase
+      await db.appointments.create(appt);
 
       const clientRecord = { name: clientName, phone: clientPhone, service, date };
       await db.clients.upsert(clientRecord);
 
       await Promise.allSettled([
-        sheets.pushAppointment(appt),
-        sheets.pushClient(clientRecord),
-        notifyNewBooking({ clientName, clientPhone, service, date, price, code, advisorName }),
+        notifyNewBooking({ clientName, clientPhone, service, date, price, code, advisorName, traslado }),
       ]);
 
       if (clientEmail && clientEmail !== 'no_proporcionado' && clientEmail.includes('@')) {
@@ -809,31 +779,7 @@ export const ai = {
   },
 };
 
-// ─── EmailJS ───────────────────────────────────────────────────────
-const EMAILJS_SERVICE_ID = import.meta.env.VITE_EMAILJS_SERVICE || "service_XXXXXXX";
-const EMAILJS_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_TEMPLATE || "template_XXXXXXX";
-const EMAILJS_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_KEY || "XXXXXXXXXXXXXXX";
-
-export const sendConfirmationEmail = async ({ toEmail, serviceName, price, date, code, advisorName }) => {
-  try {
-    if (!window.emailjs) {
-      await new Promise((resolve, reject) => {
-        const script = document.createElement('script');
-        script.src = 'https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js';
-        script.onload = resolve; script.onerror = reject;
-        document.head.appendChild(script);
-      });
-      window.emailjs.init(EMAILJS_PUBLIC_KEY);
-    }
-    await window.emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-      to_email: toEmail, service_name: serviceName, price, date, code,
-      advisor_name: advisorName, company_name: "Esteticar",
-      company_address: "Cll 67 #9-26, Barrio La Sultana, Manizales",
-    });
-    return true;
-  } catch { return false; }
-};
-
+// ─── EmailJS (legacy, no se usa activamente) ──────────────────────
 export const email = {
   send: async ({ to, subject, body }) => {
     console.log(`[Esteticar Email] To: ${to}`, { subject, body });
