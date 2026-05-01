@@ -102,25 +102,30 @@ function ServicePod({ service, index }) {
             {/* Action button */}
             <button
               type="button"
-              onClick={(e) => { 
+              onClick={(e) => {
                 e.preventDefault();
-                window.dispatchEvent(new CustomEvent('prefill-bot', { 
-                  detail: `Hola, quiero reservar:\n*${service.name}* (${service.priceDisplay})\n\n¿Tienen disponibilidad esta semana?` 
-                }));
+                const msg = service.cotizacion
+                  ? `Hola, me interesa el servicio de *${service.name}*. ¿Me pueden dar una cotización personalizada?`
+                  : `Hola, quiero reservar:\n*${service.name}* (${service.priceDisplay})\n\n¿Tienen disponibilidad esta semana?`;
+                window.dispatchEvent(new CustomEvent('prefill-bot', { detail: msg }));
               }}
               className="w-full py-4 font-ui text-[11px] tracking-[0.2em] uppercase transition-all duration-500 border rounded-sm flex items-center justify-center gap-2.5 font-semibold hover:brightness-110 active:scale-95"
               style={{
-                background: "linear-gradient(135deg, #1FAD5A 0%, #128C7E 100%)",
+                background: service.cotizacion
+                  ? "linear-gradient(135deg, #B4821E 0%, #8B6014 100%)"
+                  : "linear-gradient(135deg, #1FAD5A 0%, #128C7E 100%)",
                 color: "white",
-                border: "1px solid rgba(37,211,102,0.3)",
-                boxShadow: "0 4px 20px rgba(18,140,126,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+                border: service.cotizacion ? "1px solid rgba(184,130,30,0.3)" : "1px solid rgba(37,211,102,0.3)",
+                boxShadow: service.cotizacion
+                  ? "0 4px 20px rgba(184,130,30,0.3), inset 0 1px 0 rgba(255,255,255,0.15)"
+                  : "0 4px 20px rgba(18,140,126,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
               }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
                 <path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.553 4.103 1.523 5.828L.057 23.857a.5.5 0 0 0 .636.607l6.218-1.63A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.953 9.953 0 0 1-5.077-1.384l-.364-.216-3.767.988 1.006-3.665-.236-.377A9.952 9.952 0 0 1 2 12c0-5.514 4.486-10 10-10s10 4.486 10 10-4.486 10-10 10z"/>
               </svg>
-              RESERVAR
+              {service.cotizacion ? "COTIZAR" : "RESERVAR"}
             </button>
           </div>
         </div>
