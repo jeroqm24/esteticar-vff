@@ -8,7 +8,7 @@ const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 const WA_TOKEN     = process.env.WHATSAPP_TOKEN;
 const PHONE_ID     = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
-const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
+const anthropic = new Anthropic({ apiKey: process.env.VITE_ANTHROPIC_API_KEY });
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
