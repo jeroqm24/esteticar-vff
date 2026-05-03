@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import HeroSection from "./HeroSection";
 import TrustBreaker from "./TrustBreaker";
@@ -12,7 +12,6 @@ import CalendarSection from "./CalendarSection";
 import FinalCTA from "./FinalCTA";
 import BookingPanel from "./BookingPanel";
 import BookingFAB from "./BookingFAB";
-import BotChat from "./BotChat";
 import BotFloatButton from "./BotFloatButton";
 import Navigation from "./Navigation";
 
@@ -52,7 +51,6 @@ export default function LandingPage() {
   const [selectedServices, setSelectedServices] = useState([]);
   const [vehicleType, setVehicleType] = useState("car");
   const [isBookingOpen, setIsBookingOpen] = useState(false);
-  const [isChatOpen, setIsChatOpen] = useState(false);
 
   const addService = (service) => {
     setSelectedServices((prev) => {
@@ -64,12 +62,6 @@ export default function LandingPage() {
   const removeService = (id) => {
     setSelectedServices((prev) => prev.filter((s) => s.id !== id));
   };
-
-  useEffect(() => {
-    const handlePrefill = () => setIsChatOpen(true);
-    window.addEventListener('prefill-bot', handlePrefill);
-    return () => window.removeEventListener('prefill-bot', handlePrefill);
-  }, []);
 
   const openBooking = () => {
     if (selectedServices.length > 0) {
@@ -109,7 +101,7 @@ export default function LandingPage() {
         <ProtocoloSection />
         <TeamSection />
         <VIPSection />
-        <FinalCTA onOpenChat={() => setIsChatOpen(true)} />
+        <FinalCTA />
       </main>
 
       {/* Booking Panel */}
@@ -119,19 +111,12 @@ export default function LandingPage() {
         services={selectedServices}
         onRemoveService={removeService}
         vehicleType={vehicleType}
-        onOpenChat={() => setIsChatOpen(true)}
+        onOpenChat={() => window.open(`https://wa.me/573181983601?text=${encodeURIComponent("Hola, acabo de hacer una reserva y quisiera confirmar los detalles")}`, "_blank")}
       />
-
-      {/* Bot Chat */}
-      <BotChat isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
       {/* Floating buttons */}
       <BookingFAB count={selectedServices.length} onClick={openBooking} />
-      <BotFloatButton
-        isOpen={isChatOpen}
-        onClick={() => setIsChatOpen(!isChatOpen)}
-        hasUnread={false}
-      />
+      <BotFloatButton />
       <ScrollToTop />
     </div>
   );

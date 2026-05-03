@@ -129,9 +129,7 @@ function GuaranteeModal({ onClose }) {
             <button
               onClick={() => {
                 onClose();
-                window.dispatchEvent(new CustomEvent('prefill-bot', { 
-                  detail: 'Acabo de ver la garantía de custodia y me gustaría agendar, por favor' 
-                }));
+                window.open(`https://wa.me/573181983601?text=${encodeURIComponent("Hola, acabo de ver la garantía de custodia y me gustaría agendar, por favor")}`, "_blank");
               }}
               className="flex-1 py-4 font-ui text-[11px] tracking-[0.2em] uppercase font-bold flex items-center justify-center gap-2 rounded-sm transition-colors"
               style={{ background: "#128C7E", color: "#fff" }}

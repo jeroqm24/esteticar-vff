@@ -107,7 +107,7 @@ function ServicePod({ service, index }) {
                 const msg = service.cotizacion
                   ? `Hola, me interesa el servicio de *${service.name}*. ¿Me pueden dar una cotización personalizada?`
                   : `Hola, quiero reservar:\n*${service.name}* (${service.priceDisplay})\n\n¿Tienen disponibilidad esta semana?`;
-                window.dispatchEvent(new CustomEvent('prefill-bot', { detail: msg }));
+                window.open(`https://wa.me/573181983601?text=${encodeURIComponent(msg)}`, "_blank");
               }}
               className="w-full py-4 font-ui text-[11px] tracking-[0.2em] uppercase transition-all duration-500 border rounded-sm flex items-center justify-center gap-2.5 font-semibold hover:brightness-110 active:scale-95"
               style={{
