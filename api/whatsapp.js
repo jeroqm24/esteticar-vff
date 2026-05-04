@@ -294,18 +294,20 @@ export default async function handler(req, res) {
 
   // POST — mensaje entrante
   if (req.method === 'POST') {
-    res.status(200).send('OK'); // Responder rápido a Meta para evitar reintentos
-
     try {
-      const body    = req.body;
-      if (body.object !== 'whatsapp_business_account') return;
+      const body = req.body;
+      if (body.object !== 'whatsapp_business_account') {
+        return res.status(200).send('OK');
+      }
 
       const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-      if (!message || message.type !== 'text') return;
+      if (!message || message.type !== 'text') {
+        return res.status(200).send('OK');
+      }
 
-      const from    = message.from;
-      const text    = message.text.body?.trim();
-      if (!text) return;
+      const from = message.from;
+      const text = message.text.body?.trim();
+      if (!text) return res.status(200).send('OK');
 
       // Historial de conversación
       const history = conversations.get(from) || [];
@@ -355,7 +357,7 @@ export default async function handler(req, res) {
       console.error('WhatsApp webhook error:', err);
     }
 
-    return;
+    return res.status(200).send('OK');
   }
 
   res.status(405).send('Method not allowed');
