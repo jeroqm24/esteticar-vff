@@ -33,16 +33,12 @@ function ServicePod({ service, index }) {
     >
       <div
         ref={cardRef}
-        onMouseMove={handleMouseMove}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={handleMouseLeave}
         className="service-pod-inner"
-        style={{
-          transform: `perspective(1200px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg)`,
-        }}
       >
         <div
-          className="relative p-8 sm:p-10 transition-all duration-700 overflow-hidden group rounded-sm bg-white border border-black/[0.06] hover:border-ec-gold/25 shadow-[0_2px_20px_rgba(0,0,0,0.04)]"
+          className="relative p-8 sm:p-10 transition-all duration-700 group rounded-sm bg-white border border-black/[0.06] hover:border-ec-gold/25 shadow-[0_2px_20px_rgba(0,0,0,0.04)]"
         >
           {/* Glow on hover */}
           <div
