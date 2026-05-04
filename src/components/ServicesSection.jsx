@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SERVICES } from "../lib/constants";
 
@@ -8,18 +8,8 @@ import { SERVICES } from "../lib/constants";
 function ServicePod({ service, index }) {
   const [isHovered, setIsHovered] = useState(false);
   const cardRef = useRef(null);
-  const [tilt, setTilt] = useState({ x: 0, y: 0 });
-
-  const handleMouseMove = (e) => {
-    if (!cardRef.current || window.innerWidth < 768) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    setTilt({ x: y * -8, y: x * 8 });
-  };
 
   const handleMouseLeave = () => {
-    setTilt({ x: 0, y: 0 });
     setIsHovered(false);
   };
 
@@ -36,6 +26,7 @@ function ServicePod({ service, index }) {
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={handleMouseLeave}
         className="service-pod-inner"
+        style={{ position: "relative", zIndex: 1 }}
       >
         <div
           className="relative p-8 sm:p-10 transition-all duration-700 group rounded-sm bg-white border border-black/[0.06] hover:border-ec-gold/25 shadow-[0_2px_20px_rgba(0,0,0,0.04)]"

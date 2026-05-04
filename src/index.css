@@ -154,21 +154,18 @@
 }
 
 /* ═══════════════════════════════════════════
-   3D SERVICE POD
+   SERVICE POD
    ═══════════════════════════════════════════ */
 .service-pod {
-  perspective: 1200px;
-  transform-style: preserve-3d;
+  /* 3D perspective removed — caused pointer-events misalignment in browsers */
 }
 
 .service-pod-inner {
-  transition: transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
-  transform-style: preserve-3d;
-  will-change: transform;
+  transition: transform 0.4s ease;
 }
 
 .service-pod:hover .service-pod-inner {
-  transform: rotateY(-3deg) rotateX(2deg) translateZ(20px);
+  transform: translateY(-4px);
 }
 
 /* ═══════════════════════════════════════════
@@ -283,6 +280,7 @@
     transform: none;
   }
 }
+
 
 /* ═══════════════════════════════════════════
    BUTTON STYLES
