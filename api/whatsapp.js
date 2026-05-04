@@ -294,6 +294,7 @@ export default async function handler(req, res) {
 
   // POST — mensaje entrante
   if (req.method === 'POST') {
+    console.log('POST recibido:', JSON.stringify(req.body).slice(0, 300));
     try {
       const body = req.body;
       if (body.object !== 'whatsapp_business_account') {
