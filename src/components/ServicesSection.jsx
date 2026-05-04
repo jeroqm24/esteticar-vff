@@ -100,15 +100,12 @@ function ServicePod({ service, index }) {
             </AnimatePresence>
 
             {/* Action button */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                const msg = service.cotizacion
-                  ? `Hola, me interesa el servicio de *${service.name}*. ¿Me pueden dar una cotización personalizada?`
-                  : `Hola, quiero reservar:\n*${service.name}* (${service.priceDisplay})\n\n¿Tienen disponibilidad esta semana?`;
-                window.open(`https://wa.me/573181983601?text=${encodeURIComponent(msg)}`, "_blank");
-              }}
+            <a
+              href={`https://wa.me/573181983601?text=${encodeURIComponent(service.cotizacion
+                ? `Hola, me interesa el servicio de *${service.name}*. ¿Me pueden dar una cotización personalizada?`
+                : `Hola, quiero reservar:\n*${service.name}* (${service.priceDisplay})\n\n¿Tienen disponibilidad esta semana?`)}`}
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-full py-4 font-ui text-[11px] tracking-[0.2em] uppercase transition-all duration-500 border rounded-sm flex items-center justify-center gap-2.5 font-semibold hover:brightness-110 active:scale-95"
               style={{
                 background: service.cotizacion
@@ -119,6 +116,7 @@ function ServicePod({ service, index }) {
                 boxShadow: service.cotizacion
                   ? "0 4px 20px rgba(184,130,30,0.3), inset 0 1px 0 rgba(255,255,255,0.15)"
                   : "0 4px 20px rgba(18,140,126,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+                textDecoration: "none",
               }}
             >
               <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
@@ -126,7 +124,7 @@ function ServicePod({ service, index }) {
                 <path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.553 4.103 1.523 5.828L.057 23.857a.5.5 0 0 0 .636.607l6.218-1.63A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.953 9.953 0 0 1-5.077-1.384l-.364-.216-3.767.988 1.006-3.665-.236-.377A9.952 9.952 0 0 1 2 12c0-5.514 4.486-10 10-10s10 4.486 10 10-4.486 10-10 10z"/>
               </svg>
               {service.cotizacion ? "COTIZAR" : "RESERVAR"}
-            </button>
+            </a>
           </div>
         </div>
       </div>
