@@ -1,8 +1,15 @@
 {
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ],
   "crons": [
     {
       "path": "/api/reminders",
       "schedule": "0 14 * * *"
+    },
+    {
+      "path": "/api/resubscribe",
+      "schedule": "0 6 * * *"
     }
   ]
 }

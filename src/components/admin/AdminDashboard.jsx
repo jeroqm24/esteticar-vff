@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AdminStats from "./AdminStats";
 import AdminAppointments from "./AdminAppointments";
+import AdminClients from "./AdminClients";
 import AdminBotConfig from "./AdminBotConfig";
 import CalendarSection from "../CalendarSection";
 import { BRAND } from "../../lib/constants";
@@ -58,6 +59,7 @@ function AdminLogin({ onSuccess }) {
 const TABS = [
   { id: "stats", label: "Dashboard", icon: "dashboard" },
   { id: "appointments", label: "Citas", icon: "users" },
+  { id: "clients", label: "Clientes", icon: "clients" },
   { id: "calendar", label: "Calendario", icon: "calendar" },
   { id: "bot", label: "Bot AI", icon: "bot" },
 ];
@@ -82,6 +84,12 @@ const TabIcon = ({ type, size = 20 }) => {
     bot: (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><path d="M12 7v4" /><line x1="8" y1="16" x2="8" y2="16" /><line x1="16" y1="16" x2="16" y2="16" />
+      </svg>
+    ),
+    clients: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+        <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
       </svg>
     ),
   };
@@ -175,6 +183,7 @@ export default function AdminDashboard({ onClose }) {
               <div className="max-w-6xl mx-auto">
                 {activeTab === "stats" && <AdminStats onNavigate={setActiveTab} />}
                 {activeTab === "appointments" && <AdminAppointments />}
+                {activeTab === "clients" && <AdminClients />}
                 {activeTab === "calendar" && <CalendarSection isAdmin={true} />}
                 {activeTab === "bot" && <AdminBotConfig />}
               </div>
