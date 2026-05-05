@@ -364,7 +364,7 @@ export default function AdminFinanzas() {
               </label>
               <input
                 type="text"
-                placeholder="Ej: Facebook Ads — Mayo"
+                placeholder={form.category === "Publicidad" ? "Ej: Facebook Ads — Mayo" : "Ej: descripción del gasto"}
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 className="w-full border border-black/[0.1] rounded-sm px-3 py-2 font-body text-sm text-ec-dark placeholder-ec-text-muted/50 bg-white focus:outline-none focus:border-ec-gold/50 transition-colors"
