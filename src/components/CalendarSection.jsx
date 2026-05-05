@@ -383,6 +383,8 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
   ];
 
   const defaultService = "Lavada Esencial Carro";
+  const toDateInput = (d) => format(d instanceof Date ? d : new Date(), "yyyy-MM-dd");
+
   const [form, setForm] = useState({
     clientName: "",
     clientPhone: "",
@@ -390,36 +392,40 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
     vehicleType: "Carro",
     hour: defaultHour || 9,
     status: "confirmed",
-    priceDisplay: formatCOP(SERVICE_PRICES[defaultService]),
     discount: 0,
+    selectedDate: toDateInput(day || new Date()),
   });
 
+  const selectedDay = form.selectedDate ? new Date(form.selectedDate + "T12:00:00") : (day || new Date());
   const basePrice = SERVICE_PRICES[form.service] || 0;
   const finalPrice = Math.max(0, basePrice - (Number(form.discount) || 0));
+  const hasDiscount = form.discount > 0;
 
   const handleServiceChange = (service) => {
-    const price = SERVICE_PRICES[service] || 0;
-    setForm(f => ({ ...f, service, priceDisplay: formatCOP(price), discount: 0 }));
+    setForm(f => ({ ...f, service, discount: 0 }));
   };
 
   const handleVehicleChange = (vehicleType) => {
     const services = vehicleType === "Carro" ? CAR_SERVICES : MOTO_SERVICES;
-    const service = services[0];
-    const price = SERVICE_PRICES[service] || 0;
-    setForm(f => ({ ...f, vehicleType, service, priceDisplay: formatCOP(price), discount: 0 }));
+    setForm(f => ({ ...f, vehicleType, service: services[0], discount: 0 }));
   };
 
   const allServices = form.vehicleType === "Carro" ? CAR_SERVICES : MOTO_SERVICES;
-  const isSaturday = (getDay(day) + 6) % 7 === 5;
-  const hourEnd = isSaturday ? HOUR_END_SATURDAY : HOUR_END_WEEKDAY;
+  const isSat = (getDay(selectedDay) + 6) % 7 === 5;
+  const hourEnd = isSat ? HOUR_END_SATURDAY : HOUR_END_WEEKDAY;
   const hours = Array.from({ length: hourEnd - HOUR_START }, (_, i) => HOUR_START + i);
 
   const handleSubmit = () => {
     if (!form.clientName || !form.clientPhone) return;
-    const dateStr = format(day, "EEEE, d 'de' MMMM", { locale: es });
+    const dateStr = format(selectedDay, "EEEE, d 'de' MMMM", { locale: es });
     const fullDate = `${dateStr} a las ${form.hour}:00`;
     onSave({
-      ...form,
+      clientName: form.clientName,
+      clientPhone: form.clientPhone,
+      service: form.service,
+      vehicleType: form.vehicleType,
+      hour: form.hour,
+      status: form.status,
       date: fullDate,
       time: `${form.hour}:00`,
       priceDisplay: formatCOP(finalPrice),
@@ -431,121 +437,135 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
     });
   };
 
+  const inputCls = "w-full bg-transparent border-0 border-b border-black/[0.1] py-2 font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors placeholder-black/25";
+  const selectCls = "w-full bg-transparent border-0 border-b border-black/[0.1] py-2 font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors";
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[500] bg-black/50 flex items-center justify-center p-4"
+      className="fixed inset-0 z-[500] bg-black/40 flex items-center justify-center p-4"
       onClick={onClose}
     >
       <motion.div
-        initial={{ scale: 0.95, y: 20 }}
+        initial={{ scale: 0.96, y: 16 }}
         animate={{ scale: 1, y: 0 }}
-        exit={{ scale: 0.95, y: 20 }}
-        className="bg-white w-full max-w-md rounded-sm shadow-2xl p-6"
+        exit={{ scale: 0.96, y: 16 }}
+        transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
+        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <p className="font-ui text-[9px] tracking-[0.3em] text-[#F8C840] uppercase">Nueva Cita Manual</p>
-            <h3 className="font-heading text-xl text-ec-dark capitalize">
-              {format(day, "d 'de' MMMM", { locale: es })}
-            </h3>
-          </div>
-          <button onClick={onClose} className="text-ec-text-muted hover:text-ec-dark text-xl">✕</button>
+        {/* Color bar */}
+        <div className="h-2 bg-[#F8C840]" />
+
+        {/* Header */}
+        <div className="px-6 pt-5 pb-4 flex items-start justify-between gap-4">
+          <input
+            value={form.clientName}
+            onChange={e => setForm({ ...form, clientName: e.target.value })}
+            placeholder="Nombre del cliente"
+            autoFocus
+            className="flex-1 font-heading text-2xl text-ec-dark bg-transparent border-0 border-b-2 border-transparent focus:border-[#F8C840] focus:outline-none placeholder-black/20 transition-colors pb-1"
+          />
+          <button onClick={onClose} className="mt-1 w-8 h-8 flex items-center justify-center rounded-full text-ec-text-muted hover:bg-ec-cream hover:text-ec-dark transition-all text-lg flex-shrink-0">✕</button>
         </div>
 
-        <div className="space-y-4">
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Nombre</label>
-              <input
-                value={form.clientName}
-                onChange={e => setForm({ ...form, clientName: e.target.value })}
-                placeholder="Nombre del cliente"
-                className="w-full px-3 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors"
-              />
-            </div>
-            <div>
-              <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Teléfono</label>
-              <input
-                value={form.clientPhone}
-                onChange={e => setForm({ ...form, clientPhone: e.target.value })}
-                placeholder="3XX XXX XXXX"
-                className="w-full px-3 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors"
-              />
-            </div>
-          </div>
+        <div className="px-6 pb-6 space-y-0">
 
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Vehículo</label>
-              <select
-                value={form.vehicleType}
-                onChange={e => handleVehicleChange(e.target.value)}
-                className="w-full px-3 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors"
-              >
-                <option>Carro</option>
-                <option>Moto</option>
-              </select>
-            </div>
-            <div>
-              <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Hora</label>
+          {/* Date & Time row */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <div className="flex items-center gap-2 flex-1 flex-wrap">
+              <input
+                type="date"
+                value={form.selectedDate}
+                onChange={e => setForm(f => ({ ...f, selectedDate: e.target.value }))}
+                className="font-body text-sm text-ec-dark bg-ec-cream hover:bg-[#F8C840]/10 px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer transition-colors"
+              />
               <select
                 value={form.hour}
                 onChange={e => setForm({ ...form, hour: parseInt(e.target.value) })}
-                className="w-full px-3 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors"
+                className="font-body text-sm text-ec-dark bg-ec-cream hover:bg-[#F8C840]/10 px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer transition-colors"
               >
                 {hours.map(h => <option key={h} value={h}>{h}:00</option>)}
               </select>
             </div>
           </div>
 
-          <div>
-            <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Servicio</label>
-            <select
-              value={form.service}
-              onChange={e => handleServiceChange(e.target.value)}
-              className="w-full px-3 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors"
-            >
-              {allServices.map(s => <option key={s} value={s}>{s}</option>)}
-            </select>
+          {/* Phone row */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.07 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 2.91 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z"/>
+            </svg>
+            <input
+              value={form.clientPhone}
+              onChange={e => setForm({ ...form, clientPhone: e.target.value })}
+              placeholder="Teléfono del cliente"
+              className={inputCls}
+            />
           </div>
 
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Precio base</label>
-              <div className="w-full px-3 py-2.5 border border-black/[0.06] rounded-sm font-body text-sm text-ec-text-muted bg-ec-cream">
-                {formatCOP(basePrice)}
-              </div>
-            </div>
-            <div>
-              <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Descuento $</label>
-              <input
-                type="number"
-                min="0"
-                max={basePrice}
-                value={form.discount || ""}
-                onChange={e => setForm(f => ({ ...f, discount: parseInt(e.target.value) || 0 }))}
-                placeholder="0"
-                className="w-full px-3 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors"
-              />
-            </div>
-            <div>
-              <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Total</label>
-              <div className={`w-full px-3 py-2.5 border rounded-sm font-body text-sm font-semibold ${form.discount > 0 ? "border-[#F8C840]/40 bg-[#F8C840]/5 text-[#B8860B]" : "border-black/[0.06] bg-ec-cream text-ec-dark"}`}>
-                {formatCOP(finalPrice)}
-              </div>
+          {/* Vehicle & Service row */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <rect x="1" y="9" width="22" height="10" rx="2"/><path d="M5 9V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/>
+            </svg>
+            <div className="flex gap-2 flex-1">
+              <select
+                value={form.vehicleType}
+                onChange={e => handleVehicleChange(e.target.value)}
+                className="font-body text-sm text-ec-dark bg-ec-cream px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer"
+              >
+                <option>Carro</option>
+                <option>Moto</option>
+              </select>
+              <select
+                value={form.service}
+                onChange={e => handleServiceChange(e.target.value)}
+                className="flex-1 font-body text-sm text-ec-dark bg-transparent border-0 border-b border-black/[0.1] focus:outline-none focus:border-[#F8C840] transition-colors cursor-pointer"
+              >
+                {allServices.map(s => <option key={s} value={s}>{s}</option>)}
+              </select>
             </div>
           </div>
 
-          <div>
-            <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Estado</label>
+          {/* Price row */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <div className="flex-1 flex items-center gap-3 flex-wrap">
+              <span className="font-body text-sm text-ec-text-muted">{formatCOP(basePrice)}</span>
+              <div className="flex items-center gap-1.5">
+                <span className="font-ui text-[10px] text-ec-text-muted uppercase tracking-wider">Descuento</span>
+                <input
+                  type="number"
+                  min="0"
+                  max={basePrice}
+                  value={form.discount || ""}
+                  onChange={e => setForm(f => ({ ...f, discount: parseInt(e.target.value) || 0 }))}
+                  placeholder="0"
+                  className="w-20 font-body text-sm text-ec-dark bg-ec-cream px-2 py-1 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 text-center"
+                />
+              </div>
+              <span className={`font-heading text-base font-bold ${hasDiscount ? "text-[#B8860B]" : "text-ec-dark"}`}>
+                = {formatCOP(finalPrice)}
+              </span>
+            </div>
+          </div>
+
+          {/* Status row */}
+          <div className="flex items-center gap-3 py-3">
+            <svg className="text-ec-text-muted flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
             <select
               value={form.status}
               onChange={e => setForm({ ...form, status: e.target.value })}
-              className="w-full px-3 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors"
+              className="font-body text-sm text-ec-dark bg-ec-cream px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer"
             >
               <option value="pending">Pendiente</option>
               <option value="confirmed">Confirmada</option>
@@ -554,19 +574,20 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
           </div>
         </div>
 
-        <div className="flex gap-3 mt-6">
+        {/* Footer */}
+        <div className="px-6 pb-5 flex justify-end gap-2">
           <button
             onClick={onClose}
-            className="flex-1 py-3 border border-black/[0.1] text-ec-text-muted font-ui text-[10px] tracking-[0.2em] uppercase rounded-sm hover:bg-ec-cream transition-all"
+            className="px-5 py-2.5 font-ui text-[10px] tracking-[0.2em] uppercase text-ec-text-muted hover:bg-ec-cream rounded-lg transition-all"
           >
             Cancelar
           </button>
           <button
             onClick={handleSubmit}
             disabled={!form.clientName || !form.clientPhone}
-            className="flex-1 py-3 bg-[#F8C840] text-white font-ui text-[10px] tracking-[0.2em] uppercase rounded-sm hover:bg-[#e6b800] disabled:opacity-30 transition-all"
+            className="px-6 py-2.5 bg-[#F8C840] text-white font-ui text-[10px] tracking-[0.2em] uppercase rounded-lg hover:bg-[#e6b800] disabled:opacity-30 transition-all shadow-sm"
           >
-            Guardar Cita
+            Guardar
           </button>
         </div>
       </motion.div>
