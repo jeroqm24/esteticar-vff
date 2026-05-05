@@ -1,5 +1,5 @@
 // api/whatsapp.js
-// Webhook de WhatsApp Cloud API — recibe mensajes y responde con IA (Sara)
+// Webhook de WhatsApp Cloud API — Sara Valencia con clasificación de leads
 
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
@@ -18,24 +18,19 @@ const supabase = createClient(
 const MAX_TURNS = 20;
 
 // ─── Historial persistente en Supabase ───────────────────────────
-const getHistory = async (phone) => {
+const getConversation = async (phone) => {
   const { data } = await supabase
     .from('conversations')
-    .select('history')
+    .select('history, lead_type, client_name')
     .eq('phone', phone)
     .single();
-  return data?.history || [];
+  return data || { history: [], lead_type: null, client_name: null };
 };
 
 const saveHistory = async (phone, history, meta = {}) => {
   await supabase
     .from('conversations')
-    .upsert({
-      phone,
-      history,
-      ...meta,
-      updated_at: new Date().toISOString(),
-    }, { onConflict: 'phone' });
+    .upsert({ phone, history, ...meta, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
 };
 
 // ─── Helpers de tiempo ────────────────────────────────────────────
@@ -57,7 +52,7 @@ const getTomorrowStr = () => {
   return d.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long' });
 };
 
-// ─── Disponibilidad real desde Supabase ──────────────────────────
+// ─── Disponibilidad + escasez ────────────────────────────────────
 const SERVICE_HOURS = {
   'Lavada Esencial': 2, 'Lavado de Techo': 2, 'Lavado de Chasis': 2,
   'Brillado Farolas': 1, 'Brillado de Farolas': 1,
@@ -83,7 +78,7 @@ const extractHour = (dateStr) => {
   return m ? parseInt(m[1]) : null;
 };
 
-const getAvailabilityText = async () => {
+const getAvailabilityInfo = async () => {
   try {
     const { data } = await supabase
       .from('appointments')
@@ -93,6 +88,7 @@ const getAvailabilityText = async () => {
     const appts = data || [];
     const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
     const slots = [];
+    let availableBlocks = 0;
 
     for (let d = 1; d <= 7; d++) {
       const date = new Date(today);
@@ -125,15 +121,16 @@ const getAvailabilityText = async () => {
 
       if (morning.length || afternoon.length) {
         const parts = [];
-        if (morning.length) parts.push(`mañana desde las ${morning[0]}:00 a.m.`);
-        if (afternoon.length) parts.push(`tarde desde las ${afternoon[0]}:00 p.m.`);
+        if (morning.length) { parts.push(`mañana desde las ${morning[0]}:00 a.m.`); availableBlocks++; }
+        if (afternoon.length) { parts.push(`tarde desde las ${afternoon[0]}:00 p.m.`); availableBlocks++; }
         slots.push(`${dateStr}: ${parts.join(' o ')}`);
       }
     }
 
-    return slots.length > 0 ? slots.slice(0, 4).join(' | ') : 'agenda completa esta semana';
+    const text = slots.length > 0 ? slots.slice(0, 4).join(' | ') : 'agenda completa esta semana';
+    return { text, availableBlocks };
   } catch {
-    return 'consultar disponibilidad directamente';
+    return { text: 'consultar disponibilidad directamente', availableBlocks: 10 };
   }
 };
 
@@ -146,17 +143,23 @@ const SALUDOS = [
   (g) => `${g}, qué bueno que nos escribes. Mi nombre es Sara Valencia de Esteticar, ¿en qué te colaboro hoy?`,
 ];
 
-const buildPrompt = async () => {
-  const greeting     = getGreeting();
-  const today        = getTodayStr();
-  const tomorrow     = getTomorrowStr();
-  const availability = await getAvailabilityText();
+const buildPrompt = async (leadType = null) => {
+  const greeting   = getGreeting();
+  const today      = getTodayStr();
+  const tomorrow   = getTomorrowStr();
+  const { text: availability, availableBlocks } = await getAvailabilityInfo();
   const saludoEjemplo = SALUDOS[Math.floor(Math.random() * SALUDOS.length)](greeting);
+
+  const scarcityNote = availableBlocks <= 3
+    ? `\nESCASEZ ACTIVA: Solo quedan ${availableBlocks} espacio${availableBlocks === 1 ? '' : 's'} disponibles esta semana. Úsalo naturalmente: "Esta semana la agenda está bastante apretada, me quedan ${availableBlocks} espacio${availableBlocks === 1 ? '' : 's'} disponibles. Si quieres asegurarlo..."`
+    : '';
+
+  const leadStrategy = leadType ? `\nPERFIL DETECTADO: ${leadType.toUpperCase()} — aplica la estrategia correspondiente desde el primer mensaje.` : '';
 
   return `Eres Sara Valencia, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales. Si alguien pregunta si eres IA o un bot: "Soy muy real, te lo aseguro."
 
 HOY: ${today}. SALUDO ACTIVO: "${greeting}". MAÑANA: ${tomorrow}.
-DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}
+DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}${scarcityNote}${leadStrategy}
 
 ━━━ REGLAS ABSOLUTAS ━━━
 SIEMPRE tutea. Nunca uses usted. Nunca uses voseo: di "quieres" no "querés", "puedes" no "podés", "tienes" no "tenés".
@@ -165,7 +168,7 @@ PROHIBIDO — NO SUMES PRECIOS: Menciona cada precio por separado. Nunca sumes.
 PROHIBIDO — EL VEHÍCULO NO ES LA PERSONA: Di "el carro queda hermoso", nunca "te deja impecable".
 PROHIBIDO — GUIONES: Nunca uses — ni - para unir ideas. Usa "y", "además", "pero".
 PROHIBIDO — INICIO ROBÓTICO: Nunca empieces con "Claro!", "Por supuesto!", "Con gusto!", "Perfecto!".
-PROHIBIDO — SIGNO DE APERTURA: Nunca uses ¿ ni ¡. Solo ? y ! al cerrar. Ejemplo: "Tienes carro o moto?" no "¿Tienes carro o moto?"
+PROHIBIDO — SIGNO DE APERTURA: Nunca uses ¿ ni ¡. Solo ? y ! al cerrar.
 PROHIBIDO — PRECIO CON "A": Siempre di "te lo dejamos en $X", nunca "te lo dejamos a $X".
 PROHIBIDO — "te vendría bien": Para preguntar hora di siempre "A qué hora te queda bien?" o "A qué hora te queda fácil?"
 REGLA DE UNA PREGUNTA: Nunca hagas más de una pregunta por mensaje.
@@ -177,46 +180,54 @@ Cálida, segura, distinguida. Hablas como la mejor asesora de Manizales: directa
 
 ━━━ HORARIOS Y UBICACIÓN ━━━
 Lunes a viernes: 8:00 a.m. a 5:00 p.m. Sábados: 8:00 a.m. a 2:00 p.m. Domingos: cerrado.
-Dirección: Calle 67 #9-26, La Sultana, Manizales.
-Si preguntan ubicación o cómo llegar: "Estamos en la Calle 67 #9-26, La Sultana, Manizales. Acá te comparto la ubicación en Maps: https://maps.app.goo.gl/yvc3Hu3ksv1bVBXy7"
+Si preguntan ubicación: "Estamos en la Calle 67 #9-26, La Sultana, Manizales. Acá te comparto la ubicación: https://maps.app.goo.gl/yvc3Hu3ksv1bVBXy7"
 
-━━━ METODOLOGÍA DE VENTA (SPIN CLOSING) ━━━
-Eres una closer de alto nivel. Tu objetivo es DIAGNOSTICAR antes de ofrecer. Sigue este flujo:
+━━━ CLASIFICACIÓN DE LEADS ━━━
+En algún momento natural de la conversación haz esta pregunta: "Cuéntame, ¿qué es lo que más te gustaría mejorarle al carro?"
+Con eso (y con lo que el cliente ya dijo) clasifícalo así:
 
-PASO 1 — PRIMER MENSAJE: Varía el saludo, nunca uses el mismo. Ejemplo para hoy: "${saludoEjemplo}"
+🫰 REGATEADOR: Solo pregunta precios, busca lo más barato, pide descuentos.
+   Estrategia: "¿Tienes pensado cuánto quieres invertirle?" → ofrece lo mejor en ese rango → sube gradualmente con beneficios.
+
+📚 ANALISTA: Quiere entender todo, nunca ha hecho detailing, pregunta "¿qué incluye?", "¿qué recomiendas?".
+   Estrategia: Educa primero, explica el proceso del Tratamiento 3en1 en detalle, genera confianza antes de cerrar.
+
+⚡ EMBALADO: Tiene un problema urgente: "se manchó", "huele mal", "lo voy a vender", "necesito urgente".
+   Estrategia: Identifica el problema exacto, arma el combo que lo soluciona, cierra rápido. No pierdas tiempo.
+
+💸 BILLETUDO: Pregunta por cerámico, quiere protección completa, no pregunta precios.
+   Estrategia: Empieza con Cerámico ($2.400.000–$3.000.000), destaca diferenciadores premium, no bajes de entrada.
+
+Tan pronto identifiques el perfil, añade al final del mensaje (invisible para el cliente):
+__LEAD_TYPE__:[regateador|analista|embalado|billetudo]
+
+Si el cliente rechaza, dice "lo pienso", "después", "no por ahora" o se enfría, añade también:
+__OBJECTION__:[razón en máximo 5 palabras]
+
+━━━ METODOLOGÍA DE VENTA ━━━
+PASO 1 — PRIMER MENSAJE: Varía el saludo. Ejemplo hoy: "${saludoEjemplo}"
 Nunca preguntes por carro o moto en el primer mensaje.
 
-PASO 2 — DIAGNÓSTICO DEL VEHÍCULO (cuando el cliente muestre interés):
-Pregunta UNA cosa a la vez, de forma natural. El orden ideal:
+PASO 2 — DIAGNÓSTICO (cuando muestre interés):
 • "¿Es carro o moto?"
-• "¿Qué marca y modelo tienes?" (esto personaliza la recomendación)
-• "¿Cómo está el carro ahorita? ¿Opaco, rayado, o simplemente quieres darle mantenimiento?"
-• "¿Qué es lo que más te molesta del estado actual?" (identifica el dolor)
-• "¿Hace cuánto no le haces detailing?" (califica urgencia)
+• "¿Qué marca y modelo tienes?"
+• "Cuéntame, ¿qué es lo que más te gustaría mejorarle al carro?" ← aquí clasificas el lead
+• "¿Hace cuánto no le haces detailing?"
 
-PASO 3 — CALIFICA EL PRESUPUESTO (de forma natural, nunca directa):
-Cuando ya conoces el problema, pregunta: "¿Tienes pensado cuánto quieres invertirle al carro?"
-Con eso defines si vas por Cerámico, Tratamiento 3en1, o servicios básicos.
+PASO 3 — ANCLA ALTO (siempre empieza por Cerámico para carros):
+"Lo que yo te recomendaría para ese carro es el *Recubrimiento Cerámico*. Es nuestra protección más completa: deja el carro con brillo de concesionario y lo protege por años. El valor lo definimos después de ver el carro, pero te cuento que va desde $2.400.000. ¿Eso estaría dentro de tu presupuesto?"
+Si dice que no: Porcelanizado → Tratamiento 3en1 → opciones básicas.
 
-PASO 4 — ANCLA ALTO, SIEMPRE:
-Empieza SIEMPRE por el Recubrimiento Cerámico. Es el ticket más alto ($2.400.000 a $3.000.000).
-Preséntalo así: "Lo que yo te recomendaría para ese carro es el *Recubrimiento Cerámico*. Es nuestra protección más completa: deja el carro con un brillo de concesionario y lo protege por años. El valor lo definimos después de ver el carro, pero te cuento que es una inversión que va desde $2.400.000. ¿Eso estaría dentro de tu presupuesto?"
-Si dice que no: baja al Porcelanizado, luego al Tratamiento 3en1, en ese orden.
-
-PASO 5 — MANEJA LA OBJECIÓN DE PRECIO COMO EXPERTA:
-Si el presupuesto es bajo: NO lo descartes. Di: "Tranquilo, tenemos opciones para todos los presupuestos. Con $X podemos hacerle [servicio específico] y el carro va a quedar [resultado]. ¿Te gustaría?"
-Siempre ofrece el mejor servicio posible dentro de su presupuesto.
-
-PASO 6 — CIERRE POR ALTERNATIVA:
+PASO 4 — CIERRE POR ALTERNATIVA:
 Nunca preguntes "¿quieres agendar?" Pregunta: "¿Te queda mejor para el ${tomorrow} en la mañana o en la tarde?"
 
-━━━ TÉCNICAS DE CIERRE ━━━
-• URGENCIA REAL: Usa la disponibilidad real del sistema. "Esta semana tenemos pocos espacios, los fines de semana se llenan rápido."
-• IMPLICACIÓN: Cuando el carro está opaco o rayado: "Si lo dejas mucho tiempo así, la pintura se va deteriorando y después la corrección es mucho más costosa."
-• VALOR PERCIBIDO: Antes del precio, siempre menciona los diferenciadores.
-• PRUEBA SOCIAL: "Tenemos clientes que llevan 3 años confiándonos sus carros. Mira los resultados: https://heyzine.com/flip-book/7591b1d346.html#page/1"
+━━━ OBJECIONES ━━━
+"Está muy caro": "Entiendo perfectamente. Se trata de un servicio Premium y en nuestro caso esa palabra no es un cliché: trabajamos con productos americanos y nuestro equipo se capacita anualmente. Te aseguro que no te vas a arrepentir."
+"Lo pienso": "Con toda. ¿Qué sería lo que necesitarías ver para decidirte?"
+"Está muy lejos": "Por eso contamos con servicio de recogida desde $7.000. Nosotros vamos donde estés."
+"Vi algo más barato": "Los precios bajos generalmente significan productos de baja calidad. Aquí trabajamos con garantía escrita y póliza de $5.000.000 activa mientras tu carro está con nosotros."
 
-━━━ SERVICIOS — CARRO (siempre de mayor a menor) ━━━
+━━━ SERVICIOS — CARRO (de mayor a menor) ━━━
 1. Recubrimiento Cerámico — $2.400.000 a $3.000.000 · COTIZACIÓN EN PERSONA · 2 días
 2. Porcelanizado — BAJO COTIZACIÓN · 2 días
 3. Tratamiento 3 en 1 con brillada a máquina $350.000 (camioneta $360.000)
@@ -231,7 +242,7 @@ Nunca preguntes "¿quieres agendar?" Pregunta: "¿Te queda mejor para el ${tomor
 12. Limpieza Técnica de Motor $49.000
 13. Lavada Esencial Carro $49.000
 
-━━━ SERVICIOS — MOTO (siempre de mayor a menor) ━━━
+━━━ SERVICIOS — MOTO (de mayor a menor) ━━━
 1. Tratamiento 3 en 1 con brillada a máquina $350.000
 2. Tratamiento 3 en 1 con brillada a mano $290.000
 3. Brillado de Tanque $59.000
@@ -239,40 +250,27 @@ Nunca preguntes "¿quieres agendar?" Pregunta: "¿Te queda mejor para el ${tomor
 5. Brillado de Farolas (moto) $49.000
 6. Lavada Esencial Moto $49.000
 
-━━━ CERÁMICO Y PORCELANIZADO ━━━
-Para cerámico: genera deseo, explica la protección a largo plazo, y cierra con: "El valor exacto lo definimos después de ver el carro en persona. ¿Coordinamos una visita de diagnóstico sin ningún costo?"
-Para porcelanizado: mismo enfoque, destacar que es una protección Premium de mediano plazo.
-
-━━━ OBJECIONES ━━━
-"Está muy caro": "Entiendo perfectamente que pueda parecerte costoso. Se trata de un servicio Premium y en nuestro caso esa palabra no es un cliché: trabajamos con productos americanos y nuestro equipo se capacita anualmente en todos los servicios que ofrecemos. Ahí radica nuestro valor. Te aseguro que no te vas a arrepentir."
-"Lo pienso": "Con toda. ¿Qué sería lo que necesitarías ver para decidirte?"
-"Está muy lejos": "Te entiendo. Por eso contamos con servicio de recogida desde $7.000. Nosotros vamos donde estés."
-"Vi algo más barato": "Los precios bajos generalmente significan productos de baja calidad o personal sin capacitación. Aquí trabajamos con garantía escrita y póliza de $5.000.000 activa mientras tu carro está con nosotros."
-
-━━━ PORTAFOLIO ━━━
-Si piden fotos, trabajos anteriores o referencias: "Mira los resultados de nuestros clientes → https://heyzine.com/flip-book/7591b1d346.html#page/1"
-
-━━━ DIFERENCIADORES (úsalos estratégicamente, no todos juntos) ━━━
+━━━ DIFERENCIADORES ━━━
 • Póliza de $5.000.000 COP activa mientras el vehículo está con nosotros.
 • Registro fotográfico 360° y código QR único por vehículo.
 • Cámaras HD 24/7 en tiempo real.
 • Salón VIP: café de especialidad, Smart TV 65" con Netflix, WiFi 300Mbps.
 • Certificado digital de garantía al entregar.
-• Productos americanos. Equipo capacitado anualmente.
+• Portafolio de trabajos: https://heyzine.com/flip-book/7591b1d346.html#page/1
 
 ━━━ CAPTURA ANTES DE CONFIRMAR ━━━
-Recopila uno a uno de forma natural, nunca todos de golpe:
-1. Nombre completo → en cuanto lo sepas incluye al final (oculto): __NAME__:[nombre completo]
+Uno a uno, de forma natural:
+1. Nombre completo → al saberlo añade al final: __NAME__:[nombre completo]
 2. Número de cédula
 3. Placa del vehículo
 4. Correo electrónico
 
 ━━━ TRASLADO ━━━
-Antes de confirmar ofrece: "Contamos con servicio de traslado: recogida y entrega $9.000, o solo recogida o solo entrega $7.000 cada uno. ¿Te interesa o prefieres traerlo tú?"
+Antes de confirmar: "Contamos con traslado: recogida y entrega $9.000, o solo recogida o entrega $7.000. ¿Te interesa?"
 Si elige recogida: "Perfecto, pasamos 30 minutos antes de tu hora de cita."
 
 ━━━ CONFIRMACIÓN ━━━
-Cuando confirmes la cita, incluye al FINAL del mensaje (el cliente no lo ve):
+Al final del mensaje de confirmación (invisible para el cliente):
 __BOOKING_CONFIRMED__
 SERVICIO: [nombre exacto]
 PRECIO: [con $ y puntos]
@@ -296,201 +294,153 @@ Máximo 3-4 líneas por mensaje. Tono de chat WhatsApp, directo y cercano.
 Emojis: máximo 1 por mensaje, nunca al inicio.`;
 };
 
-// ─── Simular tiempo de escritura ─────────────────────────────────
+// ─── Helpers ─────────────────────────────────────────────────────
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
-// ─── Enviar mensaje por WhatsApp ──────────────────────────────────
 const sendMessage = async (to, text) => {
   await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${WA_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      messaging_product: 'whatsapp',
-      to,
-      type: 'text',
-      text: { body: text },
-    }),
+    headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'text', text: { body: text } }),
   });
 };
 
-// ─── Parsear confirmación de cita del mensaje de IA ──────────────
 const parseBooking = (text) => {
   if (!text.includes('__BOOKING_CONFIRMED__')) return null;
   const block = text.match(/__BOOKING_CONFIRMED__([\s\S]*?)__END_BOOKING__/)?.[1] || '';
   const get = (key) => block.match(new RegExp(`${key}:\\s*(.+)`))?.[1]?.trim() || '';
   return {
-    service:          get('SERVICIO'),
-    priceDisplay:     get('PRECIO'),
-    date:             get('FECHA'),
-    vehicleType:      get('VEHICULO')?.toLowerCase() === 'moto' ? 'moto' : 'car',
-    clientName:       get('NOMBRE'),
-    clientPhone:      get('TELEFONO'),
-    clientEmail:      get('EMAIL'),
-    traslado:         get('TRASLADO'),
-    cedula:           get('CEDULA'),
-    placa:            get('PLACA'),
+    service: get('SERVICIO'), priceDisplay: get('PRECIO'), date: get('FECHA'),
+    vehicleType: get('VEHICULO')?.toLowerCase() === 'moto' ? 'moto' : 'car',
+    clientName: get('NOMBRE'), clientPhone: get('TELEFONO'), clientEmail: get('EMAIL'),
+    traslado: get('TRASLADO'), cedula: get('CEDULA'), placa: get('PLACA'),
     confirmationCode: `EST-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
-    status:           'pending',
-    channel:          'whatsapp',
+    status: 'pending', channel: 'whatsapp',
   };
 };
 
-// ─── Limpiar marcadores del mensaje visible ───────────────────────
-const cleanReply = (text) => {
-  return text
-    .replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, '')
-    .replace(/__ESCALATE__:[^\n]*/g, '')
-    .replace(/__NAME__:[^\n]*/g, '')
-    .trim();
-};
+const cleanReply = (text) => text
+  .replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, '')
+  .replace(/__ESCALATE__:[^\n]*/g, '')
+  .replace(/__NAME__:[^\n]*/g, '')
+  .replace(/__LEAD_TYPE__:[^\n]*/g, '')
+  .replace(/__OBJECTION__:[^\n]*/g, '')
+  .trim();
 
-// ─── Notificar al equipo cuando Sara escala ───────────────────────
 const TEAM_NUMBER = '573008400230';
-
 const notifyTeam = async (clientPhone, question) => {
-  const msg =
-    `⚠️ *ESCALACIÓN ESTETICAR*\n` +
-    `Un cliente necesita atención humana.\n\n` +
-    `*Consulta:* "${question}"\n\n` +
-    `👉 Abrir chat: https://wa.me/${clientPhone}`;
+  const msg = `⚠️ *ESCALACIÓN ESTETICAR*\nUn cliente necesita atención humana.\n\n*Consulta:* "${question}"\n\n👉 Abrir chat: https://wa.me/${clientPhone}`;
   await sendMessage(TEAM_NUMBER, msg);
 };
 
 // ─── Handler principal ────────────────────────────────────────────
 export default async function handler(req, res) {
-  // GET — verificación del webhook por Meta
   if (req.method === 'GET') {
-    const mode      = req.query['hub.mode'];
-    const token     = req.query['hub.verify_token'];
-    const challenge = req.query['hub.challenge'];
-    if (mode === 'subscribe' && token === VERIFY_TOKEN) {
-      return res.status(200).send(challenge);
-    }
+    const mode = req.query['hub.mode'], token = req.query['hub.verify_token'], challenge = req.query['hub.challenge'];
+    if (mode === 'subscribe' && token === VERIFY_TOKEN) return res.status(200).send(challenge);
     return res.status(403).send('Forbidden');
   }
 
-  // POST — mensaje entrante
   if (req.method === 'POST') {
-    console.log('POST recibido:', JSON.stringify(req.body).slice(0, 300));
     try {
       const body = req.body;
-      if (body.object !== 'whatsapp_business_account') {
-        return res.status(200).send('OK');
-      }
+      if (body.object !== 'whatsapp_business_account') return res.status(200).send('OK');
 
       const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-      if (!message || message.type !== 'text') {
-        return res.status(200).send('OK');
-      }
+      if (!message || message.type !== 'text') return res.status(200).send('OK');
 
       const from = message.from;
       const text = message.text.body?.trim();
       if (!text) return res.status(200).send('OK');
 
-      // Historial de conversación (persistente en Supabase)
-      const history = await getHistory(from);
+      // Historial + perfil del cliente
+      const conv = await getConversation(from);
+      const history = conv.history || [];
       history.push({ role: 'user', content: text });
       if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
 
-      // Llamar a Claude
-      const systemPrompt = await buildPrompt();
-      const aiResponse   = await anthropic.messages.create({
-        model:      'claude-haiku-4-5-20251001',
+      // Llamar a Claude pasando el lead_type ya detectado
+      const systemPrompt = await buildPrompt(conv.lead_type);
+      const aiResponse = await anthropic.messages.create({
+        model: 'claude-haiku-4-5-20251001',
         max_tokens: 600,
-        system:     systemPrompt,
-        messages:   history,
+        system: systemPrompt,
+        messages: history,
       });
 
       const rawReply = aiResponse.content[0]?.text || 'Disculpa, en este momento no puedo responder. Intenta de nuevo.';
 
-      // Extraer nombre en cuanto Sara lo aprende
-      const nameMatch = rawReply.match(/__NAME__:([^\n]+)/);
-      if (nameMatch) {
-        await supabase.from('conversations')
-          .upsert({ phone: from, client_name: nameMatch[1].trim(), updated_at: new Date().toISOString() }, { onConflict: 'phone' });
-      }
+      // Extraer marcadores
+      const nameMatch     = rawReply.match(/__NAME__:([^\n]+)/);
+      const leadMatch     = rawReply.match(/__LEAD_TYPE__:([^\n]+)/);
+      const objMatch      = rawReply.match(/__OBJECTION__:([^\n]+)/);
+      const escalateMatch = rawReply.match(/__ESCALATE__:([^\n]*)/);
 
-      // Procesar confirmación de cita
+      // Procesar cita confirmada
       const booking = parseBooking(rawReply);
 
-      // Guardar historial y perfil del cliente en Supabase
-      history.push({ role: 'assistant', content: rawReply });
+      // Construir meta para Supabase
       const meta = {};
+      if (nameMatch)  meta.client_name = nameMatch[1].trim();
+      if (leadMatch)  meta.lead_type   = leadMatch[1].trim();
+      if (objMatch)   meta.objection   = objMatch[1].trim();
       if (booking) {
-        if (booking.clientName) meta.client_name = booking.clientName;
-        if (booking.service)    meta.last_service = booking.service;
-        if (booking.vehicleType) meta.vehicle_type = booking.vehicleType;
-        if (booking.placa)      meta.vehicle_plate = booking.placa;
+        if (booking.clientName)  meta.client_name  = booking.clientName;
+        if (booking.service)     meta.last_service  = booking.service;
+        if (booking.vehicleType) meta.vehicle_type  = booking.vehicleType;
+        if (booking.placa)       meta.vehicle_plate = booking.placa;
         if (booking.clientEmail && booking.clientEmail !== 'no_proporcionado') meta.client_email = booking.clientEmail;
-        if (booking.cedula)     meta.cedula = booking.cedula;
+        if (booking.cedula)      meta.cedula        = booking.cedula;
+        meta.last_visit_date = new Date().toISOString();
+        meta.remarketing_status = 'converted';
       }
+
+      history.push({ role: 'assistant', content: rawReply });
       await saveHistory(from, history, meta);
+
+      // Guardar cita en appointments
       if (booking) {
         await supabase.from('appointments').insert({
-          service:           booking.service,
-          vehicle_type:      booking.vehicleType,
-          date:              booking.date,
-          price_display:     booking.priceDisplay,
+          service: booking.service, vehicle_type: booking.vehicleType,
+          date: booking.date, price_display: booking.priceDisplay,
           confirmation_code: booking.confirmationCode,
-          client_name:       booking.clientName,
-          client_phone:      booking.clientPhone || from,
-          client_email:      booking.clientEmail,
-          traslado:          booking.traslado,
-          cedula:            booking.cedula,
-          placa:             booking.placa,
-          status:            'pending',
-          channel:           'whatsapp',
+          client_name: booking.clientName, client_phone: booking.clientPhone || from,
+          client_email: booking.clientEmail, traslado: booking.traslado,
+          cedula: booking.cedula, placa: booking.placa,
+          status: 'pending', channel: 'whatsapp',
         });
 
-        // Email de confirmación al cliente y al admin
-        const emailHtml = `
-          <div style="font-family:sans-serif;max-width:520px;margin:auto">
-            <h2 style="color:#B8860B">¡Tu cita en Esteticar está confirmada!</h2>
-            <p>Hola <strong>${booking.clientName || 'cliente'}</strong>, aquí están los detalles:</p>
-            <table style="width:100%;border-collapse:collapse">
-              <tr><td style="padding:8px;color:#555">Servicio</td><td style="padding:8px"><strong>${booking.service}</strong></td></tr>
-              <tr style="background:#f9f9f9"><td style="padding:8px;color:#555">Fecha y hora</td><td style="padding:8px"><strong>${booking.date}</strong></td></tr>
-              <tr><td style="padding:8px;color:#555">Precio</td><td style="padding:8px"><strong>${booking.priceDisplay}</strong></td></tr>
-              <tr style="background:#f9f9f9"><td style="padding:8px;color:#555">Vehículo</td><td style="padding:8px">${booking.vehicleType === 'moto' ? 'Moto' : 'Carro'} — Placa ${booking.placa || 'N/A'}</td></tr>
-              <tr><td style="padding:8px;color:#555">Traslado</td><td style="padding:8px">${booking.traslado || 'No'}</td></tr>
-              <tr style="background:#f9f9f9"><td style="padding:8px;color:#555">Código</td><td style="padding:8px"><strong>${booking.confirmationCode}</strong></td></tr>
-            </table>
-            <p style="margin-top:20px;color:#888;font-size:13px">Esteticar Manizales · Lunes–Viernes 8am–5pm · Sábados 8am–2pm</p>
-          </div>`;
+        const emailHtml = `<div style="font-family:sans-serif;max-width:520px;margin:auto">
+          <h2 style="color:#B8860B">Tu cita en Esteticar está confirmada!</h2>
+          <p>Hola <strong>${booking.clientName || 'cliente'}</strong>, aquí están los detalles:</p>
+          <table style="width:100%;border-collapse:collapse">
+            <tr><td style="padding:8px;color:#555">Servicio</td><td style="padding:8px"><strong>${booking.service}</strong></td></tr>
+            <tr style="background:#f9f9f9"><td style="padding:8px;color:#555">Fecha</td><td style="padding:8px"><strong>${booking.date}</strong></td></tr>
+            <tr><td style="padding:8px;color:#555">Precio</td><td style="padding:8px"><strong>${booking.priceDisplay}</strong></td></tr>
+            <tr style="background:#f9f9f9"><td style="padding:8px;color:#555">Código</td><td style="padding:8px"><strong>${booking.confirmationCode}</strong></td></tr>
+          </table>
+        </div>`;
 
         await fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000'}/api/notify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'email',
-            subject: `✅ Cita confirmada — ${booking.service} · ${booking.confirmationCode}`,
-            html: emailHtml,
-            to: booking.clientEmail && booking.clientEmail !== 'no_proporcionado' ? booking.clientEmail : undefined,
-          }),
+          body: JSON.stringify({ type: 'email', subject: `Cita confirmada — ${booking.confirmationCode}`, html: emailHtml,
+            to: booking.clientEmail && booking.clientEmail !== 'no_proporcionado' ? booking.clientEmail : undefined }),
         }).catch(() => {});
       }
 
-      // Notificar al equipo si Sara escala
-      const escalateMatch = rawReply.match(/__ESCALATE__:([^\n]*)/);
-      if (escalateMatch) {
-        const question = escalateMatch[1].trim();
-        await notifyTeam(from, question);
-      }
+      // Escalación al equipo
+      if (escalateMatch) await notifyTeam(from, escalateMatch[1].trim());
 
-      // Simular tiempo de escritura (2 a 4 segundos)
+      // Delay humanizador
       await sleep(2000 + Math.random() * 2000);
 
-      // Enviar respuesta limpia al cliente
       const reply = cleanReply(rawReply);
       if (reply) await sendMessage(from, reply);
 
     } catch (err) {
       console.error('WhatsApp webhook error:', err);
     }
-
     return res.status(200).send('OK');
   }
 
