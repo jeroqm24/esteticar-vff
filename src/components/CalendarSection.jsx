@@ -350,17 +350,28 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
 }
 
 // ─── Add appointment modal ────────────────────────────────────────
-function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
-  const [form, setForm] = useState({
-    clientName: "",
-    clientPhone: "",
-    service: "Lavada Esencial Carro",
-    vehicleType: "Carro",
-    hour: defaultHour || 9,
-    status: "confirmed",
-    priceDisplay: "",
-  });
+const SERVICE_PRICES = {
+  "Lavada Esencial Carro": 49000,
+  "Brillado a Máquina": 120000,
+  "Lavado de Chasis": 35000,
+  "Lavado de Techo": 25000,
+  "Descontaminación de Vidrios": 45000,
+  "Restauración de Farolas": 80000,
+  "Lavado de Cojinería": 90000,
+  "Mantenimiento Interior": 75000,
+  "Tratamiento 3 en 1 Manual": 150000,
+  "Tratamiento 3 en 1 a Máquina": 200000,
+  "Lavada Esencial Moto": 25000,
+  "Brillado de Farolas": 30000,
+  "Brillado de Tanque": 35000,
+  "Descontaminación de Tubería": 40000,
+};
 
+function formatCOP(amount) {
+  return "$" + amount.toLocaleString("es-CO");
+}
+
+function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
   const CAR_SERVICES = [
     "Lavada Esencial Carro", "Brillado a Máquina", "Lavado de Chasis",
     "Lavado de Techo", "Descontaminación de Vidrios", "Restauración de Farolas",
@@ -370,6 +381,33 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
   const MOTO_SERVICES = [
     "Lavada Esencial Moto", "Brillado de Farolas", "Brillado de Tanque", "Descontaminación de Tubería",
   ];
+
+  const defaultService = "Lavada Esencial Carro";
+  const [form, setForm] = useState({
+    clientName: "",
+    clientPhone: "",
+    service: defaultService,
+    vehicleType: "Carro",
+    hour: defaultHour || 9,
+    status: "confirmed",
+    priceDisplay: formatCOP(SERVICE_PRICES[defaultService]),
+    discount: 0,
+  });
+
+  const basePrice = SERVICE_PRICES[form.service] || 0;
+  const finalPrice = Math.max(0, basePrice - (Number(form.discount) || 0));
+
+  const handleServiceChange = (service) => {
+    const price = SERVICE_PRICES[service] || 0;
+    setForm(f => ({ ...f, service, priceDisplay: formatCOP(price), discount: 0 }));
+  };
+
+  const handleVehicleChange = (vehicleType) => {
+    const services = vehicleType === "Carro" ? CAR_SERVICES : MOTO_SERVICES;
+    const service = services[0];
+    const price = SERVICE_PRICES[service] || 0;
+    setForm(f => ({ ...f, vehicleType, service, priceDisplay: formatCOP(price), discount: 0 }));
+  };
 
   const allServices = form.vehicleType === "Carro" ? CAR_SERVICES : MOTO_SERVICES;
   const isSaturday = (getDay(day) + 6) % 7 === 5;
@@ -384,6 +422,8 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
       ...form,
       date: fullDate,
       time: `${form.hour}:00`,
+      priceDisplay: formatCOP(finalPrice),
+      discount: form.discount,
       confirmationCode: `EST-M${Math.floor(Math.random() * 9000) + 1000}`,
       channel: "manual",
       id: Math.random().toString(36).substr(2, 9),
@@ -443,7 +483,7 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
               <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Vehículo</label>
               <select
                 value={form.vehicleType}
-                onChange={e => setForm({ ...form, vehicleType: e.target.value, service: e.target.value === "Carro" ? CAR_SERVICES[0] : MOTO_SERVICES[0] })}
+                onChange={e => handleVehicleChange(e.target.value)}
                 className="w-full px-3 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors"
               >
                 <option>Carro</option>
@@ -466,35 +506,51 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
             <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Servicio</label>
             <select
               value={form.service}
-              onChange={e => setForm({ ...form, service: e.target.value })}
+              onChange={e => handleServiceChange(e.target.value)}
               className="w-full px-3 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors"
             >
               {allServices.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Precio</label>
+              <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Precio base</label>
+              <div className="w-full px-3 py-2.5 border border-black/[0.06] rounded-sm font-body text-sm text-ec-text-muted bg-ec-cream">
+                {formatCOP(basePrice)}
+              </div>
+            </div>
+            <div>
+              <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Descuento $</label>
               <input
-                value={form.priceDisplay}
-                onChange={e => setForm({ ...form, priceDisplay: e.target.value })}
-                placeholder="$49.000"
+                type="number"
+                min="0"
+                max={basePrice}
+                value={form.discount || ""}
+                onChange={e => setForm(f => ({ ...f, discount: parseInt(e.target.value) || 0 }))}
+                placeholder="0"
                 className="w-full px-3 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors"
               />
             </div>
             <div>
-              <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Estado</label>
-              <select
-                value={form.status}
-                onChange={e => setForm({ ...form, status: e.target.value })}
-                className="w-full px-3 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors"
-              >
-                <option value="pending">Pendiente</option>
-                <option value="confirmed">Confirmada</option>
-                <option value="completed">Completada</option>
-              </select>
+              <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Total</label>
+              <div className={`w-full px-3 py-2.5 border rounded-sm font-body text-sm font-semibold ${form.discount > 0 ? "border-[#F8C840]/40 bg-[#F8C840]/5 text-[#B8860B]" : "border-black/[0.06] bg-ec-cream text-ec-dark"}`}>
+                {formatCOP(finalPrice)}
+              </div>
             </div>
+          </div>
+
+          <div>
+            <label className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase block mb-1.5">Estado</label>
+            <select
+              value={form.status}
+              onChange={e => setForm({ ...form, status: e.target.value })}
+              className="w-full px-3 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors"
+            >
+              <option value="pending">Pendiente</option>
+              <option value="confirmed">Confirmada</option>
+              <option value="completed">Completada</option>
+            </select>
           </div>
         </div>
 

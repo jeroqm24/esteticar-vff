@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import AdminStats from "./AdminStats";
 import AdminAppointments from "./AdminAppointments";
 import AdminClients from "./AdminClients";
-import AdminBotConfig from "./AdminBotConfig";
+import AdminFinanzas from "./AdminFinanzas";
 import CalendarSection from "../CalendarSection";
 import { BRAND } from "../../lib/constants";
 
@@ -61,7 +61,7 @@ const TABS = [
   { id: "appointments", label: "Citas", icon: "users" },
   { id: "clients", label: "Clientes", icon: "clients" },
   { id: "calendar", label: "Calendario", icon: "calendar" },
-  { id: "bot", label: "Bot AI", icon: "bot" },
+  { id: "finanzas", label: "Finanzas", icon: "finanzas" },
 ];
 
 const TabIcon = ({ type, size = 20 }) => {
@@ -81,9 +81,9 @@ const TabIcon = ({ type, size = 20 }) => {
         <rect x="3" y="4" width="18" height="18" rx="2" /><line x1="16" y1="2" x2="16" y2="6" /><line x1="8" y1="2" x2="8" y2="6" /><line x1="3" y1="10" x2="21" y2="10" />
       </svg>
     ),
-    bot: (
+    finanzas: (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-        <rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><path d="M12 7v4" /><line x1="8" y1="16" x2="8" y2="16" /><line x1="16" y1="16" x2="16" y2="16" />
+        <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
       </svg>
     ),
     clients: (
@@ -185,7 +185,7 @@ export default function AdminDashboard({ onClose }) {
                 {activeTab === "appointments" && <AdminAppointments />}
                 {activeTab === "clients" && <AdminClients />}
                 {activeTab === "calendar" && <CalendarSection isAdmin={true} />}
-                {activeTab === "bot" && <AdminBotConfig />}
+                {activeTab === "finanzas" && <AdminFinanzas />}
               </div>
             </motion.div>
           </AnimatePresence>
@@ -194,7 +194,7 @@ export default function AdminDashboard({ onClose }) {
 
       {/* ── BOTTOM NAV (mobile only) ── */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-black/[0.06] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        <div className="grid grid-cols-4 h-16">
+        <div className="grid grid-cols-5 h-16">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
