@@ -276,6 +276,18 @@ const cleanReply = (text) => {
     .trim();
 };
 
+// ─── Notificar al equipo cuando Sara escala ───────────────────────
+const TEAM_NUMBER = '573008400230';
+
+const notifyTeam = async (clientPhone, question) => {
+  const msg =
+    `⚠️ *ESCALACIÓN ESTETICAR*\n` +
+    `Un cliente necesita atención humana.\n\n` +
+    `*Consulta:* "${question}"\n\n` +
+    `👉 Abrir chat: https://wa.me/${clientPhone}`;
+  await sendMessage(TEAM_NUMBER, msg);
+};
+
 // ─── Handler principal ────────────────────────────────────────────
 export default async function handler(req, res) {
   // GET — verificación del webhook por Meta
@@ -345,6 +357,13 @@ export default async function handler(req, res) {
           status:            'pending',
           channel:           'whatsapp',
         });
+      }
+
+      // Notificar al equipo si Sara escala
+      const escalateMatch = rawReply.match(/__ESCALATE__:([^\n]*)/);
+      if (escalateMatch) {
+        const question = escalateMatch[1].trim();
+        await notifyTeam(from, question);
       }
 
       // Enviar respuesta limpia al cliente
