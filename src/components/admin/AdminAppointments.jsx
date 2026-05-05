@@ -8,12 +8,69 @@ const STATUS_LABELS = {
   completed: "Completada", cancelled: "Cancelada",
 };
 const STATUS_COLORS = {
-  pending: { bg: "rgba(184,134,11,0.06)", color: "var(--color-ec-gold)", border: "rgba(184,134,11,0.2)" },
-  confirmed: { bg: "rgba(184,134,11,0.1)", color: "var(--color-ec-gold)", border: "rgba(184,134,11,0.3)" },
-  in_progress: { bg: "rgba(59,130,246,0.06)", color: "#2563eb", border: "rgba(59,130,246,0.2)" },
-  completed: { bg: "rgba(34,197,94,0.06)", color: "#16a34a", border: "rgba(34,197,94,0.2)" },
-  cancelled: { bg: "rgba(239,68,68,0.06)", color: "#dc2626", border: "rgba(239,68,68,0.2)" },
+  pending:    { bg: "#FEF9ED", text: "#B8860B", border: "#F8C840", bar: "#F8C840" },
+  confirmed:  { bg: "#FFFBF0", text: "#92700A", border: "#E6B800", bar: "#E6B800" },
+  in_progress:{ bg: "#EFF6FF", text: "#2563EB", border: "#93C5FD", bar: "#3B82F6" },
+  completed:  { bg: "#F0FDF4", text: "#16A34A", border: "#86EFAC", bar: "#22C55E" },
+  cancelled:  { bg: "#FEF2F2", text: "#DC2626", border: "#FCA5A5", bar: "#EF4444" },
 };
+
+function StatusBadge({ status }) {
+  const c = STATUS_COLORS[status] || STATUS_COLORS.pending;
+  return (
+    <span
+      className="font-ui text-[9px] tracking-[0.15em] uppercase px-3 py-1.5 rounded-full"
+      style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}
+    >
+      {STATUS_LABELS[status] || status}
+    </span>
+  );
+}
+
+function ConfirmDeleteModal({ name, onConfirm, onCancel, loading }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[600] bg-black/40 flex items-center justify-center p-4"
+      onClick={onCancel}
+    >
+      <motion.div
+        initial={{ scale: 0.95, y: 10 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.95, y: 10 }}
+        className="bg-white rounded-lg shadow-2xl p-8 w-full max-w-sm"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="w-14 h-14 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-5">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#DC2626" strokeWidth="2" strokeLinecap="round">
+            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+          </svg>
+        </div>
+        <h3 className="font-heading text-xl text-ec-dark text-center mb-2">Eliminar cita</h3>
+        <p className="font-body text-sm text-ec-text-muted text-center mb-6">
+          ¿Seguro que deseas eliminar la cita de <strong className="text-ec-dark">{name}</strong>? Esta acción no se puede deshacer.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={onCancel}
+            className="flex-1 py-3 border border-black/[0.1] text-ec-text-muted font-ui text-[10px] tracking-[0.2em] uppercase rounded-lg hover:bg-ec-cream transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="flex-1 py-3 bg-red-500 text-white font-ui text-[10px] tracking-[0.2em] uppercase rounded-lg hover:bg-red-600 disabled:opacity-40 transition-all"
+          >
+            {loading ? "Eliminando..." : "Eliminar"}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
 
 export default function AdminAppointments() {
   const [appointments, setAppointments] = useState([]);
@@ -21,6 +78,9 @@ export default function AdminAppointments() {
   const [selected, setSelected] = useState(null);
   const [sending, setSending] = useState(false);
   const [filter, setFilter] = useState("all");
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleting, setDeleting] = useState(false);
+  const [showDetail, setShowDetail] = useState(false);
 
   useEffect(() => { load(); }, []);
 
@@ -33,184 +93,342 @@ export default function AdminAppointments() {
 
   const updateStatus = async (id, status) => {
     await db.appointments.update(id, { status });
-    setAppointments((prev) => prev.map((a) => a.id === id ? { ...a, status } : a));
-    if (selected?.id === id) setSelected((prev) => ({ ...prev, status }));
+    setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
+    if (selected?.id === id) setSelected(prev => ({ ...prev, status }));
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+    setDeleting(true);
+    await db.appointments.delete(deleteTarget.id);
+    setAppointments(prev => prev.filter(a => a.id !== deleteTarget.id));
+    if (selected?.id === deleteTarget.id) { setSelected(null); setShowDetail(false); }
+    setDeleteTarget(null);
+    setDeleting(false);
   };
 
   const sendReminderEmail = async (appt) => {
     setSending(true);
-    const services = (appt.services || []).map((s) => s.name).join(", ");
+    const services = (appt.services || []).map(s => s.name).join(", ");
     await email.send({
       to: appt.client_email,
       subject: `Recordatorio de tu cita — Esteticar ✨`,
       body: `Hola ${appt.client_name}! Te recordamos tu cita el ${appt.date} a las ${appt.time || "Por confirmar"}. Servicios: ${services}.`,
     });
     await db.appointments.update(appt.id, { reminder_sent: true });
-    setAppointments((prev) => prev.map((a) => a.id === appt.id ? { ...a, reminder_sent: true } : a));
-    if (selected?.id === appt.id) setSelected((prev) => ({ ...prev, reminder_sent: true }));
+    setAppointments(prev => prev.map(a => a.id === appt.id ? { ...a, reminder_sent: true } : a));
+    if (selected?.id === appt.id) setSelected(prev => ({ ...prev, reminder_sent: true }));
     setSending(false);
   };
 
-  const filtered = filter === "all" ? appointments : appointments.filter((a) => a.status === filter);
+  const openDetail = (appt) => { setSelected(appt); setShowDetail(true); };
+  const closeDetail = () => { setShowDetail(false); };
+
+  const filtered = filter === "all" ? appointments : appointments.filter(a => a.status === filter);
+
+  const counts = {};
+  STATUS_OPTIONS.forEach(s => { counts[s] = appointments.filter(a => a.status === s).length; });
 
   return (
-    <div className="space-y-8">
-      {/* Filters */}
-      <div className="flex flex-wrap gap-2">
-        {["all", ...STATUS_OPTIONS].map((f) => (
-          <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-5 py-2.5 font-ui text-[10px] tracking-[0.2em] uppercase border transition-all duration-300 rounded-sm ${
-              filter === f ? "bg-ec-gold text-white border-ec-gold font-bold" : "bg-white text-ec-text-muted border-black/[0.06] hover:border-ec-gold/30"
-            }`}
-          >
-            {f === "all" ? "Todas" : STATUS_LABELS[f]}
-            {f !== "all" && <span className="ml-2 opacity-40">({appointments.filter((a) => a.status === f).length})</span>}
-          </button>
-        ))}
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h2 className="font-heading text-2xl text-ec-dark">Citas</h2>
+          <p className="font-body text-sm text-ec-text-muted mt-0.5">{appointments.length} citas en total</p>
+        </div>
+        <button
+          onClick={load}
+          className="self-start sm:self-auto flex items-center gap-2 px-4 py-2.5 border border-black/[0.08] rounded-lg font-ui text-[10px] tracking-[0.2em] uppercase text-ec-text-muted hover:border-ec-gold/40 hover:text-ec-gold transition-all"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.08-5.96"/>
+          </svg>
+          Actualizar
+        </button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2">
+        <button
+          onClick={() => setFilter("all")}
+          className={`px-4 py-2 font-ui text-[10px] tracking-[0.15em] uppercase rounded-full border transition-all ${
+            filter === "all" ? "bg-ec-dark text-white border-ec-dark" : "bg-white text-ec-text-muted border-black/[0.1] hover:border-ec-gold/40"
+          }`}
+        >
+          Todas <span className="ml-1 opacity-60">({appointments.length})</span>
+        </button>
+        {STATUS_OPTIONS.map(f => {
+          const c = STATUS_COLORS[f];
+          const isActive = filter === f;
+          return (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className="px-4 py-2 font-ui text-[10px] tracking-[0.15em] uppercase rounded-full border transition-all"
+              style={isActive
+                ? { background: c.bar, color: "#fff", borderColor: c.bar }
+                : { background: "#fff", color: c.text, borderColor: c.border }
+              }
+            >
+              {STATUS_LABELS[f]} <span className="ml-1 opacity-60">({counts[f]})</span>
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Content */}
+      <div className="grid grid-cols-1 xl:grid-cols-5 gap-6">
         {/* List */}
-        <div className="space-y-3">
+        <div className={`${showDetail ? "xl:col-span-3" : "xl:col-span-5"} space-y-3`}>
           {loading ? (
-            <div className="flex items-center justify-center py-32 text-ec-text-muted">
-              <div className="w-8 h-8 border-2 border-ec-gold border-t-transparent rounded-full animate-spin" />
+            <div className="flex items-center justify-center py-40">
+              <div className="w-10 h-10 border-2 border-ec-gold border-t-transparent rounded-full animate-spin" />
             </div>
           ) : filtered.length === 0 ? (
-            <div className="py-20 text-center border border-black/[0.06] bg-white rounded-sm">
-              <div className="w-16 h-16 mx-auto mb-6 bg-ec-gold/10 border border-ec-gold/15 flex items-center justify-center rounded-sm">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-ec-gold/50">
-                  <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
-                  <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
-                </svg>
-              </div>
-              <p className="font-heading text-lg text-ec-dark mb-2">Sin citas en esta categoría</p>
-              <p className="font-body text-sm text-ec-text-muted font-light max-w-xs mx-auto">
-                Las reservas nuevas aparecerán aquí cuando los clientes completen el proceso de booking.
-              </p>
+            <div className="py-24 text-center border border-dashed border-black/[0.1] bg-white rounded-2xl">
+              <p className="font-heading text-xl text-ec-dark mb-2">Sin citas</p>
+              <p className="font-body text-sm text-ec-text-muted">No hay citas en esta categoría.</p>
             </div>
           ) : (
-            filtered.map((a) => {
-              const sc = STATUS_COLORS[a.status] || STATUS_COLORS.pending;
-              return (
-                <motion.button
-                  key={a.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  onClick={() => setSelected(a)}
-                  className={`w-full text-left p-6 border transition-all duration-300 flex flex-col gap-4 rounded-sm ${
-                    selected?.id === a.id ? "bg-ec-gold/[0.04] border-ec-gold shadow-[0_4px_20px_rgba(184,134,11,0.08)]" : "bg-white border-black/[0.06] hover:border-ec-gold/20"
-                  }`}
-                >
-                  <div className="flex items-start justify-between gap-4">
-                    <div>
-                      <p className="font-heading text-lg text-ec-dark">{a.client_name}</p>
-                      <p className="font-ui text-[10px] tracking-wider text-ec-gold mt-1 uppercase">{a.date} · {a.time || "Hora por confirmar"}</p>
+            <AnimatePresence>
+              {filtered.map(a => {
+                const c = STATUS_COLORS[a.status] || STATUS_COLORS.pending;
+                const isSelected = selected?.id === a.id && showDetail;
+                return (
+                  <motion.div
+                    key={a.id}
+                    layout
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, x: -20, height: 0, marginBottom: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className={`group bg-white rounded-2xl border transition-all duration-300 overflow-hidden cursor-pointer ${
+                      isSelected
+                        ? "border-ec-gold shadow-[0_4px_24px_rgba(184,134,11,0.12)]"
+                        : "border-black/[0.07] hover:border-ec-gold/30 hover:shadow-md"
+                    }`}
+                    onClick={() => isSelected ? closeDetail() : openDetail(a)}
+                  >
+                    {/* Color bar */}
+                    <div className="h-1 w-full" style={{ background: c.bar }} />
+
+                    <div className="p-5 sm:p-6">
+                      <div className="flex items-start gap-4">
+                        {/* Avatar */}
+                        <div
+                          className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center text-white font-heading text-lg"
+                          style={{ background: c.bar }}
+                        >
+                          {(a.client_name || "?")[0].toUpperCase()}
+                        </div>
+
+                        {/* Info */}
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-3 flex-wrap">
+                            <div>
+                              <p className="font-heading text-xl text-ec-dark leading-tight">{a.client_name}</p>
+                              <p className="font-body text-sm text-ec-text-muted mt-0.5">
+                                {a.client_phone || a.client_email || "—"}
+                              </p>
+                            </div>
+                            <StatusBadge status={a.status} />
+                          </div>
+
+                          <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-1.5">
+                            <span className="flex items-center gap-1.5 font-ui text-[11px] tracking-wider text-ec-gold">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+                              </svg>
+                              {a.date}
+                            </span>
+                            <span className="flex items-center gap-1.5 font-ui text-[11px] tracking-wider text-ec-text-muted">
+                              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+                              </svg>
+                              {a.time || "Hora por confirmar"}
+                            </span>
+                            {a.vehicle_type && (
+                              <span className="flex items-center gap-1.5 font-ui text-[11px] tracking-wider text-ec-text-muted">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                                  <rect x="1" y="9" width="22" height="10" rx="2"/><path d="M5 9V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/>
+                                </svg>
+                                {a.vehicle_type === "car" ? "Carro" : a.vehicle_type === "moto" ? "Moto" : a.vehicle_type}
+                              </span>
+                            )}
+                          </div>
+
+                          {a.services && a.services.length > 0 && (
+                            <div className="mt-3 flex flex-wrap gap-1.5">
+                              {a.services.map(s => (
+                                <span key={s.id} className="font-ui text-[9px] tracking-[0.1em] uppercase bg-ec-cream text-ec-text-muted px-2.5 py-1 rounded-md">
+                                  {s.name}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Total + delete */}
+                        <div className="flex-shrink-0 flex flex-col items-end gap-2">
+                          {a.total_amount > 0 && (
+                            <span className="font-heading text-lg text-ec-gold font-bold">
+                              ${(a.total_amount).toLocaleString("es-CO")}
+                            </span>
+                          )}
+                          <button
+                            onClick={e => { e.stopPropagation(); setDeleteTarget(a); }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600"
+                            title="Eliminar cita"
+                          >
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                              <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
                     </div>
-                    <span
-                      className="font-ui text-[9px] tracking-[0.15em] uppercase px-3 py-1.5 rounded-sm"
-                      style={{ background: sc.bg, color: sc.color, border: `1px solid ${sc.border}` }}
-                    >
-                      {STATUS_LABELS[a.status] || a.status}
-                    </span>
-                  </div>
-                  {a.services && (
-                    <p className="font-body text-xs text-ec-text-muted truncate border-t border-black/[0.04] pt-4 font-light">
-                      {a.services.map((s) => s.name).join(" · ")}
-                    </p>
-                  )}
-                </motion.button>
-              );
-            })
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
           )}
         </div>
 
         {/* Detail panel */}
         <AnimatePresence>
-          {selected && (
+          {showDetail && selected && (
             <motion.div
-              initial={{ opacity: 0, x: 20 }}
+              initial={{ opacity: 0, x: 24 }}
               animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 20 }}
-              className="border border-black/[0.06] p-8 h-fit sticky top-28 bg-white rounded-sm shadow-[0_8px_40px_rgba(0,0,0,0.08)]"
+              exit={{ opacity: 0, x: 24 }}
+              transition={{ duration: 0.3 }}
+              className="xl:col-span-2"
             >
-              <div className="flex items-start justify-between mb-8 pb-6 border-b border-black/[0.06]">
-                <div>
-                  <h3 className="font-heading text-2xl text-ec-gold mb-1">{selected.client_name}</h3>
-                  <p className="font-ui text-[10px] tracking-[0.3em] text-ec-text-muted uppercase">Detalles de la Reserva</p>
-                </div>
-                <button onClick={() => setSelected(null)} className="text-black/20 hover:text-ec-dark transition-colors text-lg">✕</button>
-              </div>
+              <div className="bg-white rounded-2xl border border-black/[0.07] shadow-[0_8px_40px_rgba(0,0,0,0.08)] sticky top-6 overflow-hidden">
+                {/* Top color bar */}
+                <div className="h-2 w-full" style={{ background: (STATUS_COLORS[selected.status] || STATUS_COLORS.pending).bar }} />
 
-              <div className="grid grid-cols-2 gap-6 mb-10">
-                {[
-                  { label: "Email", value: selected.client_email },
-                  { label: "Teléfono", value: selected.client_phone || "—" },
-                  { label: "Vehículo", value: selected.vehicle_type === "car" ? "Carro" : "Moto" },
-                  { label: "Fecha", value: selected.date },
-                  { label: "Hora", value: selected.time || "Por confirmar" },
-                  { label: "Entrega", value: selected.pickup_option },
-                ].map((item, i) => (
-                  <div key={i}>
-                    <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase mb-1">{item.label}</p>
-                    <p className="font-body text-sm text-ec-dark break-all">{item.value}</p>
+                <div className="p-6">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-heading text-2xl"
+                        style={{ background: (STATUS_COLORS[selected.status] || STATUS_COLORS.pending).bar }}
+                      >
+                        {(selected.client_name || "?")[0].toUpperCase()}
+                      </div>
+                      <div>
+                        <h3 className="font-heading text-xl text-ec-dark">{selected.client_name}</h3>
+                        <StatusBadge status={selected.status} />
+                      </div>
+                    </div>
+                    <button
+                      onClick={closeDetail}
+                      className="w-8 h-8 flex items-center justify-center rounded-lg text-ec-text-muted hover:bg-ec-cream hover:text-ec-dark transition-all text-lg"
+                    >
+                      ✕
+                    </button>
                   </div>
-                ))}
-              </div>
 
-              {/* Services */}
-              {selected.services && selected.services.length > 0 && (
-                <div className="mb-10">
-                  <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase mb-4">Servicios</p>
-                  <div className="space-y-3 bg-ec-cream p-4 border border-black/[0.06] rounded-sm">
-                    {selected.services.map((s) => (
-                      <div key={s.id} className="flex justify-between items-center">
-                        <span className="font-body text-sm text-ec-dark">{s.name}</span>
-                        <span className="font-ui text-xs text-ec-gold font-bold">{s.priceDisplay}</span>
+                  {/* Info grid */}
+                  <div className="grid grid-cols-2 gap-4 mb-6">
+                    {[
+                      { label: "Email", value: selected.client_email, icon: "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6" },
+                      { label: "Teléfono", value: selected.client_phone || "—", icon: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.07 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 2.91 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z" },
+                      { label: "Fecha", value: selected.date, icon: "M3 4h18v18H3zM16 2v4M8 2v4M3 10h18" },
+                      { label: "Hora", value: selected.time || "Por confirmar", icon: "M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20M12 6v6l4 2" },
+                      { label: "Vehículo", value: selected.vehicle_type === "car" ? "Carro" : selected.vehicle_type === "moto" ? "Moto" : selected.vehicle_type || "—", icon: "M1 9h22M5 9V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3M1 9h22v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" },
+                      { label: "Entrega", value: selected.pickup_option || "—", icon: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" },
+                    ].map((item, i) => (
+                      <div key={i} className="bg-ec-cream rounded-xl p-3">
+                        <p className="font-ui text-[8px] tracking-[0.2em] text-ec-text-muted uppercase mb-1">{item.label}</p>
+                        <p className="font-body text-sm text-ec-dark break-all leading-snug">{item.value}</p>
                       </div>
                     ))}
-                    <div className="pt-3 border-t border-black/[0.08] flex justify-between items-center">
-                      <span className="font-heading text-lg text-ec-dark">Total</span>
-                      <span className="font-heading text-xl text-ec-gold font-bold">${(selected.total_amount || 0).toLocaleString("es-CO")}</span>
+                  </div>
+
+                  {/* Services */}
+                  {selected.services && selected.services.length > 0 && (
+                    <div className="mb-6">
+                      <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase mb-3">Servicios</p>
+                      <div className="bg-ec-cream rounded-xl p-4 space-y-2">
+                        {selected.services.map(s => (
+                          <div key={s.id} className="flex justify-between items-center">
+                            <span className="font-body text-sm text-ec-dark">{s.name}</span>
+                            <span className="font-ui text-xs text-ec-gold font-bold">{s.priceDisplay}</span>
+                          </div>
+                        ))}
+                        <div className="pt-3 border-t border-black/[0.08] flex justify-between items-center">
+                          <span className="font-heading text-base text-ec-dark">Total</span>
+                          <span className="font-heading text-xl text-ec-gold font-bold">${(selected.total_amount || 0).toLocaleString("es-CO")}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Change status */}
+                  <div className="mb-6">
+                    <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase mb-3">Cambiar Estado</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {STATUS_OPTIONS.map(s => {
+                        const c = STATUS_COLORS[s];
+                        const isActive = selected.status === s;
+                        return (
+                          <button
+                            key={s}
+                            onClick={() => updateStatus(selected.id, s)}
+                            className="py-2.5 font-ui text-[9px] tracking-[0.1em] border uppercase rounded-xl transition-all"
+                            style={isActive
+                              ? { background: c.bar, color: "#fff", borderColor: c.bar }
+                              : { background: c.bg, color: c.text, borderColor: c.border }
+                            }
+                          >
+                            {STATUS_LABELS[s]}
+                          </button>
+                        );
+                      })}
                     </div>
                   </div>
-                </div>
-              )}
 
-              {/* Status change */}
-              <div className="mb-8">
-                <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase mb-4">Cambiar Estado</p>
-                <div className="grid grid-cols-3 gap-2">
-                  {STATUS_OPTIONS.map((s) => (
+                  {/* Actions */}
+                  <div className="flex flex-col gap-2">
                     <button
-                      key={s}
-                      onClick={() => updateStatus(selected.id, s)}
-                      className={`py-2.5 font-ui text-[9px] tracking-[0.15em] border transition-all duration-300 uppercase rounded-sm ${
-                        selected.status === s ? "bg-ec-gold text-white border-ec-gold font-bold" : "bg-ec-cream text-ec-text-muted border-black/[0.06] hover:border-ec-gold/30"
-                      }`}
+                      onClick={() => sendReminderEmail(selected)}
+                      disabled={sending || selected.reminder_sent}
+                      className="w-full py-3.5 font-ui text-[10px] tracking-[0.2em] border border-ec-gold text-ec-gold uppercase flex items-center justify-center gap-2 hover:bg-ec-gold hover:text-white transition-all disabled:opacity-30 rounded-xl"
                     >
-                      {STATUS_LABELS[s]}
+                      {selected.reminder_sent ? "Recordatorio Enviado ✓" : "Enviar Recordatorio"}
                     </button>
-                  ))}
+                    <button
+                      onClick={() => setDeleteTarget(selected)}
+                      className="w-full py-3.5 font-ui text-[10px] tracking-[0.2em] border border-red-200 text-red-500 uppercase flex items-center justify-center gap-2 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all rounded-xl"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+                      </svg>
+                      Eliminar Cita
+                    </button>
+                  </div>
                 </div>
-              </div>
-
-              {/* Actions */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={() => sendReminderEmail(selected)}
-                  disabled={sending || selected.reminder_sent}
-                  className="flex-1 py-4 font-ui text-[10px] tracking-[0.2em] border border-ec-gold text-ec-gold uppercase flex items-center justify-center gap-2 hover:bg-ec-gold hover:text-white transition-all disabled:opacity-25 rounded-sm"
-                >
-                  {selected.reminder_sent ? "Recordatorio Enviado ✓" : "Enviar Recordatorio"}
-                </button>
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
+
+      {/* Delete confirm modal */}
+      <AnimatePresence>
+        {deleteTarget && (
+          <ConfirmDeleteModal
+            name={deleteTarget.client_name}
+            onConfirm={handleDelete}
+            onCancel={() => setDeleteTarget(null)}
+            loading={deleting}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }

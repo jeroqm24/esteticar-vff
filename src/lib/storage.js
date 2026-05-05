@@ -52,6 +52,12 @@ export const db = {
         return true;
       } catch { return false; }
     },
+    delete: async (id) => {
+      try {
+        await supabase.from('appointments').delete().eq('id', id);
+        return true;
+      } catch { return false; }
+    },
     filter: async () => {
       try {
         const { data } = await supabase.from('appointments').select('*').order('created_date', { ascending: false });
