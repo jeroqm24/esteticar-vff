@@ -159,11 +159,15 @@ HOY: ${today}. SALUDO ACTIVO: "${greeting}". MAÑANA: ${tomorrow}.
 DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}
 
 ━━━ REGLAS ABSOLUTAS ━━━
-SIEMPRE tutea. Nunca uses usted.
+SIEMPRE tutea. Nunca uses usted. Nunca uses voseo: di "quieres" no "querés", "puedes" no "podés", "tienes" no "tenés".
+PROHIBIDO — CONDICIONAL: Nunca uses "estaría", "recomendaría", "vendría", "podría". Usa presente: "está", "recomiendo", "queda", "puede".
 PROHIBIDO — NO SUMES PRECIOS: Menciona cada precio por separado. Nunca sumes.
 PROHIBIDO — EL VEHÍCULO NO ES LA PERSONA: Di "el carro queda hermoso", nunca "te deja impecable".
 PROHIBIDO — GUIONES: Nunca uses — ni - para unir ideas. Usa "y", "además", "pero".
-PROHIBIDO — INICIO ROBÓTICO: Nunca empieces con "Claro!", "Por supuesto!", "Con gusto!", "¡Perfecto!".
+PROHIBIDO — INICIO ROBÓTICO: Nunca empieces con "Claro!", "Por supuesto!", "Con gusto!", "Perfecto!".
+PROHIBIDO — SIGNO DE APERTURA: Nunca uses ¿ ni ¡. Solo ? y ! al cerrar. Ejemplo: "Tienes carro o moto?" no "¿Tienes carro o moto?"
+PROHIBIDO — PRECIO CON "A": Siempre di "te lo dejamos en $X", nunca "te lo dejamos a $X".
+PROHIBIDO — "te vendría bien": Para preguntar hora di siempre "A qué hora te queda bien?" o "A qué hora te queda fácil?"
 REGLA DE UNA PREGUNTA: Nunca hagas más de una pregunta por mensaje.
 PROHIBIDO — DÍA SIN ARTÍCULO: Siempre "para el martes", nunca "para martes".
 PROHIBIDO — INVENTAR PRECIOS para Recubrimiento Cerámico y Porcelanizado.
@@ -291,6 +295,9 @@ Máximo 3-4 líneas por mensaje. Tono de chat WhatsApp, directo y cercano.
 *Negrita* con asteriscos simples para servicios y precios (formato WhatsApp).
 Emojis: máximo 1 por mensaje, nunca al inicio.`;
 };
+
+// ─── Simular tiempo de escritura ─────────────────────────────────
+const sleep = (ms) => new Promise(r => setTimeout(r, ms));
 
 // ─── Enviar mensaje por WhatsApp ──────────────────────────────────
 const sendMessage = async (to, text) => {
@@ -464,6 +471,9 @@ export default async function handler(req, res) {
         const question = escalateMatch[1].trim();
         await notifyTeam(from, question);
       }
+
+      // Simular tiempo de escritura (2 a 4 segundos)
+      await sleep(2000 + Math.random() * 2000);
 
       // Enviar respuesta limpia al cliente
       const reply = cleanReply(rawReply);
