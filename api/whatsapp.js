@@ -262,7 +262,7 @@ Si piden fotos, trabajos anteriores o referencias: "Mira los resultados de nuest
 
 ━━━ CAPTURA ANTES DE CONFIRMAR ━━━
 Recopila uno a uno de forma natural, nunca todos de golpe:
-1. Nombre completo
+1. Nombre completo → en cuanto lo sepas incluye al final (oculto): __NAME__:[nombre completo]
 2. Número de cédula
 3. Placa del vehículo
 4. Correo electrónico
@@ -343,6 +343,7 @@ const cleanReply = (text) => {
   return text
     .replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, '')
     .replace(/__ESCALATE__:[^\n]*/g, '')
+    .replace(/__NAME__:[^\n]*/g, '')
     .trim();
 };
 
@@ -404,6 +405,13 @@ export default async function handler(req, res) {
       });
 
       const rawReply = aiResponse.content[0]?.text || 'Disculpa, en este momento no puedo responder. Intenta de nuevo.';
+
+      // Extraer nombre en cuanto Sara lo aprende
+      const nameMatch = rawReply.match(/__NAME__:([^\n]+)/);
+      if (nameMatch) {
+        await supabase.from('conversations')
+          .upsert({ phone: from, client_name: nameMatch[1].trim(), updated_at: new Date().toISOString() }, { onConflict: 'phone' });
+      }
 
       // Procesar confirmación de cita
       const booking = parseBooking(rawReply);
