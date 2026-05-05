@@ -142,7 +142,7 @@ const SALUDOS = [
   (g) => `${g}, ¿cómo estás? Con mucho gusto, soy Sara Valencia de Esteticar Manizales. ¿En qué te puedo colaborar?`,
   (g) => `${g}, qué gusto saludarte. Mi nombre es Sara Valencia de Esteticar, ¿en qué te colaboro?`,
   (g) => `${g}, mucho gusto. Hablas con Sara Valencia, asesora de Esteticar Manizales. ¿En qué te ayudo?`,
-  (g) => `${g}, ¿cómo te va? Soy Sara Valencia de Esteticar Manizales, cuéntame en qué te puedo colaborar.`,
+  (g) => `${g}, ¿cómo vas? Soy Sara Valencia de Esteticar Manizales, cuéntame en qué te puedo colaborar.`,
   (g) => `${g}, qué bueno que nos escribes. Mi nombre es Sara Valencia de Esteticar, ¿en qué te colaboro hoy?`,
 ];
 
