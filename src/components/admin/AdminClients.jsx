@@ -160,7 +160,8 @@ function ClientCard({ client, apptCount, isSelected, onClick }) {
 }
 
 // ─── Panel de detalle ─────────────────────────────────────────────
-function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketing }) {
+function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketing, onDelete }) {
+  const [confirmDelete, setConfirmDelete] = useState(false);
   const profile = LEAD_PROFILES[client.lead_type];
   const status  = STATUS_CONFIG[client.remarketing_status] || STATUS_CONFIG.active;
   const lastDays = daysSince(client.last_visit_date || client.updated_at);
@@ -258,6 +259,33 @@ function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketin
               Recuperar cliente
             </button>
           )}
+
+          {!confirmDelete ? (
+            <button
+              onClick={() => setConfirmDelete(true)}
+              className="w-full py-3 font-ui text-[10px] tracking-[0.2em] uppercase border border-red-200 text-red-400 hover:bg-red-500 hover:text-white hover:border-red-500 rounded-sm transition-all flex items-center justify-center gap-2">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
+              </svg>
+              Eliminar cliente
+            </button>
+          ) : (
+            <div className="p-3 bg-red-50 border border-red-200 rounded-sm space-y-2">
+              <p className="font-ui text-[9px] tracking-[0.15em] text-red-600 uppercase text-center">¿Confirmar eliminación?</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setConfirmDelete(false)}
+                  className="flex-1 py-2 font-ui text-[9px] tracking-[0.15em] uppercase border border-black/[0.1] text-ec-text-muted hover:bg-ec-cream rounded-sm transition-all">
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => onDelete(client.phone)}
+                  className="flex-1 py-2 font-ui text-[9px] tracking-[0.15em] uppercase bg-red-500 text-white hover:bg-red-600 rounded-sm transition-all">
+                  Sí, eliminar
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </motion.div>
@@ -334,6 +362,15 @@ export default function AdminClients() {
     const interval = setInterval(load, 30000); // actualiza cada 30s
     return () => clearInterval(interval);
   }, [load]);
+
+  const deleteClient = async (phone) => {
+    await Promise.all([
+      supabase.from('conversations').delete().eq('phone', phone),
+      supabase.from('clients').delete().eq('phone', phone),
+    ]);
+    setClients(prev => prev.filter(c => c.phone !== phone));
+    if (selected?.phone === phone) setSelected(null);
+  };
 
   const updateStatus = async (phone, status) => {
     await supabase.from('conversations').upsert({ phone, remarketing_status: status, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
@@ -449,6 +486,7 @@ export default function AdminClients() {
                 onClose={() => setSelected(null)}
                 onUpdateStatus={updateStatus}
                 onRemarketing={markRemarketing}
+                onDelete={deleteClient}
               />
             )}
           </AnimatePresence>
