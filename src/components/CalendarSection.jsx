@@ -70,13 +70,28 @@ const parseAppointmentHour = (appt) => {
   return 9; // default 9am
 };
 
+const MESES = {
+  enero: 0, febrero: 1, marzo: 2, abril: 3, mayo: 4, junio: 5,
+  julio: 6, agosto: 7, septiembre: 8, octubre: 9, noviembre: 10, diciembre: 11,
+};
+
 const parseAppointmentDate = (appt) => {
-  // Try yyyy-MM-dd format
-  const isoMatch = (appt.date || '').match(/(\d{4})-(\d{2})-(\d{2})/);
-  if (isoMatch) return new Date(appt.date.substring(0, 10));
-  // Try "lunes, 21 de abril" format
-  const today = new Date();
-  return today;
+  const dateStr = appt.date || appt.created_date || '';
+
+  // ISO: 2026-05-06
+  const isoMatch = dateStr.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (isoMatch) return new Date(dateStr.substring(0, 10));
+
+  // Español: "6 de mayo" o "6 de mayo de 2026"
+  const esMatch = dateStr.match(/(\d{1,2})\s+de\s+(\w+)(?:\s+de\s+(\d{4}))?/i);
+  if (esMatch) {
+    const day   = parseInt(esMatch[1]);
+    const month = MESES[esMatch[2].toLowerCase()];
+    const year  = esMatch[3] ? parseInt(esMatch[3]) : new Date().getFullYear();
+    if (month !== undefined) return new Date(year, month, day);
+  }
+
+  return new Date();
 };
 
 const isSameDate = (appt, day) => {
