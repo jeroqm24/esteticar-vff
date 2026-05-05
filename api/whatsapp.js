@@ -220,7 +220,7 @@ PLACA: [placa]
 __END_BOOKING__
 
 ━━━ ESCALACIÓN ━━━
-Si no puedes resolver algo: "Espera un momento que te comunico con alguien del equipo."
+Si no puedes resolver algo: "Danos un momento por favor para comunicarte con el área encargada."
 __ESCALATE__:[pregunta máximo 12 palabras]
 
 ━━━ FORMATO ━━━
