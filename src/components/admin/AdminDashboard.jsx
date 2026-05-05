@@ -6,6 +6,55 @@ import AdminBotConfig from "./AdminBotConfig";
 import CalendarSection from "../CalendarSection";
 import { BRAND } from "../../lib/constants";
 
+const ADMIN_PASSWORD = "esteticar2026";
+
+function AdminLogin({ onSuccess }) {
+  const [pwd, setPwd] = useState("");
+  const [error, setError] = useState(false);
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (pwd === ADMIN_PASSWORD) {
+      sessionStorage.setItem("admin_auth", "1");
+      onSuccess();
+    } else {
+      setError(true);
+      setPwd("");
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-ec-cream flex items-center justify-center px-4">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white border border-black/[0.06] shadow-sm rounded-sm p-10 w-full max-w-sm"
+      >
+        <div className="mb-8 text-center">
+          <span className="font-ui text-[10px] tracking-[0.4em] text-ec-gold uppercase block mb-3">Panel Administrativo</span>
+          <h1 className="font-heading text-3xl text-ec-dark font-light">Esteticar</h1>
+        </div>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+          <input
+            type="password"
+            value={pwd}
+            onChange={(e) => { setPwd(e.target.value); setError(false); }}
+            placeholder="Contraseña"
+            autoFocus
+            className="w-full px-4 py-3 border border-black/[0.1] rounded-sm font-body text-sm bg-ec-cream focus:border-ec-gold focus:outline-none"
+          />
+          {error && (
+            <p className="text-red-500 text-xs font-body text-center">Contraseña incorrecta</p>
+          )}
+          <button type="submit" className="btn-gold w-full py-3 rounded-sm text-[11px]">
+            ENTRAR
+          </button>
+        </form>
+      </motion.div>
+    </div>
+  );
+}
+
 const TABS = [
   { id: "stats", label: "Dashboard", icon: "dashboard" },
   { id: "appointments", label: "Citas", icon: "users" },
@@ -41,6 +90,9 @@ const TabIcon = ({ type, size = 20 }) => {
 
 export default function AdminDashboard({ onClose }) {
   const [activeTab, setActiveTab] = useState("stats");
+  const [authed, setAuthed] = useState(() => sessionStorage.getItem("admin_auth") === "1");
+
+  if (!authed) return <AdminLogin onSuccess={() => setAuthed(true)} />;
 
   return (
     <div className="h-[100dvh] bg-ec-cream flex flex-col lg:flex-row overflow-hidden">

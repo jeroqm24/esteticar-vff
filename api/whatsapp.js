@@ -15,9 +15,28 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
-// Historial en memoria por número de teléfono (persiste durante el ciclo de vida del proceso)
-const conversations = new Map();
 const MAX_TURNS = 20;
+
+// ─── Historial persistente en Supabase ───────────────────────────
+const getHistory = async (phone) => {
+  const { data } = await supabase
+    .from('conversations')
+    .select('history')
+    .eq('phone', phone)
+    .single();
+  return data?.history || [];
+};
+
+const saveHistory = async (phone, history, meta = {}) => {
+  await supabase
+    .from('conversations')
+    .upsert({
+      phone,
+      history,
+      ...meta,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'phone' });
+};
 
 // ─── Helpers de tiempo ────────────────────────────────────────────
 const getGreeting = () => {
@@ -319,8 +338,8 @@ export default async function handler(req, res) {
       const text = message.text.body?.trim();
       if (!text) return res.status(200).send('OK');
 
-      // Historial de conversación
-      const history = conversations.get(from) || [];
+      // Historial de conversación (persistente en Supabase)
+      const history = await getHistory(from);
       history.push({ role: 'user', content: text });
       if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
 
@@ -335,12 +354,21 @@ export default async function handler(req, res) {
 
       const rawReply = aiResponse.content[0]?.text || 'Disculpa, en este momento no puedo responder. Intenta de nuevo.';
 
-      // Guardar en historial
-      history.push({ role: 'assistant', content: rawReply });
-      conversations.set(from, history);
-
       // Procesar confirmación de cita
       const booking = parseBooking(rawReply);
+
+      // Guardar historial y perfil del cliente en Supabase
+      history.push({ role: 'assistant', content: rawReply });
+      const meta = {};
+      if (booking) {
+        if (booking.clientName) meta.client_name = booking.clientName;
+        if (booking.service)    meta.last_service = booking.service;
+        if (booking.vehicleType) meta.vehicle_type = booking.vehicleType;
+        if (booking.placa)      meta.vehicle_plate = booking.placa;
+        if (booking.clientEmail && booking.clientEmail !== 'no_proporcionado') meta.client_email = booking.clientEmail;
+        if (booking.cedula)     meta.cedula = booking.cedula;
+      }
+      await saveHistory(from, history, meta);
       if (booking) {
         await supabase.from('appointments').insert({
           service:           booking.service,
@@ -357,6 +385,33 @@ export default async function handler(req, res) {
           status:            'pending',
           channel:           'whatsapp',
         });
+
+        // Email de confirmación al cliente y al admin
+        const emailHtml = `
+          <div style="font-family:sans-serif;max-width:520px;margin:auto">
+            <h2 style="color:#B8860B">¡Tu cita en Esteticar está confirmada!</h2>
+            <p>Hola <strong>${booking.clientName || 'cliente'}</strong>, aquí están los detalles:</p>
+            <table style="width:100%;border-collapse:collapse">
+              <tr><td style="padding:8px;color:#555">Servicio</td><td style="padding:8px"><strong>${booking.service}</strong></td></tr>
+              <tr style="background:#f9f9f9"><td style="padding:8px;color:#555">Fecha y hora</td><td style="padding:8px"><strong>${booking.date}</strong></td></tr>
+              <tr><td style="padding:8px;color:#555">Precio</td><td style="padding:8px"><strong>${booking.priceDisplay}</strong></td></tr>
+              <tr style="background:#f9f9f9"><td style="padding:8px;color:#555">Vehículo</td><td style="padding:8px">${booking.vehicleType === 'moto' ? 'Moto' : 'Carro'} — Placa ${booking.placa || 'N/A'}</td></tr>
+              <tr><td style="padding:8px;color:#555">Traslado</td><td style="padding:8px">${booking.traslado || 'No'}</td></tr>
+              <tr style="background:#f9f9f9"><td style="padding:8px;color:#555">Código</td><td style="padding:8px"><strong>${booking.confirmationCode}</strong></td></tr>
+            </table>
+            <p style="margin-top:20px;color:#888;font-size:13px">Esteticar Manizales · Lunes–Viernes 8am–5pm · Sábados 8am–2pm</p>
+          </div>`;
+
+        await fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000'}/api/notify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'email',
+            subject: `✅ Cita confirmada — ${booking.service} · ${booking.confirmationCode}`,
+            html: emailHtml,
+            to: booking.clientEmail && booking.clientEmail !== 'no_proporcionado' ? booking.clientEmail : undefined,
+          }),
+        }).catch(() => {});
       }
 
       // Notificar al equipo si Sara escala
