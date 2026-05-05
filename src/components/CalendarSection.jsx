@@ -121,15 +121,15 @@ function MonthGrid({ currentMonth, selectedDay, appointments, onSelectDay }) {
   return (
     <div>
       {/* Week headers */}
-      <div className="grid grid-cols-7 mb-2">
+      <div className="grid grid-cols-7 mb-3">
         {WEEK_DAYS.map((d, i) => (
           <div key={d} className="text-center py-2">
-            <span className={`font-ui text-[9px] tracking-[0.15em] uppercase ${i === 6 ? "text-red-300" : "text-ec-text-muted"}`}>{d}</span>
+            <span className={`font-ui text-[11px] tracking-[0.2em] uppercase font-medium ${i === 6 ? "text-red-300" : "text-ec-text-muted"}`}>{d}</span>
           </div>
         ))}
       </div>
 
-      <div className="grid grid-cols-7 gap-1">
+      <div className="grid grid-cols-7 gap-1.5">
         {Array(firstDayOfWeek).fill(null).map((_, i) => (
           <div key={`empty-${i}`} className="aspect-square" />
         ))}
@@ -144,8 +144,8 @@ function MonthGrid({ currentMonth, selectedDay, appointments, onSelectDay }) {
 
           if (isSunday) {
             return (
-              <div key={day.toISOString()} className="aspect-square flex items-center justify-center opacity-20">
-                <span className="text-xs text-ec-text-muted">{format(day, "d")}</span>
+              <div key={day.toISOString()} className="min-h-[64px] flex items-center justify-center opacity-20">
+                <span className="font-heading text-xl text-ec-text-muted">{format(day, "d")}</span>
               </div>
             );
           }
@@ -155,24 +155,27 @@ function MonthGrid({ currentMonth, selectedDay, appointments, onSelectDay }) {
               key={day.toISOString()}
               onClick={() => !isPast && onSelectDay(day)}
               disabled={isPast}
-              className={`relative aspect-square flex flex-col items-center justify-center rounded-sm text-xs transition-all duration-200 ${isSelected
-                ? "bg-[#F8C840] text-white shadow-[0_4px_12px_rgba(248,200,64,0.35)] scale-105"
+              className={`relative min-h-[64px] flex flex-col items-center justify-center rounded-sm transition-all duration-200 ${isSelected
+                ? "bg-[#F8C840] text-white shadow-[0_4px_16px_rgba(248,200,64,0.4)] scale-105"
                 : isTod
-                  ? "border border-[#F8C840]/50 bg-[#F8C840]/5 text-[#F8C840] font-bold"
+                  ? "border-2 border-[#F8C840] bg-[#F8C840]/5 text-[#F8C840]"
                   : isPast
                     ? "opacity-25 cursor-not-allowed text-ec-text-muted"
                     : isFull
                       ? "bg-red-50 text-red-400 cursor-not-allowed"
-                      : "hover:bg-ec-cream text-ec-dark hover:scale-105"
+                      : "hover:bg-ec-cream text-ec-dark hover:scale-105 hover:shadow-[0_2px_8px_rgba(0,0,0,0.08)]"
                 }`}
             >
-              <span className="font-heading text-sm">{format(day, "d")}</span>
+              <span className={`font-heading text-2xl leading-none ${isTod && !isSelected ? "font-bold" : "font-light"}`}>{format(day, "d")}</span>
               {count > 0 && !isSelected && (
-                <div className="absolute bottom-1 flex gap-0.5">
+                <div className="flex gap-1 mt-1.5">
                   {Array.from({ length: Math.min(count, 3) }).map((_, i) => (
-                    <div key={i} className={`w-1 h-1 rounded-full ${isFull ? "bg-red-400" : count === 2 ? "bg-amber-400" : "bg-green-400"}`} />
+                    <div key={i} className={`w-1.5 h-1.5 rounded-full ${isFull ? "bg-red-400" : count === 2 ? "bg-amber-400" : "bg-green-400"}`} />
                   ))}
                 </div>
+              )}
+              {count > 0 && isSelected && (
+                <span className="font-ui text-[9px] mt-1 opacity-80">{count} cita{count > 1 ? "s" : ""}</span>
               )}
             </button>
           );
@@ -350,21 +353,28 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
 }
 
 // ─── Add appointment modal ────────────────────────────────────────
+// null = precio por cotización (campo editable en el modal)
 const SERVICE_PRICES = {
+  // CARROS
   "Lavada Esencial Carro": 49000,
-  "Brillado a Máquina": 120000,
-  "Lavado de Chasis": 35000,
-  "Lavado de Techo": 25000,
-  "Descontaminación de Vidrios": 45000,
-  "Restauración de Farolas": 80000,
-  "Lavado de Cojinería": 90000,
-  "Mantenimiento Interior": 75000,
-  "Tratamiento 3 en 1 Manual": 150000,
-  "Tratamiento 3 en 1 a Máquina": 200000,
-  "Lavada Esencial Moto": 25000,
-  "Brillado de Farolas": 30000,
-  "Brillado de Tanque": 35000,
-  "Descontaminación de Tubería": 40000,
+  "Brillado a Máquina": 100000,
+  "Lavado de Chasis": 59000,
+  "Lavado de Techo y Parasoles": 49000,
+  "Descontaminación de Vidrios (todos)": 250000,
+  "Descontaminación de Vidrios (parabrisas)": 60000,
+  "Restauración de Farolas": 180000,
+  "Lavado de Cojinería": 199000,
+  "Mantenimiento Interior": 280000,
+  "Tratamiento 3 en 1 Manual": 290000,
+  "Tratamiento 3 en 1 a Máquina": 350000,
+  "Limpieza Técnica de Motor": 49000,
+  "Recubrimiento Cerámico": null,
+  "Porcelanizado": null,
+  // MOTOS
+  "Lavada Esencial Moto": 49000,
+  "Brillado de Farolas": 49000,
+  "Brillado de Tanque": 59000,
+  "Descontaminación de Tubería": 49000,
 };
 
 function formatCOP(amount) {
@@ -373,10 +383,20 @@ function formatCOP(amount) {
 
 function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
   const CAR_SERVICES = [
-    "Lavada Esencial Carro", "Brillado a Máquina", "Lavado de Chasis",
-    "Lavado de Techo", "Descontaminación de Vidrios", "Restauración de Farolas",
-    "Lavado de Cojinería", "Mantenimiento Interior",
-    "Tratamiento 3 en 1 Manual", "Tratamiento 3 en 1 a Máquina",
+    "Lavada Esencial Carro",
+    "Brillado a Máquina",
+    "Lavado de Chasis",
+    "Lavado de Techo y Parasoles",
+    "Descontaminación de Vidrios (todos)",
+    "Descontaminación de Vidrios (parabrisas)",
+    "Restauración de Farolas",
+    "Lavado de Cojinería",
+    "Mantenimiento Interior",
+    "Tratamiento 3 en 1 Manual",
+    "Tratamiento 3 en 1 a Máquina",
+    "Limpieza Técnica de Motor",
+    "Recubrimiento Cerámico",
+    "Porcelanizado",
   ];
   const MOTO_SERVICES = [
     "Lavada Esencial Moto", "Brillado de Farolas", "Brillado de Tanque", "Descontaminación de Tubería",
@@ -393,21 +413,24 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
     hour: defaultHour || 9,
     status: "confirmed",
     discount: 0,
+    manualPrice: "",
     selectedDate: toDateInput(day || new Date()),
   });
 
   const selectedDay = form.selectedDate ? new Date(form.selectedDate + "T12:00:00") : (day || new Date());
-  const basePrice = SERVICE_PRICES[form.service] || 0;
+  const rawPrice = SERVICE_PRICES[form.service];
+  const isCotizacion = rawPrice === null;
+  const basePrice = isCotizacion ? (parseInt(form.manualPrice) || 0) : (rawPrice || 0);
   const finalPrice = Math.max(0, basePrice - (Number(form.discount) || 0));
   const hasDiscount = form.discount > 0;
 
   const handleServiceChange = (service) => {
-    setForm(f => ({ ...f, service, discount: 0 }));
+    setForm(f => ({ ...f, service, discount: 0, manualPrice: "" }));
   };
 
   const handleVehicleChange = (vehicleType) => {
     const services = vehicleType === "Carro" ? CAR_SERVICES : MOTO_SERVICES;
-    setForm(f => ({ ...f, vehicleType, service: services[0], discount: 0 }));
+    setForm(f => ({ ...f, vehicleType, service: services[0], discount: 0, manualPrice: "" }));
   };
 
   const allServices = form.vehicleType === "Carro" ? CAR_SERVICES : MOTO_SERVICES;
@@ -428,7 +451,7 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
       status: form.status,
       date: fullDate,
       time: `${form.hour}:00`,
-      priceDisplay: formatCOP(finalPrice),
+      priceDisplay: (isCotizacion && !basePrice) ? "Por cotización" : formatCOP(finalPrice),
       discount: form.discount,
       confirmationCode: `EST-M${Math.floor(Math.random() * 9000) + 1000}`,
       channel: "manual",
@@ -538,22 +561,38 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
               <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
             </svg>
             <div className="flex-1 flex items-center gap-3 flex-wrap">
-              <span className="font-body text-sm text-ec-text-muted">{formatCOP(basePrice)}</span>
+              {isCotizacion ? (
+                <>
+                  <span className="font-ui text-[9px] tracking-[0.15em] uppercase px-2.5 py-1 rounded-full bg-purple-50 text-purple-600 border border-purple-200">Por cotización</span>
+                  <input
+                    type="number"
+                    min="0"
+                    value={form.manualPrice}
+                    onChange={e => setForm(f => ({ ...f, manualPrice: e.target.value }))}
+                    placeholder="Precio acordado (opcional)"
+                    className="flex-1 font-body text-sm text-ec-dark bg-ec-cream px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-purple-300 min-w-0"
+                  />
+                </>
+              ) : (
+                <span className="font-body text-sm text-ec-text-muted">{formatCOP(basePrice)}</span>
+              )}
               <div className="flex items-center gap-1.5">
                 <span className="font-ui text-[10px] text-ec-text-muted uppercase tracking-wider">Descuento</span>
                 <input
                   type="number"
                   min="0"
-                  max={basePrice}
+                  max={basePrice || undefined}
                   value={form.discount || ""}
                   onChange={e => setForm(f => ({ ...f, discount: parseInt(e.target.value) || 0 }))}
                   placeholder="0"
                   className="w-20 font-body text-sm text-ec-dark bg-ec-cream px-2 py-1 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 text-center"
                 />
               </div>
-              <span className={`font-heading text-base font-bold ${hasDiscount ? "text-[#B8860B]" : "text-ec-dark"}`}>
-                = {formatCOP(finalPrice)}
-              </span>
+              {(basePrice > 0) && (
+                <span className={`font-heading text-base font-bold ${hasDiscount ? "text-[#B8860B]" : "text-ec-dark"}`}>
+                  = {formatCOP(finalPrice)}
+                </span>
+              )}
             </div>
           </div>
 
@@ -812,9 +851,9 @@ export default function CalendarSection({ isAdmin = false, onOpenChat, openNewOn
           { value: appointments.filter(a => a.status === 'confirmed').length, label: "Confirmadas", sublabel: "esta semana" },
           { value: appointments.filter(a => a.status === 'completed').length, label: "Completadas", sublabel: "histórico" },
         ].map((stat, i) => (
-          <div key={i} className="bg-white border border-black/[0.06] p-4 rounded-sm">
-            <p className="font-heading text-3xl text-ec-dark">{stat.value}</p>
-            <p className="font-ui text-[10px] tracking-[0.2em] text-[#F8C840] uppercase mt-1">{stat.label}</p>
+          <div key={i} className="bg-white border border-black/[0.06] p-5 rounded-sm">
+            <p className="font-heading text-5xl font-light text-ec-gold leading-none">{stat.value}</p>
+            <p className="font-ui text-[10px] tracking-[0.2em] text-ec-dark uppercase mt-3">{stat.label}</p>
             <p className="font-ui text-[9px] text-ec-text-muted mt-0.5">{stat.sublabel}</p>
             {stat.max && (
               <div className="flex gap-1 mt-2">
