@@ -14,10 +14,12 @@ const saveMessages = (msgs) => { try { localStorage.setItem(MSG_KEY, JSON.string
 // ─── Mappers entre Supabase (snake_case) y app (camelCase) ────────
 const mapAppt = (r) => ({
   id: r.id, service: r.service, vehicleType: r.vehicle_type,
-  date: r.date, priceDisplay: r.price_display, confirmationCode: r.confirmation_code,
+  date: r.date, time: r.time, priceDisplay: r.price_display, confirmationCode: r.confirmation_code,
   clientName: r.client_name, clientPhone: r.client_phone, clientEmail: r.client_email,
   traslado: r.traslado, cedula: r.cedula, placa: r.placa,
   status: r.status, channel: r.channel, created_date: r.created_date,
+  services: r.services || [], totalAmount: r.total_amount || 0,
+  pickupOption: r.pickup_option, reminderSent: r.reminder_sent || false,
 });
 
 const toApptRow = (d) => ({

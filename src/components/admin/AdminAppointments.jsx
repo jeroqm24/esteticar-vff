@@ -111,13 +111,13 @@ export default function AdminAppointments() {
     setSending(true);
     const services = (appt.services || []).map(s => s.name).join(", ");
     await email.send({
-      to: appt.client_email,
+      to: appt.clientEmail,
       subject: `Recordatorio de tu cita — Esteticar ✨`,
-      body: `Hola ${appt.client_name}! Te recordamos tu cita el ${appt.date} a las ${appt.time || "Por confirmar"}. Servicios: ${services}.`,
+      body: `Hola ${appt.clientName}! Te recordamos tu cita el ${appt.date} a las ${appt.time || "Por confirmar"}. Servicios: ${services}.`,
     });
-    await db.appointments.update(appt.id, { reminder_sent: true });
-    setAppointments(prev => prev.map(a => a.id === appt.id ? { ...a, reminder_sent: true } : a));
-    if (selected?.id === appt.id) setSelected(prev => ({ ...prev, reminder_sent: true }));
+    await db.appointments.update(appt.id, { reminderSent: true });
+    setAppointments(prev => prev.map(a => a.id === appt.id ? { ...a, reminderSent: true } : a));
+    if (selected?.id === appt.id) setSelected(prev => ({ ...prev, reminderSent: true }));
     setSending(false);
   };
 
@@ -220,16 +220,16 @@ export default function AdminAppointments() {
                           className="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center text-white font-heading text-lg"
                           style={{ background: c.bar }}
                         >
-                          {(a.client_name || "?")[0].toUpperCase()}
+                          {(a.clientName || "?")[0].toUpperCase()}
                         </div>
 
                         {/* Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-start justify-between gap-3 flex-wrap">
                             <div>
-                              <p className="font-heading text-xl text-ec-dark leading-tight">{a.client_name}</p>
+                              <p className="font-heading text-xl text-ec-dark leading-tight">{a.clientName}</p>
                               <p className="font-body text-sm text-ec-text-muted mt-0.5">
-                                {a.client_phone || a.client_email || "—"}
+                                {a.clientPhone || a.client_email || "—"}
                               </p>
                             </div>
                             <StatusBadge status={a.status} />
@@ -248,12 +248,12 @@ export default function AdminAppointments() {
                               </svg>
                               {a.time || "Hora por confirmar"}
                             </span>
-                            {a.vehicle_type && (
+                            {a.vehicleType && (
                               <span className="flex items-center gap-1.5 font-ui text-[11px] tracking-wider text-ec-text-muted">
                                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                                   <rect x="1" y="9" width="22" height="10" rx="2"/><path d="M5 9V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/>
                                 </svg>
-                                {a.vehicle_type === "car" ? "Carro" : a.vehicle_type === "moto" ? "Moto" : a.vehicle_type}
+                                {a.vehicleType === "car" ? "Carro" : a.vehicleType === "moto" ? "Moto" : a.vehicleType}
                               </span>
                             )}
                           </div>
@@ -271,9 +271,9 @@ export default function AdminAppointments() {
 
                         {/* Total + delete */}
                         <div className="flex-shrink-0 flex flex-col items-end gap-2">
-                          {a.total_amount > 0 && (
+                          {a.totalAmount > 0 && (
                             <span className="font-heading text-lg text-ec-gold font-bold">
-                              ${(a.total_amount).toLocaleString("es-CO")}
+                              ${(a.totalAmount).toLocaleString("es-CO")}
                             </span>
                           )}
                           <button
@@ -317,10 +317,10 @@ export default function AdminAppointments() {
                         className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-heading text-2xl"
                         style={{ background: (STATUS_COLORS[selected.status] || STATUS_COLORS.pending).bar }}
                       >
-                        {(selected.client_name || "?")[0].toUpperCase()}
+                        {(selected.clientName || "?")[0].toUpperCase()}
                       </div>
                       <div>
-                        <h3 className="font-heading text-xl text-ec-dark">{selected.client_name}</h3>
+                        <h3 className="font-heading text-xl text-ec-dark">{selected.clientName}</h3>
                         <StatusBadge status={selected.status} />
                       </div>
                     </div>
@@ -335,12 +335,12 @@ export default function AdminAppointments() {
                   {/* Info grid */}
                   <div className="grid grid-cols-2 gap-4 mb-6">
                     {[
-                      { label: "Email", value: selected.client_email, icon: "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6" },
-                      { label: "Teléfono", value: selected.client_phone || "—", icon: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.07 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 2.91 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z" },
+                      { label: "Email", value: selected.clientEmail, icon: "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6" },
+                      { label: "Teléfono", value: selected.clientPhone || "—", icon: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.07 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 2.91 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z" },
                       { label: "Fecha", value: selected.date, icon: "M3 4h18v18H3zM16 2v4M8 2v4M3 10h18" },
                       { label: "Hora", value: selected.time || "Por confirmar", icon: "M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20M12 6v6l4 2" },
-                      { label: "Vehículo", value: selected.vehicle_type === "car" ? "Carro" : selected.vehicle_type === "moto" ? "Moto" : selected.vehicle_type || "—", icon: "M1 9h22M5 9V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3M1 9h22v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" },
-                      { label: "Entrega", value: selected.pickup_option || "—", icon: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" },
+                      { label: "Vehículo", value: selected.vehicleType === "car" ? "Carro" : selected.vehicleType === "moto" ? "Moto" : selected.vehicleType || "—", icon: "M1 9h22M5 9V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3M1 9h22v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" },
+                      { label: "Entrega", value: selected.pickupOption || "—", icon: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" },
                     ].map((item, i) => (
                       <div key={i} className="bg-ec-cream rounded-xl p-3">
                         <p className="font-ui text-[8px] tracking-[0.2em] text-ec-text-muted uppercase mb-1">{item.label}</p>
@@ -362,7 +362,7 @@ export default function AdminAppointments() {
                         ))}
                         <div className="pt-3 border-t border-black/[0.08] flex justify-between items-center">
                           <span className="font-heading text-base text-ec-dark">Total</span>
-                          <span className="font-heading text-xl text-ec-gold font-bold">${(selected.total_amount || 0).toLocaleString("es-CO")}</span>
+                          <span className="font-heading text-xl text-ec-gold font-bold">${(selected.totalAmount || 0).toLocaleString("es-CO")}</span>
                         </div>
                       </div>
                     </div>
@@ -396,10 +396,10 @@ export default function AdminAppointments() {
                   <div className="flex flex-col gap-2">
                     <button
                       onClick={() => sendReminderEmail(selected)}
-                      disabled={sending || selected.reminder_sent}
+                      disabled={sending || selected.reminderSent}
                       className="w-full py-3.5 font-ui text-[10px] tracking-[0.2em] border border-ec-gold text-ec-gold uppercase flex items-center justify-center gap-2 hover:bg-ec-gold hover:text-white transition-all disabled:opacity-30 rounded-xl"
                     >
-                      {selected.reminder_sent ? "Recordatorio Enviado ✓" : "Enviar Recordatorio"}
+                      {selected.reminderSent ? "Recordatorio Enviado ✓" : "Enviar Recordatorio"}
                     </button>
                     <button
                       onClick={() => setDeleteTarget(selected)}
