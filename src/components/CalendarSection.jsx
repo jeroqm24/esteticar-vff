@@ -652,7 +652,7 @@ function WeekView({ currentWeek, appointments, isAdmin, onAddAppointment, onUpda
 }
 
 // ─── Main CalendarSection ─────────────────────────────────────────
-export default function CalendarSection({ isAdmin = false, onOpenChat }) {
+export default function CalendarSection({ isAdmin = false, onOpenChat, openNewOnMount = false }) {
   const [view, setView] = useState("month"); // "month" | "week" | "day"
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [currentWeek, setCurrentWeek] = useState(new Date());
@@ -664,6 +664,14 @@ export default function CalendarSection({ isAdmin = false, onOpenChat }) {
   const [addModalHour, setAddModalHour] = useState(null);
 
   useEffect(() => { loadAppointments(); }, [currentMonth]);
+
+  useEffect(() => {
+    if (openNewOnMount) {
+      setAddModalDay(new Date());
+      setAddModalHour(9);
+      setShowAddModal(true);
+    }
+  }, [openNewOnMount]);
 
   const loadAppointments = async () => {
     setLoading(true);

@@ -105,7 +105,7 @@ function QuickAction({ icon, label, onClick }) {
   );
 }
 
-export default function AdminStats({ onNavigate }) {
+export default function AdminStats({ onNavigate, onNewAppointment }) {
   const exportData = async () => {
     const all = await db.appointments.list();
     const clients = await db.clients.list();
@@ -196,7 +196,7 @@ export default function AdminStats({ onNavigate }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <QuickAction
             label="Nueva Cita"
-            onClick={() => onNavigate?.('appointments')}
+            onClick={() => onNewAppointment ? onNewAppointment() : onNavigate?.('calendar')}
             icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>}
           />
           <QuickAction

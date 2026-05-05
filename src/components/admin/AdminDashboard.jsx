@@ -99,6 +99,16 @@ const TabIcon = ({ type, size = 20 }) => {
 export default function AdminDashboard({ onClose }) {
   const [activeTab, setActiveTab] = useState("stats");
   const [authed, setAuthed] = useState(() => sessionStorage.getItem("admin_auth") === "1");
+  const [openNewAppt, setOpenNewAppt] = useState(false);
+
+  const navigateTo = (tab, newAppt = false) => {
+    setActiveTab(tab);
+    if (tab === "calendar" && newAppt) {
+      setOpenNewAppt(true);
+    } else {
+      setOpenNewAppt(false);
+    }
+  };
 
   if (!authed) return <AdminLogin onSuccess={() => setAuthed(true)} />;
 
@@ -181,10 +191,10 @@ export default function AdminDashboard({ onClose }) {
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
               <div className="max-w-6xl mx-auto">
-                {activeTab === "stats" && <AdminStats onNavigate={setActiveTab} />}
+                {activeTab === "stats" && <AdminStats onNavigate={(tab) => navigateTo(tab, tab === "calendar")} onNewAppointment={() => navigateTo("calendar", true)} />}
                 {activeTab === "appointments" && <AdminAppointments />}
                 {activeTab === "clients" && <AdminClients />}
-                {activeTab === "calendar" && <CalendarSection isAdmin={true} />}
+                {activeTab === "calendar" && <CalendarSection isAdmin={true} openNewOnMount={openNewAppt} />}
                 {activeTab === "finanzas" && <AdminFinanzas />}
               </div>
             </motion.div>
