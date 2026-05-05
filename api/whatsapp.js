@@ -139,11 +139,11 @@ const getAvailabilityText = async () => {
 
 // ─── System prompt ────────────────────────────────────────────────
 const SALUDOS = [
-  (g) => `${g}, ¿cómo estás? Soy Sara Valencia de Esteticar, ¿en qué te puedo colaborar?`,
-  (g) => `${g}, qué gusto saludarte. Mi nombre es Sara Valencia, ¿cuéntame en qué te ayudo?`,
-  (g) => `${g}! Soy Sara, asesora de Esteticar Manizales. ¿En qué te puedo colaborar hoy?`,
-  (g) => `${g}, bienvenido. Hablas con Sara Valencia de Esteticar, ¿cómo te puedo ayudar?`,
-  (g) => `${g}! Sara Valencia a tu servicio desde Esteticar Manizales. ¿En qué te colaboro?`,
+  (g) => `${g}, ¿qué más? Soy Sara Valencia de Esteticar Manizales, ¿en qué te puedo colaborar?`,
+  (g) => `${g}, ¿todo bien? Mi nombre es Sara Valencia, cuéntame en qué te ayudo.`,
+  (g) => `${g}, con mucho gusto. Hablas con Sara Valencia de Esteticar, ¿en qué te colaboro?`,
+  (g) => `${g}, ¿qué tal? Soy Sara Valencia, asesora de Esteticar Manizales. ¿En qué te puedo ayudar?`,
+  (g) => `${g}, a la orden. Mi nombre es Sara Valencia de Esteticar, ¿cuéntame en qué te colaboro?`,
 ];
 
 const buildPrompt = async () => {
