@@ -35,21 +35,26 @@ const getServiceColor = (service) => {
   return SERVICE_COLORS[key] || SERVICE_COLORS.default;
 };
 
-// Duration in hours by service name
+// Duration in hours by service (keys must be substrings of the service name).
+// More specific keys first so the find() picks the right one.
 const SERVICE_DURATIONS = {
-  "Lavada Esencial": 2,
-  "Lavado de Techo": 2,
-  "Lavado de Chasis": 2,
-  "Brillado Farolas": 1,
-  "Descontaminación de Tubería": 2,
-  "Brillado de Tanque": 2,
-  "Descontaminación de Vidrios": 2,
+  "Descontaminación de Vidrios (parabrisas)": 1,
+  "Descontaminación de Vidrios": 2,       // catches "(todos)"
+  "Tratamiento 3 en 1 a Máquina": 5,
+  "Tratamiento 3 en 1 Manual": 4,
+  "Mantenimiento Interior": 3,
+  "Lavado de Cojinería": 4,
+  "Restauración de Farolas": 2,
   "Brillado a Máquina": 3,
-  "Restauración de Farolas": 3,
-  "Lavado de Cojinería": 8,
-  "Mantenimiento Interior": 16,
-  "Tratamiento 3 en 1 Manual": 5,
-  "Tratamiento 3 en 1 a Máquina": 6,
+  "Recubrimiento Cerámico": 6,
+  "Porcelanizado": 5,
+  "Limpieza Técnica de Motor": 1,
+  "Lavado de Techo": 1,                   // catches "y Parasoles"
+  "Lavado de Chasis": 1,
+  "Lavada Esencial": 1,                   // catches Carro y Moto
+  "Brillado de Farolas": 1,
+  "Brillado de Tanque": 1,
+  "Descontaminación de Tubería": 1,
   default: 2,
 };
 
@@ -118,6 +123,23 @@ function MonthGrid({ currentMonth, selectedDay, appointments, onSelectDay }) {
     return appointments.filter(a => isSameDate(a, day) && a.status !== 'cancelada').length;
   };
 
+  // A day is truly full only when every hour slot has MAX_BAYS concurrent appointments
+  const isDayAtCapacity = (day) => {
+    const dayAppts = appointments.filter(a => isSameDate(a, day) && a.status !== 'cancelada');
+    if (dayAppts.length === 0) return false;
+    const sat = (getDay(day) + 6) % 7 === 5;
+    const endH = sat ? HOUR_END_SATURDAY : HOUR_END_WEEKDAY;
+    for (let h = HOUR_START; h < endH; h++) {
+      const concurrent = dayAppts.filter(a => {
+        const start = parseAppointmentHour(a);
+        const dur = getServiceDuration(a.service);
+        return h >= start && h < start + dur;
+      }).length;
+      if (concurrent < MAX_BAYS) return false;
+    }
+    return true;
+  };
+
   return (
     <div>
       {/* Week headers */}
@@ -140,7 +162,7 @@ function MonthGrid({ currentMonth, selectedDay, appointments, onSelectDay }) {
           const isSelected = selectedDay && isSameDay(day, selectedDay);
           const count = getApptCountForDay(day);
           const isTod = isToday(day);
-          const isFull = count >= MAX_BAYS;
+          const isFull = isDayAtCapacity(day);
 
           if (isSunday) {
             return (
@@ -193,7 +215,7 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
   const hours = Array.from({ length: hourEnd - HOUR_START }, (_, i) => HOUR_START + i);
   const dayAppts = appointments.filter(a => isSameDate(a, day) && a.status !== 'cancelada');
 
-  // Group appointments by hour
+  // Group appointments by START hour (for rendering)
   const apptsByHour = {};
   dayAppts.forEach(a => {
     const h = parseAppointmentHour(a);
@@ -201,8 +223,16 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
     apptsByHour[h].push(a);
   });
 
-  const totalSlots = MAX_BAYS;
-  const usedCount = dayAppts.length;
+  // Count how many appointments are simultaneously active at a given hour
+  // (includes carry-overs from earlier hours based on service duration)
+  const getActiveCountAtHour = (hour) =>
+    dayAppts.filter(a => {
+      const start = parseAppointmentHour(a);
+      const dur = getServiceDuration(a.service);
+      return hour >= start && hour < start + dur;
+    }).length;
+
+  const peakConcurrent = hours.reduce((max, h) => Math.max(max, getActiveCountAtHour(h)), 0);
 
   return (
     <div className="flex flex-col h-full">
@@ -217,20 +247,25 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
           </h3>
         </div>
         <div className="flex items-center gap-3">
-          {/* Capacity indicator */}
-          <div className="flex items-center gap-1.5">
-            {Array.from({ length: totalSlots }).map((_, i) => (
-              <div
-                key={i}
-                className={`w-2.5 h-2.5 rounded-full transition-all ${i < usedCount ? "bg-[#F8C840]" : "bg-black/[0.08]"
+          {/* Capacity indicator — pico de concurrencia del día */}
+          <div className="flex flex-col items-end gap-1">
+            <div className="flex items-center gap-1">
+              {Array.from({ length: MAX_BAYS }).map((_, i) => (
+                <div
+                  key={i}
+                  className={`w-2.5 h-2.5 rounded-full transition-all ${
+                    i < peakConcurrent
+                      ? peakConcurrent >= MAX_BAYS ? "bg-red-400" : "bg-[#F8C840]"
+                      : "bg-black/[0.08]"
                   }`}
-              />
-            ))}
-            <span className="font-ui text-[9px] tracking-[0.15em] text-ec-text-muted ml-1">
-              {totalSlots - usedCount} libres
+                />
+              ))}
+            </div>
+            <span className="font-ui text-[9px] tracking-[0.1em] text-ec-text-muted">
+              pico {peakConcurrent}/{MAX_BAYS} · {dayAppts.length} cita{dayAppts.length !== 1 ? "s" : ""}
             </span>
           </div>
-          {isAdmin && usedCount < totalSlots && (
+          {isAdmin && (
             <button
               onClick={() => onAddAppointment && onAddAppointment(day)}
               className="flex items-center gap-1.5 px-3 py-2 bg-[#F8C840] text-white font-ui text-[9px] tracking-[0.15em] uppercase rounded-sm hover:bg-[#e6b800] transition-all"
@@ -250,14 +285,26 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
           {hours.map((hour) => {
             const appts = apptsByHour[hour] || [];
             const hasAppts = appts.length > 0;
+            const activeCount = getActiveCountAtHour(hour);
+            const isSlotFull = activeCount >= MAX_BAYS;
 
             return (
               <div key={hour} className="flex gap-3 mb-1" style={{ minHeight: `${SLOT_HEIGHT}px` }}>
-                {/* Hour label */}
-                <div className="w-12 flex-shrink-0 flex items-start pt-2">
+                {/* Hour label + capacity strip */}
+                <div className="w-12 flex-shrink-0 flex flex-col items-end pt-2 gap-1.5">
                   <span className="font-ui text-[10px] tracking-wider text-ec-text-muted">
                     {hour}:00
                   </span>
+                  {/* 3 dots: occupied bays at this hour */}
+                  <div className="flex flex-col gap-0.5">
+                    {Array.from({ length: MAX_BAYS }).map((_, i) => (
+                      <div key={i} className={`w-1.5 h-1.5 rounded-full ${
+                        i < activeCount
+                          ? isSlotFull ? "bg-red-400" : "bg-[#F8C840]/60"
+                          : "bg-black/[0.06]"
+                      }`} />
+                    ))}
+                  </div>
                 </div>
 
                 {/* Slot area */}
@@ -330,13 +377,17 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
                     </div>
                   ) : (
                     <div className="h-full flex items-center">
-                      {isAdmin && usedCount < totalSlots ? (
+                      {isAdmin && !isSlotFull ? (
                         <button
                           onClick={() => onAddAppointment && onAddAppointment(day, hour)}
                           className="w-full h-10 border border-dashed border-black/[0.08] rounded-sm text-ec-text-muted/30 font-ui text-[9px] tracking-wider hover:border-[#F8C840]/40 hover:text-[#F8C840]/60 transition-all flex items-center justify-center gap-1"
                         >
                           <span>+</span>
                         </button>
+                      ) : isSlotFull ? (
+                        <div className="w-full h-8 flex items-center justify-center bg-red-50 rounded-sm">
+                          <span className="font-ui text-[9px] tracking-wider text-red-300 uppercase">3/3 bahías ocupadas</span>
+                        </div>
                       ) : (
                         <div className="w-full h-px bg-black/[0.04]" />
                       )}
@@ -769,6 +820,14 @@ export default function CalendarSection({ isAdmin = false, onOpenChat, openNewOn
   const todayAppts = appointments.filter(a => isSameDate(a, new Date()) && a.status !== 'cancelada');
   const pendingAppts = appointments.filter(a => a.status === 'pending');
 
+  // Bahías ocupadas en este momento (basado en hora actual y duración de servicio)
+  const currentHour = new Date().getHours();
+  const nowOccupied = todayAppts.filter(a => {
+    const start = parseAppointmentHour(a);
+    const dur = getServiceDuration(a.service);
+    return currentHour >= start && currentHour < start + dur;
+  }).length;
+
   // Public view (landing page)
   if (!isAdmin) {
     return (
@@ -846,7 +905,7 @@ export default function CalendarSection({ isAdmin = false, onOpenChat, openNewOn
       {/* Stats bar */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
-          { value: todayAppts.length, max: MAX_BAYS, label: "Hoy", sublabel: `${MAX_BAYS - todayAppts.length} cupos libres` },
+          { value: todayAppts.length, occupancy: nowOccupied, label: "Hoy", sublabel: `${MAX_BAYS - nowOccupied} bahía${MAX_BAYS - nowOccupied !== 1 ? "s" : ""} libre${MAX_BAYS - nowOccupied !== 1 ? "s" : ""} ahora` },
           { value: pendingAppts.length, label: "Pendientes", sublabel: "por confirmar" },
           { value: appointments.filter(a => a.status === 'confirmed').length, label: "Confirmadas", sublabel: "esta semana" },
           { value: appointments.filter(a => a.status === 'completed').length, label: "Completadas", sublabel: "histórico" },
@@ -855,10 +914,14 @@ export default function CalendarSection({ isAdmin = false, onOpenChat, openNewOn
             <p className="font-heading text-5xl font-light text-ec-gold leading-none">{stat.value}</p>
             <p className="font-ui text-[10px] tracking-[0.2em] text-ec-dark uppercase mt-3">{stat.label}</p>
             <p className="font-ui text-[9px] text-ec-text-muted mt-0.5">{stat.sublabel}</p>
-            {stat.max && (
-              <div className="flex gap-1 mt-2">
-                {Array.from({ length: stat.max }).map((_, j) => (
-                  <div key={j} className={`h-1 flex-1 rounded-full ${j < stat.value ? "bg-[#F8C840]" : "bg-black/[0.06]"}`} />
+            {stat.occupancy !== undefined && (
+              <div className="flex gap-1 mt-2" title={`${stat.occupancy}/${MAX_BAYS} bahías ocupadas ahora`}>
+                {Array.from({ length: MAX_BAYS }).map((_, j) => (
+                  <div key={j} className={`h-1 flex-1 rounded-full ${
+                    j < stat.occupancy
+                      ? stat.occupancy >= MAX_BAYS ? "bg-red-400" : "bg-[#F8C840]"
+                      : "bg-black/[0.06]"
+                  }`} />
                 ))}
               </div>
             )}
