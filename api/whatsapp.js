@@ -54,16 +54,20 @@ const getTomorrowStr = () => {
 
 // ─── Disponibilidad + escasez ────────────────────────────────────
 const SERVICE_HOURS = {
-  'Lavada Esencial': 2, 'Lavado de Techo': 2, 'Lavado de Chasis': 2,
-  'Brillado Farolas': 1, 'Brillado de Farolas': 1,
-  'Descontaminacion de Tuberia': 2, 'Descontaminación de Tubería': 2,
-  'Brillado de Tanque': 2, 'Descontaminacion de Vidrios': 2,
-  'Descontaminación de Vidrios': 2, 'Brillado a Maquina': 3,
-  'Brillado a Máquina': 3, 'Restauracion de Farolas': 3,
-  'Restauración de Farolas': 3, 'Lavado de Cojineria': 8,
-  'Lavado de Cojinería': 8, 'Mantenimiento Interior': 16,
-  'Tratamiento 3 en 1 Manual': 5, 'Tratamiento 3 en 1 a Maquina': 6,
-  'Tratamiento 3 en 1 a Máquina': 6,
+  'Descontaminación de Vidrios (parabrisas)': 1, 'Descontaminacion de Vidrios (parabrisas)': 1,
+  'Descontaminación de Vidrios': 2, 'Descontaminacion de Vidrios': 2,
+  'Tratamiento 3 en 1 a Máquina': 5, 'Tratamiento 3 en 1 a Maquina': 5,
+  'Tratamiento 3 en 1 Manual': 4,
+  'Mantenimiento Interior': 3,
+  'Lavado de Cojinería': 4, 'Lavado de Cojineria': 4,
+  'Restauración de Farolas': 2, 'Restauracion de Farolas': 2,
+  'Brillado a Máquina': 3, 'Brillado a Maquina': 3,
+  'Recubrimiento Cerámico': 6, 'Recubrimiento Ceramico': 6,
+  'Porcelanizado': 5,
+  'Limpieza Técnica de Motor': 1, 'Limpieza Tecnica de Motor': 1,
+  'Lavado de Techo': 1, 'Lavado de Chasis': 1,
+  'Lavada Esencial': 1, 'Brillado de Farolas': 1, 'Brillado Farolas': 1,
+  'Brillado de Tanque': 1, 'Descontaminación de Tubería': 1, 'Descontaminacion de Tuberia': 1,
 };
 
 const getServiceDuration = (name) => {
@@ -181,6 +185,43 @@ Cálida, segura, distinguida. Hablas como la mejor asesora de Manizales: directa
 ━━━ HORARIOS Y UBICACIÓN ━━━
 Lunes a viernes: 8:00 a.m. a 5:00 p.m. Sábados: 8:00 a.m. a 2:00 p.m. Domingos: cerrado.
 Si preguntan ubicación: "Estamos en la Calle 67 #9-26, La Sultana, Manizales. Acá te comparto la ubicación: https://maps.app.goo.gl/yvc3Hu3ksv1bVBXy7"
+
+━━━ CONOCIMIENTO DE VEHÍCULOS — OBLIGATORIO ━━━
+REGLA CRÍTICA: NUNCA asumas la marca si el cliente no la dice. Si dice solo el modelo, confirma antes de seguir: "Una Pulsar NS 125 de Bajaj, perfecto." Si no estás segura, pregunta: "¿De qué marca es?"
+
+MOTOS MÁS COMUNES EN COLOMBIA:
+• Bajaj: Pulsar NS 125, NS 160, NS 200, Pulsar 220F, Rouser 135, Dominar 400, Boxer CT 100
+• Yamaha: FZ 150i, FZS 150, FZ 25, MT-03, YBR 125, NMAX 155, Ray ZR, Crypton 110
+• Honda: CB 190R, CB 125F, XR 150L, Wave 110, Click 125i, Dio 110, Tornado 250
+• Suzuki: AX 100, GN 125, GN 125H, DR 160, GSX-R150
+• KTM: Duke 200, Duke 390, RC 390, Adventure 390
+• Kawasaki: Ninja 300, Ninja 400, Z400, Versys 300
+• Hero: Hunk 150, Eco Deluxe, Splendor Plus, Ignitor 125
+• AKT: NKD 125, Storm 125, TT 150, RTX 200
+
+CARROS MÁS COMUNES EN COLOMBIA:
+• Renault: Duster, Sandero, Kwid, Logan, Stepway, Captur, Koleos
+• Chevrolet: Spark GT, Onix, Tracker, Equinox, Captiva, Aveo, Montana
+• Toyota: Corolla, Yaris, Fortuner, Hilux, Land Cruiser, Prado, RAV4
+• Mazda: Mazda 2, Mazda 3, Mazda 6, CX-30, CX-5, BT-50
+• Kia: Picanto, Rio, Seltos, Sportage, Stonic, Sorento, Carnival
+• Hyundai: i10, Accent, Creta, Tucson, Santa Fe, Ioniq 5, Venue
+• Ford: Escape, Explorer, Territory, EcoSport, F-150, Bronco
+• Volkswagen: Polo, Vento, T-Cross, Tiguan, T-Roc
+• Nissan: March, Versa, Kicks, Frontier, Pathfinder
+• BMW, Mercedes-Benz, Audi, Porsche, Volvo: segmento premium — dale trato especial
+
+CONFUSIONES FRECUENTES — MEMORIZA ESTO:
+• "NS 125", "NS 160", "NS 200" = SIEMPRE Bajaj Pulsar NS (NO Yamaha, NO Honda)
+• "Pulsar" a secas = siempre Bajaj
+• "FZ" o "FZS" = siempre Yamaha (no Bajaj)
+• "Duke" = siempre KTM (no Yamaha ni Honda)
+• "Ninja" = siempre Kawasaki
+• "Duster" = siempre Renault (no Chevrolet)
+• "Tracker" = siempre Chevrolet (no Renault)
+• "Spark" = siempre Chevrolet
+• "Seltos" o "Sportage" = siempre Kia
+• "Tucson" o "Santa Fe" = siempre Hyundai
 
 ━━━ CLASIFICACIÓN DE LEADS ━━━
 En algún momento natural de la conversación haz esta pregunta: "Cuéntame, ¿qué es lo que más te gustaría mejorarle al carro?"
@@ -400,15 +441,38 @@ export default async function handler(req, res) {
 
       // Guardar cita en appointments
       if (booking) {
-        await supabase.from('appointments').insert({
-          service: booking.service, vehicle_type: booking.vehicleType,
-          date: booking.date, price_display: booking.priceDisplay,
+        // Extraer hora del campo FECHA (ej: "miércoles, 7 de mayo de 2026 a las 9:00")
+        const timeMatch = booking.date?.match(/(\d{1,2}):(\d{2})/);
+        const bookingTime = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : null;
+
+        const { error: insertError } = await supabase.from('appointments').insert({
+          service: booking.service,
+          vehicle_type: booking.vehicleType,
+          date: booking.date,
+          time: bookingTime,
+          price_display: booking.priceDisplay,
           confirmation_code: booking.confirmationCode,
-          client_name: booking.clientName, client_phone: booking.clientPhone || from,
-          client_email: booking.clientEmail, traslado: booking.traslado,
-          cedula: booking.cedula, placa: booking.placa,
-          status: 'pending', channel: 'whatsapp',
+          client_name: booking.clientName,
+          client_phone: booking.clientPhone || from,
+          client_email: booking.clientEmail !== 'no_proporcionado' ? booking.clientEmail : null,
+          traslado: booking.traslado,
+          cedula: booking.cedula,
+          placa: booking.placa,
+          status: 'pending',
+          channel: 'whatsapp',
+          created_date: new Date().toISOString(),
         });
+
+        if (insertError) console.error('Supabase insert error:', insertError);
+
+        // Sincronizar cliente en tabla clients para que aparezca en dashboard
+        await supabase.from('clients').upsert({
+          phone: booking.clientPhone || from,
+          name: booking.clientName,
+          last_service: booking.service,
+          last_date: new Date().toISOString(),
+          updated: new Date().toISOString(),
+        }, { onConflict: 'phone' }).catch(e => console.error('Client upsert error:', e));
 
         const emailHtml = `<div style="font-family:sans-serif;max-width:520px;margin:auto">
           <h2 style="color:#B8860B">Tu cita en Esteticar está confirmada!</h2>

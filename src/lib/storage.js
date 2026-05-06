@@ -24,10 +24,11 @@ const mapAppt = (r) => ({
 
 const toApptRow = (d) => ({
   id: d.id, service: d.service, vehicle_type: d.vehicleType,
-  date: d.date, price_display: d.priceDisplay, confirmation_code: d.confirmationCode,
+  date: d.date, time: d.time, price_display: d.priceDisplay, confirmation_code: d.confirmationCode,
   client_name: d.clientName, client_phone: d.clientPhone, client_email: d.clientEmail,
   traslado: d.traslado, cedula: d.cedula, placa: d.placa,
-  status: d.status || 'pending', channel: d.channel || 'chat',
+  status: d.status || 'pending', channel: d.channel || 'manual',
+  created_date: d.created_date || new Date().toISOString(),
 });
 
 // ═══════════════════════════════════════════════════════════════════
@@ -289,26 +290,33 @@ export const getGreeting = () => {
 };
 
 const SERVICE_DURATION_HOURS = {
-  "Lavada Esencial": 2,
-  "Lavado de Techo": 2,
-  "Lavado de Chasis": 2,
-  "Brillado Farolas": 1,
-  "Brillado de Farolas": 1,
-  "Descontaminacion de Tuberia": 2,
-  "Descontaminación de Tubería": 2,
-  "Brillado de Tanque": 2,
-  "Descontaminacion de Vidrios": 2,
+  "Descontaminación de Vidrios (parabrisas)": 1,
+  "Descontaminacion de Vidrios (parabrisas)": 1,
   "Descontaminación de Vidrios": 2,
-  "Brillado a Maquina": 3,
+  "Descontaminacion de Vidrios": 2,
+  "Tratamiento 3 en 1 a Máquina": 5,
+  "Tratamiento 3 en 1 a Maquina": 5,
+  "Tratamiento 3 en 1 Manual": 4,
+  "Mantenimiento Interior": 3,
+  "Lavado de Cojinería": 4,
+  "Lavado de Cojineria": 4,
+  "Restauración de Farolas": 2,
+  "Restauracion de Farolas": 2,
   "Brillado a Máquina": 3,
-  "Restauracion de Farolas": 3,
-  "Restauración de Farolas": 3,
-  "Lavado de Cojineria": 8,
-  "Lavado de Cojinería": 8,
-  "Mantenimiento Interior": 16,
-  "Tratamiento 3 en 1 Manual": 5,
-  "Tratamiento 3 en 1 a Maquina": 6,
-  "Tratamiento 3 en 1 a Máquina": 6,
+  "Brillado a Maquina": 3,
+  "Recubrimiento Cerámico": 6,
+  "Recubrimiento Ceramico": 6,
+  "Porcelanizado": 5,
+  "Limpieza Técnica de Motor": 1,
+  "Limpieza Tecnica de Motor": 1,
+  "Lavado de Techo": 1,
+  "Lavado de Chasis": 1,
+  "Lavada Esencial": 1,
+  "Brillado de Farolas": 1,
+  "Brillado Farolas": 1,
+  "Brillado de Tanque": 1,
+  "Descontaminación de Tubería": 1,
+  "Descontaminacion de Tuberia": 1,
 };
 
 const getServiceDuration = (serviceName) => {
