@@ -169,7 +169,7 @@ DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}${scarcityNote}$
 SIEMPRE tutea. Nunca uses usted. Nunca uses voseo: di "quieres" no "querés", "puedes" no "podés", "tienes" no "tenés".
 PROHIBIDO — CONDICIONAL: Nunca uses "estaría", "recomendaría", "vendría", "podría". Usa presente: "está", "recomiendo", "queda", "puede".
 PROHIBIDO — NO SUMES PRECIOS: Menciona cada precio por separado. Nunca sumes.
-PROHIBIDO — EL VEHÍCULO NO ES LA PERSONA: Di "el carro queda hermoso", nunca "te deja impecable".
+PROHIBIDO — EL VEHÍCULO NO ES LA PERSONA: NUNCA digas "te deja impecable", "te lo dejamos impecable", "te queda perfecto", "te va a quedar". SIEMPRE di "tu moto queda impecable", "el carro queda perfecto", "tu vehículo queda hermoso". El que queda impecable es el vehículo, no la persona.
 PROHIBIDO — GUIONES: Nunca uses — ni - para unir ideas. Usa "y", "además", "pero".
 PROHIBIDO — INICIO ROBÓTICO: Nunca empieces con "Claro!", "Por supuesto!", "Con gusto!", "Perfecto!".
 PROHIBIDO — SIGNO DE APERTURA: Nunca uses ¿ ni ¡. Solo ? y ! al cerrar.
@@ -240,9 +240,16 @@ Con eso (y con lo que el cliente ya dijo) clasifícalo así:
 💸 BILLETUDO: Pregunta por cerámico, quiere protección completa, no pregunta precios.
    Estrategia: Empieza con Cerámico ($2.400.000–$3.000.000), destaca diferenciadores premium, no bajes de entrada.
 
-Tan pronto identifiques el perfil — incluso desde el primer o segundo mensaje — añade al final del mensaje (invisible para el cliente):
+Clasifica al cliente desde el primer o segundo mensaje con los datos disponibles. No esperes la pregunta de diagnóstico para clasificar — infiere el perfil desde cómo escribe y qué pide:
+- Pregunta directo por el precio más barato → REGATEADOR
+- Pide la lavada esencial sin más contexto → probablemente REGATEADOR
+- Pregunta qué incluye, cómo funciona → ANALISTA
+- Tiene urgencia ("lo voy a vender", "se manchó", "para este fin de semana") → EMBALADO
+- Pregunta por cerámico, protección, no menciona precio → BILLETUDO
+
+Añade al final de CADA mensaje (invisible para el cliente):
 __LEAD_TYPE__:[regateador|analista|embalado|billetudo]
-IMPORTANTE: si ya clasificaste al cliente en un mensaje anterior, vuelve a incluir el tag en CADA mensaje para que quede registrado.
+Si aún no tienes suficiente info, clasifica como ANALISTA por defecto — nunca omitas el tag.
 
 Si el cliente rechaza, dice "lo pienso", "después", "no por ahora" o se enfría, añade también:
 __OBJECTION__:[razón en máximo 5 palabras]
@@ -325,7 +332,8 @@ REGLA CLAVE: Con el nombre y la fecha acordada ya puedes confirmar. No retrases 
 
 ━━━ TRASLADO ━━━
 Antes de confirmar: "Contamos con traslado: recogida y entrega $9.000, o solo recogida o entrega $7.000. Te interesa?"
-SOLO si el cliente eligió recogida o recogida+entrega: "Perfecto, llegamos por tu vehículo 30 minutos antes de tu hora de cita."
+Si el cliente elige CUALQUIER opción que incluya recogida o entrega: pide la dirección ANTES de confirmar. "Perfecto, necesito tu dirección para coordinar el traslado."
+Luego confirma: "Llegamos por tu vehículo 30 minutos antes de tu hora de cita."
 Si el cliente dijo que NO quiere traslado o que lleva él mismo el vehículo: NO menciones recogida, NO digas que pasamos por él. Confirma directo.
 
 ━━━ CONFIRMACIÓN ━━━
@@ -338,9 +346,10 @@ VEHICULO: [Carro o Moto]
 NOMBRE: [nombre completo]
 TELEFONO: [teléfono]
 EMAIL: [correo o "no_proporcionado"]
-TRASLADO: [opción elegida]
-CEDULA: [número]
-PLACA: [placa]
+TRASLADO: [opción elegida o "sin traslado"]
+DIRECCION: [dirección del cliente si hay recogida o entrega, sino "no_aplica"]
+CEDULA: [número o "no_proporcionado"]
+PLACA: [placa o "no_proporcionado"]
 __END_BOOKING__
 
 ━━━ ESCALACIÓN ━━━
@@ -367,12 +376,15 @@ const sendMessage = async (to, text) => {
 const parseBooking = (text) => {
   if (!text.includes('__BOOKING_CONFIRMED__')) return null;
   const block = text.match(/__BOOKING_CONFIRMED__([\s\S]*?)__END_BOOKING__/)?.[1] || '';
+  if (!block) return null;
   const get = (key) => block.match(new RegExp(`${key}:\\s*(.+)`))?.[1]?.trim() || '';
+  const vehicleRaw = get('VEHICULO').toLowerCase();
   return {
     service: get('SERVICIO'), priceDisplay: get('PRECIO'), date: get('FECHA'),
-    vehicleType: get('VEHICULO')?.toLowerCase() === 'moto' ? 'moto' : 'car',
+    vehicleType: vehicleRaw === 'moto' ? 'Moto' : 'Carro',
     clientName: get('NOMBRE'), clientPhone: get('TELEFONO'), clientEmail: get('EMAIL'),
-    traslado: get('TRASLADO'), cedula: get('CEDULA'), placa: get('PLACA'),
+    traslado: get('TRASLADO'), direccion: get('DIRECCION'),
+    cedula: get('CEDULA'), placa: get('PLACA'),
     confirmationCode: `EST-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
     status: 'pending', channel: 'whatsapp',
   };
@@ -506,7 +518,7 @@ export default async function handler(req, res) {
         const timeMatch = booking.date?.match(/(\d{1,2}):(\d{2})/);
         const bookingTime = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : null;
 
-        const { error: insertError } = await supabase.from('appointments').insert({
+        const insertPayload = {
           service: booking.service,
           vehicle_type: booking.vehicleType,
           date: booking.date,
@@ -515,16 +527,17 @@ export default async function handler(req, res) {
           confirmation_code: booking.confirmationCode,
           client_name: booking.clientName,
           client_phone: from,
-          client_email: booking.clientEmail !== 'no_proporcionado' ? booking.clientEmail : null,
-          traslado: booking.traslado,
-          cedula: booking.cedula,
-          placa: booking.placa,
+          client_email: booking.clientEmail && booking.clientEmail !== 'no_proporcionado' ? booking.clientEmail : null,
+          traslado: booking.traslado && booking.traslado !== 'sin traslado' ? booking.traslado : null,
+          cedula: booking.cedula && booking.cedula !== 'no_proporcionado' ? booking.cedula : null,
+          placa: booking.placa && booking.placa !== 'no_proporcionado' ? booking.placa : null,
           status: 'pending',
           channel: 'whatsapp',
           created_date: new Date().toISOString(),
-        });
+        };
 
-        if (insertError) console.error('Supabase insert error:', insertError);
+        const { error: insertError } = await supabase.from('appointments').insert(insertPayload);
+        if (insertError) console.error('APPT INSERT ERROR:', JSON.stringify(insertError), 'PAYLOAD:', JSON.stringify(insertPayload));
 
         // Sincronizar cliente en tabla clients — siempre usar 'from' (número WhatsApp real)
         const { error: clientUpsertError } = await supabase.from('clients').upsert({
