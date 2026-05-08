@@ -512,13 +512,14 @@ export default async function handler(req, res) {
         if (insertError) console.error('Supabase insert error:', insertError);
 
         // Sincronizar cliente en tabla clients para que aparezca en dashboard
-        await supabase.from('clients').upsert({
+        const { error: clientUpsertError } = await supabase.from('clients').upsert({
           phone: booking.clientPhone || from,
           name: booking.clientName,
           last_service: booking.service,
           last_date: new Date().toISOString(),
           updated: new Date().toISOString(),
-        }, { onConflict: 'phone' }).catch(e => console.error('Client upsert error:', e));
+        }, { onConflict: 'phone' });
+        if (clientUpsertError) console.error('Client upsert error:', clientUpsertError);
 
         const emailHtml = `<div style="font-family:sans-serif;max-width:520px;margin:auto">
           <h2 style="color:#B8860B">Tu cita en Esteticar está confirmada!</h2>
