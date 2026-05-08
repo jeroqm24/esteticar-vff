@@ -316,13 +316,27 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
                         const duration = getServiceDuration(appt.service);
                         const status = STATUS_CONFIG[appt.status] || STATUS_CONFIG.pending;
 
+                        // Traslado detection
+                        const trasladoStr = (appt.traslado || '').toLowerCase();
+                        const hasPickup = trasladoStr.includes('recogi') || trasladoStr.includes('recoger');
+                        const hasDelivery = trasladoStr.includes('entrega') || trasladoStr.includes('entregar');
+                        const hasTraslado = hasPickup || hasDelivery;
+
+                        // Timeline calculation
+                        const entryH = parseAppointmentHour(appt);
+                        const exitH = entryH + duration;
+                        const fmtH = (h) => `${Math.floor(h)}:${(h % 1) * 60 === 0 ? '00' : '30'}`;
+
                         return (
                           <motion.div
                             key={appt.id || i}
                             initial={{ opacity: 0, x: -8 }}
                             animate={{ opacity: 1, x: 0 }}
-                            className="flex items-start gap-3 p-3 rounded-sm border-l-[3px] bg-white shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
-                            style={{ borderLeftColor: color }}
+                            className="flex items-start gap-3 p-3 rounded-sm border-l-[3px] shadow-[0_2px_8px_rgba(0,0,0,0.06)]"
+                            style={{
+                              borderLeftColor: hasTraslado ? '#3b82f6' : color,
+                              background: hasTraslado ? '#eff6ff' : '#ffffff',
+                            }}
                           >
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
@@ -335,14 +349,47 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
                                 >
                                   {status.label}
                                 </span>
+                                {hasTraslado && (
+                                  <span className="font-ui text-[8px] tracking-[0.1em] uppercase px-2 py-0.5 rounded-full bg-blue-100 text-blue-600">
+                                    {hasPickup && hasDelivery ? '🚗 Recogida + Entrega' : hasPickup ? '🚗 Recogida' : '📦 Entrega'}
+                                  </span>
+                                )}
                               </div>
                               <p className="font-body text-xs text-ec-text-muted mt-0.5">{appt.service}</p>
+
+                              {/* Timeline strip */}
+                              <div className="flex items-center gap-1.5 mt-2 flex-wrap">
+                                {hasPickup && (
+                                  <>
+                                    <span className="font-ui text-[8px] px-2 py-0.5 rounded-sm bg-blue-100 text-blue-700 border border-blue-200">
+                                      🚗 Recogida {fmtH(entryH - 0.5)}
+                                    </span>
+                                    <span className="text-ec-text-muted/40 text-[8px]">→</span>
+                                  </>
+                                )}
+                                <span className="font-ui text-[8px] px-2 py-0.5 rounded-sm bg-green-50 text-green-700 border border-green-200">
+                                  ↓ Entrada {fmtH(entryH)}
+                                </span>
+                                <span className="text-ec-text-muted/40 text-[8px]">→</span>
+                                <span className="font-ui text-[8px] px-2 py-0.5 rounded-sm bg-amber-50 text-amber-700 border border-amber-200">
+                                  ↑ Salida ~{fmtH(exitH)}
+                                </span>
+                                {hasDelivery && (
+                                  <>
+                                    <span className="text-ec-text-muted/40 text-[8px]">→</span>
+                                    <span className="font-ui text-[8px] px-2 py-0.5 rounded-sm bg-purple-50 text-purple-700 border border-purple-200">
+                                      🏠 Entrega ~{fmtH(exitH + 0.5)}
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+
                               <div className="flex items-center gap-3 mt-1.5 flex-wrap">
                                 <span className="font-ui text-[9px] tracking-wider text-[#F8C840]">
                                   {appt.priceDisplay || appt.price}
                                 </span>
                                 <span className="font-ui text-[9px] tracking-wider text-ec-text-muted">
-                                  ~{duration}h · {appt.vehicleType || "Vehículo"}
+                                  {duration}h · {appt.vehicleType || "Vehículo"}
                                 </span>
                                 {appt.clientPhone && (
                                   <span className="font-ui text-[9px] tracking-wider text-ec-text-muted">
@@ -352,7 +399,7 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
                               </div>
                             </div>
 
-                            {/* Code */}
+                            {/* Code + status */}
                             <div className="flex flex-col items-end gap-2 flex-shrink-0">
                               <span className="font-mono text-[9px] text-ec-text-muted/60">
                                 {appt.confirmationCode}
@@ -466,6 +513,7 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
     discount: 0,
     manualPrice: "",
     selectedDate: toDateInput(day || new Date()),
+    traslado: "",
   });
 
   const selectedDay = form.selectedDate ? new Date(form.selectedDate + "T12:00:00") : (day || new Date());
@@ -504,6 +552,7 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
       time: `${form.hour}:00`,
       priceDisplay: (isCotizacion && !basePrice) ? "Por cotización" : formatCOP(finalPrice),
       discount: form.discount,
+      traslado: form.traslado || null,
       confirmationCode: `EST-M${Math.floor(Math.random() * 9000) + 1000}`,
       channel: "manual",
       id: Math.random().toString(36).substr(2, 9),
@@ -580,6 +629,23 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
               placeholder="Teléfono del cliente"
               className={inputCls}
             />
+          </div>
+
+          {/* Traslado row */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="1"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            </svg>
+            <select
+              value={form.traslado}
+              onChange={e => setForm(f => ({ ...f, traslado: e.target.value }))}
+              className={selectCls}
+            >
+              <option value="">Sin traslado (cliente trae y recoge)</option>
+              <option value="Solo recogida">Solo recogida · $7.000</option>
+              <option value="Solo entrega">Solo entrega · $7.000</option>
+              <option value="Recogida y entrega">Recogida y entrega · $9.000</option>
+            </select>
           </div>
 
           {/* Vehicle & Service row */}
