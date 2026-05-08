@@ -398,10 +398,14 @@ export default async function handler(req, res) {
       if (!text) return res.status(200).send('OK');
 
       // Registrar teléfono desde el primer mensaje — sin esperar
-      supabase.from('conversations').upsert(
-        { phone: from, updated_at: new Date().toISOString() },
-        { onConflict: 'phone' }
-      ).catch(() => {});
+      (async () => {
+        try {
+          await supabase.from('conversations').upsert(
+            { phone: from, updated_at: new Date().toISOString() },
+            { onConflict: 'phone' }
+          );
+        } catch (_) {}
+      })();
 
       // Historial + perfil del cliente
       const conv = await getConversation(from);
@@ -453,10 +457,14 @@ export default async function handler(req, res) {
       if (nameMatch) {
         meta.client_name = nameMatch[1].trim();
         // Guardar nombre en tabla clients en cuanto se conoce
-        supabase.from('clients').upsert(
-          { phone: from, name: nameMatch[1].trim(), updated: new Date().toISOString() },
-          { onConflict: 'phone' }
-        ).catch(() => {});
+        (async () => {
+          try {
+            await supabase.from('clients').upsert(
+              { phone: from, name: nameMatch[1].trim(), updated: new Date().toISOString() },
+              { onConflict: 'phone' }
+            );
+          } catch (_) {}
+        })();
       }
       if (leadMatch)  meta.lead_type   = leadMatch[1].trim();
       if (objMatch)   meta.objection   = objMatch[1].trim();
