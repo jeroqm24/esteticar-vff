@@ -45,10 +45,10 @@ const daysSince = (dateStr) => {
 };
 
 const shouldSendRemarketing = (client) => {
-  if (!client.lead_type || client.remarketing_status === 'lost' || client.remarketing_status === 'converted') return false;
-  const profile = LEAD_PROFILES[client.lead_type];
+  if (!client.leadType || client.remarketingStatus === 'lost' || client.remarketingStatus === 'converted') return false;
+  const profile = LEAD_PROFILES[client.leadType];
   if (!profile) return false;
-  const days = daysSince(client.last_remarketing_at || client.updated_at);
+  const days = daysSince(client.lastRemarketingAt || client.updatedAt);
   return days !== null && days >= profile.remarketingDays;
 };
 
@@ -78,9 +78,9 @@ function CopyBtn({ text, label = "Copiar" }) {
 
 // ─── Card de cliente (estilo "reunión de Teams") ──────────────────
 function ClientCard({ client, apptCount, isSelected, onClick }) {
-  const profile = LEAD_PROFILES[client.lead_type];
-  const status  = STATUS_CONFIG[client.remarketing_status] || STATUS_CONFIG.active;
-  const lastDays = daysSince(client.last_visit_date || client.updated_at);
+  const profile = LEAD_PROFILES[client.leadType];
+  const status  = STATUS_CONFIG[client.remarketingStatus] || STATUS_CONFIG.active;
+  const lastDays = daysSince(client.lastVisitDate || client.updatedAt);
   const needsRemarketing = shouldSendRemarketing(client);
 
   return (
@@ -154,7 +154,7 @@ function ClientCard({ client, apptCount, isSelected, onClick }) {
       {needsRemarketing && (
         <div className="mt-2.5 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-sm">
           <p className="font-ui text-[9px] text-amber-700 tracking-[0.1em] uppercase">
-            Remarketar ahora · {LEAD_PROFILES[client.lead_type]?.remarketingDays}d sin contacto
+            Remarketar ahora · {LEAD_PROFILES[client.leadType]?.remarketingDays}d sin contacto
           </p>
         </div>
       )}
@@ -181,9 +181,9 @@ function ClientCard({ client, apptCount, isSelected, onClick }) {
 // ─── Panel de detalle ─────────────────────────────────────────────
 function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketing, onDelete, onToggleBot }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
-  const profile = LEAD_PROFILES[client.lead_type];
-  const status  = STATUS_CONFIG[client.remarketing_status] || STATUS_CONFIG.active;
-  const lastDays = daysSince(client.last_visit_date || client.updated_at);
+  const profile = LEAD_PROFILES[client.leadType];
+  const status  = STATUS_CONFIG[client.remarketingStatus] || STATUS_CONFIG.active;
+  const lastDays = daysSince(client.lastVisitDate || client.updatedAt);
   const remarketingMsg = profile?.message(client.name) || '';
   const waLink = `https://wa.me/57${client.phone?.replace(/\D/g, '')}?text=${encodeURIComponent(remarketingMsg)}`;
 
@@ -217,11 +217,12 @@ function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketin
             { label: "Teléfono",        value: client.phone },
             { label: "Correo",          value: client.email || "—" },
             { label: "Placa",           value: client.vehiclePlate?.toUpperCase() || "—" },
-            { label: "Vehículo",        value: client.vehicleType === "car" ? "Carro" : client.vehicleType === "moto" ? "Moto" : "—" },
+            { label: "Vehículo",        value: client.vehicleType === "car" ? "Carro" : client.vehicleType === "moto" ? "Moto" : (client.vehicleType || "—") },
             { label: "Último servicio", value: client.lastService || "—" },
             { label: "Total citas",     value: apptCount || 0 },
             { label: "Último contacto", value: lastDays !== null ? `hace ${lastDays} días` : "—" },
             { label: "Estado",          value: status.label },
+            ...(client.direccion ? [{ label: "Dirección traslado", value: client.direccion }] : []),
           ].map((item) => (
             <div key={item.label}>
               <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase mb-0.5">{item.label}</p>
@@ -239,7 +240,7 @@ function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketin
         )}
 
         {/* Mensaje de remarketing */}
-        {profile && client.remarketing_status !== 'lost' && (
+        {profile && client.remarketingStatus !== 'lost' && (
           <div className="space-y-3">
             <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase">
               Mensaje de remarketing ({profile.emoji} {profile.label} · cada {profile.remarketingDays}d)
@@ -395,8 +396,11 @@ export default function AdminClients() {
           leadType:        c.lead_type     || existing?.leadType     || null,
           objection:       c.objection     || existing?.objection    || null,
           remarketingStatus: c.remarketing_status || existing?.remarketingStatus || 'active',
-          lastVisitDate:   c.last_visit_date || existing?.lastVisitDate || null,
-          botPaused:       c.bot_paused    || false,
+          lastVisitDate:      c.last_visit_date     || existing?.lastVisitDate     || null,
+          lastRemarketingAt:  c.last_remarketing_at || existing?.lastRemarketingAt || null,
+          remarketingCount:   c.remarketing_count   || existing?.remarketingCount  || 0,
+          botPaused:          c.bot_paused          || false,
+          direccion:          c.direccion           || existing?.direccion         || null,
         });
       }
 
