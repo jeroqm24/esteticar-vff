@@ -397,8 +397,22 @@ export default async function handler(req, res) {
       // Historial + perfil del cliente
       const conv = await getConversation(from);
 
-      // Si el bot está pausado, una persona está atendiendo — no interrumpir
-      if (conv.bot_paused) return res.status(200).send('OK');
+      // Si el bot está pausado, una persona está atendiendo — solo guardar el mensaje, no responder
+      if (conv.bot_paused) {
+        const history = conv.history || [];
+        history.push({ role: 'user', content: text });
+        if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
+
+        // Intentar capturar nombre si aún no lo tenemos
+        const meta = {};
+        if (!conv.client_name) {
+          // Guardar el número como referencia mínima
+          meta.client_phone = from;
+        }
+
+        await saveHistory(from, history, meta);
+        return res.status(200).send('OK');
+      }
 
       const history = conv.history || [];
       history.push({ role: 'user', content: text });
