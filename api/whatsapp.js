@@ -240,8 +240,9 @@ Con eso (y con lo que el cliente ya dijo) clasifícalo así:
 💸 BILLETUDO: Pregunta por cerámico, quiere protección completa, no pregunta precios.
    Estrategia: Empieza con Cerámico ($2.400.000–$3.000.000), destaca diferenciadores premium, no bajes de entrada.
 
-Tan pronto identifiques el perfil, añade al final del mensaje (invisible para el cliente):
+Tan pronto identifiques el perfil — incluso desde el primer o segundo mensaje — añade al final del mensaje (invisible para el cliente):
 __LEAD_TYPE__:[regateador|analista|embalado|billetudo]
+IMPORTANTE: si ya clasificaste al cliente en un mensaje anterior, vuelve a incluir el tag en CADA mensaje para que quede registrado.
 
 Si el cliente rechaza, dice "lo pienso", "después", "no por ahora" o se enfría, añade también:
 __OBJECTION__:[razón en máximo 5 palabras]
@@ -320,7 +321,8 @@ Uno a uno, de forma natural:
 
 ━━━ TRASLADO ━━━
 Antes de confirmar: "Contamos con traslado: recogida y entrega $9.000, o solo recogida o entrega $7.000. Te interesa?"
-Si elige recogida: "Perfecto, pasamos 30 minutos antes de tu hora de cita."
+SOLO si el cliente eligió recogida o recogida+entrega: "Perfecto, llegamos por tu vehículo 30 minutos antes de tu hora de cita."
+Si el cliente dijo que NO quiere traslado o que lleva él mismo el vehículo: NO menciones recogida, NO digas que pasamos por él. Confirma directo.
 
 ━━━ CONFIRMACIÓN ━━━
 Al final del mensaje de confirmación (invisible para el cliente):
@@ -462,7 +464,7 @@ export default async function handler(req, res) {
       const booking = parseBooking(rawReply);
 
       // Construir meta para Supabase
-      const meta = {};
+      const meta = { last_visit_date: new Date().toISOString() };
       if (nameMatch) {
         meta.client_name = nameMatch[1].trim();
         // Guardar nombre en tabla clients en cuanto se conoce
@@ -508,7 +510,7 @@ export default async function handler(req, res) {
           price_display: booking.priceDisplay,
           confirmation_code: booking.confirmationCode,
           client_name: booking.clientName,
-          client_phone: booking.clientPhone || from,
+          client_phone: from,
           client_email: booking.clientEmail !== 'no_proporcionado' ? booking.clientEmail : null,
           traslado: booking.traslado,
           cedula: booking.cedula,
@@ -520,9 +522,9 @@ export default async function handler(req, res) {
 
         if (insertError) console.error('Supabase insert error:', insertError);
 
-        // Sincronizar cliente en tabla clients para que aparezca en dashboard
+        // Sincronizar cliente en tabla clients — siempre usar 'from' (número WhatsApp real)
         const { error: clientUpsertError } = await supabase.from('clients').upsert({
-          phone: booking.clientPhone || from,
+          phone: from,
           name: booking.clientName,
           last_service: booking.service,
           last_date: new Date().toISOString(),
