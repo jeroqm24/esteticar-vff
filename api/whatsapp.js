@@ -21,7 +21,7 @@ const MAX_TURNS = 20;
 const getConversation = async (phone) => {
   const { data } = await supabase
     .from('conversations')
-    .select('history, lead_type, client_name, bot_paused')
+    .select('history, lead_type, client_name, bot_paused, vehicle_type, vehicle_plate, client_email, last_service, direccion')
     .eq('phone', phone)
     .single();
   return data || { history: [], lead_type: null, client_name: null, bot_paused: false };
@@ -147,7 +147,7 @@ const SALUDOS = [
   (g) => `${g}, qué bueno que nos escribes. Mi nombre es Sara Valencia de Esteticar, en qué te colaboro hoy?`,
 ];
 
-const buildPrompt = async (leadType = null) => {
+const buildPrompt = async (leadType = null, clientProfile = {}) => {
   const greeting   = getGreeting();
   const today      = getTodayStr();
   const tomorrow   = getTomorrowStr();
@@ -160,10 +160,31 @@ const buildPrompt = async (leadType = null) => {
 
   const leadStrategy = leadType ? `\nPERFIL DETECTADO: ${leadType.toUpperCase()} — aplica la estrategia correspondiente desde el primer mensaje.` : '';
 
+  // Perfil del cliente conocido — inyectar en el prompt
+  const knownData = [];
+  if (clientProfile.client_name) knownData.push(`• Nombre: ${clientProfile.client_name}`);
+  if (clientProfile.vehicle_type) knownData.push(`• Vehículo: ${clientProfile.vehicle_type}`);
+  if (clientProfile.vehicle_plate) knownData.push(`• Placa: ${clientProfile.vehicle_plate.toUpperCase()}`);
+  if (clientProfile.client_email) knownData.push(`• Correo: ${clientProfile.client_email}`);
+  if (clientProfile.last_service) knownData.push(`• Último servicio: ${clientProfile.last_service}`);
+  if (clientProfile.direccion) knownData.push(`• Dirección registrada: ${clientProfile.direccion}`);
+
+  const clientContext = knownData.length > 0 ? `
+━━━ CLIENTE CONOCIDO — USA ESTA INFORMACIÓN ━━━
+Ya tienes estos datos del cliente. ÚSALOS:
+${knownData.join('\n')}
+
+REGLAS PARA CLIENTES CONOCIDOS:
+• Salúdalo por su nombre desde el primer mensaje: "Hola [nombre], qué gusto verte de nuevo!"
+• NO vuelvas a preguntar nombre, correo, placa ni dirección si ya los tienes — son datos conocidos.
+• Si retoma servicio, pregunta si es para el mismo vehículo (${clientProfile.vehicle_type || 'el mismo'}).
+• Referencia su visita anterior: "La última vez hiciste un ${clientProfile.last_service || 'servicio con nosotros'}, quedó divino."
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : '';
+
   return `Eres Sara Valencia, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales. Si alguien pregunta si eres IA o un bot: "Soy muy real, te lo aseguro."
 
 HOY: ${today}. SALUDO ACTIVO: "${greeting}". MAÑANA: ${tomorrow}.
-DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}${scarcityNote}${leadStrategy}
+DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}${scarcityNote}${leadStrategy}${clientContext}
 
 ━━━ REGLAS ABSOLUTAS ━━━
 SIEMPRE tutea. Nunca uses usted. Nunca uses voseo: di "quieres" no "querés", "puedes" no "podés", "tienes" no "tenés".
@@ -320,15 +341,14 @@ Nunca preguntes "quieres agendar?" Pregunta: "Te queda mejor para el ${tomorrow}
 • Portafolio de trabajos: https://heyzine.com/flip-book/7591b1d346.html#page/1
 
 ━━━ CAPTURA ANTES DE CONFIRMAR ━━━
-OBLIGATORIO — sin esto NO confirmes:
-1. Nombre completo → al saberlo añade al final: __NAME__:[nombre completo]
+Pide estos datos UNO A UNO de forma natural ANTES de confirmar. Si el cliente no quiere dar alguno, acepta "no_proporcionado" y sigue:
 
-OPCIONALES — pídelos naturalmente si surgen, pero NO bloquees la confirmación si el cliente no los da:
-2. Placa del vehículo (pídela si viene al taller para el registro de entrada)
-3. Número de cédula (solo si el cliente la menciona)
-4. Correo electrónico (solo si quiere recibir confirmación por email)
+1. Nombre completo → al saberlo: __NAME__:[nombre completo]
+2. Placa del vehículo → "Para el registro de entrada necesito la placa de tu moto/carro, me la das?"
+3. Correo electrónico → "Te mando la confirmación al correo, cuál es?"
+4. Si hay traslado: dirección de recogida/entrega → "Me das la dirección para el traslado?"
 
-REGLA CLAVE: Con el nombre y la fecha acordada ya puedes confirmar. No retrases la cita esperando datos que el cliente no quiere dar. Si no tienes un dato, escribe "no_proporcionado" en ese campo del bloque.
+REGLA: Si el cliente dice que no tiene o no quiere dar un dato, escribe "no_proporcionado" y confirma igual. Nunca bloquees la cita.
 
 ━━━ TRASLADO ━━━
 Antes de confirmar: "Contamos con traslado: recogida y entrega $9.000, o solo recogida o entrega $7.000. Te interesa?"
@@ -459,8 +479,8 @@ export default async function handler(req, res) {
       history.push({ role: 'user', content: text });
       if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
 
-      // Llamar a Claude pasando el lead_type ya detectado
-      const systemPrompt = await buildPrompt(conv.lead_type);
+      // Llamar a Claude pasando lead_type y perfil completo del cliente
+      const systemPrompt = await buildPrompt(conv.lead_type, conv);
       const aiResponse = await anthropic.messages.create({
         model: 'claude-haiku-4-5-20251001',
         max_tokens: 600,
@@ -499,9 +519,10 @@ export default async function handler(req, res) {
         if (booking.clientName)  meta.client_name  = booking.clientName;
         if (booking.service)     meta.last_service  = booking.service;
         if (booking.vehicleType) meta.vehicle_type  = booking.vehicleType;
-        if (booking.placa)       meta.vehicle_plate = booking.placa;
+        if (booking.placa && booking.placa !== 'no_proporcionado') meta.vehicle_plate = booking.placa;
         if (booking.clientEmail && booking.clientEmail !== 'no_proporcionado') meta.client_email = booking.clientEmail;
-        if (booking.cedula)      meta.cedula        = booking.cedula;
+        if (booking.cedula && booking.cedula !== 'no_proporcionado') meta.cedula = booking.cedula;
+        if (booking.direccion && booking.direccion !== 'no_aplica' && booking.direccion !== 'no_proporcionado') meta.direccion = booking.direccion;
         meta.last_visit_date = new Date().toISOString();
         meta.remarketing_status = 'converted';
       }
@@ -518,7 +539,17 @@ export default async function handler(req, res) {
         const timeMatch = booking.date?.match(/(\d{1,2}):(\d{2})/);
         const bookingTime = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : null;
 
+        // Construir traslado con dirección incluida si aplica
+        let trasladoFinal = null;
+        if (booking.traslado && booking.traslado !== 'sin traslado' && booking.traslado !== 'no_proporcionado') {
+          trasladoFinal = booking.traslado;
+          if (booking.direccion && booking.direccion !== 'no_aplica' && booking.direccion !== 'no_proporcionado') {
+            trasladoFinal += ` · Dir: ${booking.direccion}`;
+          }
+        }
+
         const insertPayload = {
+          id: Math.random().toString(36).slice(2, 11),
           service: booking.service,
           vehicle_type: booking.vehicleType,
           date: booking.date,
@@ -528,7 +559,7 @@ export default async function handler(req, res) {
           client_name: booking.clientName,
           client_phone: from,
           client_email: booking.clientEmail && booking.clientEmail !== 'no_proporcionado' ? booking.clientEmail : null,
-          traslado: booking.traslado && booking.traslado !== 'sin traslado' ? booking.traslado : null,
+          traslado: trasladoFinal,
           cedula: booking.cedula && booking.cedula !== 'no_proporcionado' ? booking.cedula : null,
           placa: booking.placa && booking.placa !== 'no_proporcionado' ? booking.placa : null,
           status: 'pending',
