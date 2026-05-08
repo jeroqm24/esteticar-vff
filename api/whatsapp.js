@@ -21,7 +21,7 @@ const MAX_TURNS = 20;
 const getConversation = async (phone) => {
   const { data } = await supabase
     .from('conversations')
-    .select('history, lead_type, client_name, bot_paused, vehicle_type, vehicle_plate, client_email, last_service, direccion')
+    .select('history, lead_type, client_name, bot_paused, vehicle_type, vehicle_plate, client_email, last_service, direccion, custom_fields')
     .eq('phone', phone)
     .single();
   return data || { history: [], lead_type: null, client_name: null, bot_paused: false };
@@ -169,17 +169,32 @@ const buildPrompt = async (leadType = null, clientProfile = {}) => {
   if (clientProfile.last_service) knownData.push(`• Último servicio: ${clientProfile.last_service}`);
   if (clientProfile.direccion) knownData.push(`• Dirección registrada: ${clientProfile.direccion}`);
 
+  // Campos personalizados
+  const customFields = clientProfile.custom_fields || [];
+  const customKnown  = customFields.filter(f => f.value);
+  const customToAsk  = customFields.filter(f => f.botShouldAsk && !f.value);
+  customKnown.forEach(f => knownData.push(`• ${f.title}: ${f.value}`));
+
+  const toAskSection = customToAsk.length > 0 ? `
+
+DATOS ADICIONALES A CAPTURAR (pide de a uno, de forma natural, cuando sea oportuno):
+${customToAsk.map(f => `• ${f.title}`).join('\n')}` : '';
+
   const clientContext = knownData.length > 0 ? `
 ━━━ CLIENTE CONOCIDO — USA ESTA INFORMACIÓN ━━━
 Ya tienes estos datos del cliente. ÚSALOS:
-${knownData.join('\n')}
+${knownData.join('\n')}${toAskSection}
 
 REGLAS PARA CLIENTES CONOCIDOS:
 • Salúdalo por su nombre desde el primer mensaje: "Hola [nombre], qué gusto verte de nuevo!"
 • NO vuelvas a preguntar nombre, correo, placa ni dirección si ya los tienes — son datos conocidos.
 • Si retoma servicio, pregunta si es para el mismo vehículo (${clientProfile.vehicle_type || 'el mismo'}).
 • Referencia su visita anterior: "La última vez hiciste un ${clientProfile.last_service || 'servicio con nosotros'}, quedó divino."
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : '';
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : (customToAsk.length > 0 ? `
+━━━ DATOS A CAPTURAR PARA ESTE CLIENTE ━━━
+Cuando sea natural en la conversación, pregunta estos datos de a uno:
+${customToAsk.map(f => `• ${f.title}`).join('\n')}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : '');
 
   return `Eres Sara Valencia, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales. Si alguien pregunta si eres IA o un bot: "Soy muy real, te lo aseguro."
 

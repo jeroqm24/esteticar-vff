@@ -178,9 +178,37 @@ function ClientCard({ client, apptCount, isSelected, onClick }) {
   );
 }
 
+const FIELD_OPTIONS = [
+  "Año del vehículo", "Color del vehículo", "Kilometraje", "Problema a resolver",
+  "Presupuesto aproximado", "Tipo de uso (personal/trabajo)", "Fecha de compra del vehículo",
+  "Observaciones especiales", "Personalizado...",
+];
+
 // ─── Panel de detalle ─────────────────────────────────────────────
-function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketing, onDelete, onToggleBot }) {
+function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketing, onDelete, onToggleBot, onUpdateCustomFields }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
+  const [addingField,    setAddingField]   = useState(false);
+  const [fieldTitle,     setFieldTitle]    = useState('');
+  const [fieldValue,     setFieldValue]    = useState('');
+  const [fieldBotAsk,    setFieldBotAsk]   = useState(false);
+  const [customTitle,    setCustomTitle]   = useState('');
+
+  const isCustom = fieldTitle === 'Personalizado...';
+  const fields   = client.customFields || [];
+
+  const saveField = () => {
+    const title = isCustom ? customTitle.trim() : fieldTitle;
+    if (!title) return;
+    const updated = [...fields, { id: Math.random().toString(36).slice(2, 9), title, value: fieldValue.trim(), botShouldAsk: fieldBotAsk }];
+    onUpdateCustomFields(client.phone, updated);
+    setAddingField(false); setFieldTitle(''); setFieldValue(''); setFieldBotAsk(false); setCustomTitle('');
+  };
+
+  const toggleBotAsk = (id) =>
+    onUpdateCustomFields(client.phone, fields.map(f => f.id === id ? { ...f, botShouldAsk: !f.botShouldAsk } : f));
+
+  const deleteField = (id) =>
+    onUpdateCustomFields(client.phone, fields.filter(f => f.id !== id));
   const profile = LEAD_PROFILES[client.leadType];
   const status  = STATUS_CONFIG[client.remarketingStatus] || STATUS_CONFIG.active;
   const lastDays = daysSince(client.lastVisitDate || client.updatedAt);
@@ -296,9 +324,77 @@ function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketin
           )}
         </div>
 
+        {/* Campos personalizados */}
+        <div className="pt-2 border-t border-black/[0.06] space-y-2">
+          <div className="flex items-center justify-between">
+            <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase">Campos personalizados</p>
+            {!addingField && (
+              <button onClick={() => setAddingField(true)}
+                className="font-ui text-[9px] tracking-[0.15em] uppercase px-2.5 py-1 border border-ec-gold/30 text-ec-gold hover:bg-ec-gold hover:text-white rounded-sm transition-all">
+                + Añadir
+              </button>
+            )}
+          </div>
+
+          {fields.length === 0 && !addingField && (
+            <p className="font-body text-xs text-ec-text-muted italic">Sin campos. Añade datos adicionales y configura qué debe preguntar el bot.</p>
+          )}
+
+          {fields.map(f => (
+            <div key={f.id} className="flex items-start gap-2 p-2.5 bg-ec-cream/40 border border-black/[0.06] rounded-sm">
+              <div className="flex-1 min-w-0">
+                <p className="font-ui text-[8px] tracking-[0.15em] uppercase text-ec-text-muted">{f.title}</p>
+                <p className="font-body text-sm text-ec-dark mt-0.5 break-words">{f.value || <span className="text-black/30 italic text-xs">Sin valor</span>}</p>
+              </div>
+              <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
+                <button onClick={() => toggleBotAsk(f.id)}
+                  className={`px-2 py-1 font-ui text-[8px] tracking-[0.1em] uppercase rounded-sm border transition-all whitespace-nowrap ${
+                    f.botShouldAsk ? 'bg-ec-gold text-white border-ec-gold' : 'border-black/[0.1] text-ec-text-muted hover:border-ec-gold/30 hover:text-ec-gold'
+                  }`}>
+                  {f.botShouldAsk ? 'Bot pregunta ✓' : 'Bot pregunta'}
+                </button>
+                <button onClick={() => deleteField(f.id)} className="text-black/20 hover:text-red-400 transition-colors text-sm leading-none">✕</button>
+              </div>
+            </div>
+          ))}
+
+          {addingField && (
+            <div className="p-3 bg-white border border-ec-gold/20 rounded-sm space-y-2">
+              <select value={fieldTitle} onChange={e => setFieldTitle(e.target.value)}
+                className="w-full px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm bg-white focus:border-ec-gold focus:outline-none">
+                <option value="">Seleccionar campo...</option>
+                {FIELD_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
+              </select>
+              {isCustom && (
+                <input value={customTitle} onChange={e => setCustomTitle(e.target.value)}
+                  placeholder="Nombre del campo..."
+                  className="w-full px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm focus:border-ec-gold focus:outline-none" />
+              )}
+              <input value={fieldValue} onChange={e => setFieldValue(e.target.value)}
+                placeholder="Valor (opcional — el bot puede preguntarlo)"
+                className="w-full px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm focus:border-ec-gold focus:outline-none" />
+              <label className="flex items-center gap-2 cursor-pointer select-none">
+                <input type="checkbox" checked={fieldBotAsk} onChange={e => setFieldBotAsk(e.target.checked)}
+                  className="accent-ec-gold w-4 h-4" />
+                <span className="font-ui text-[9px] tracking-[0.1em] uppercase text-ec-text-muted">Bot debe preguntar este dato</span>
+              </label>
+              <div className="flex gap-2 pt-1">
+                <button onClick={saveField}
+                  className="flex-1 py-2 font-ui text-[9px] tracking-[0.15em] uppercase bg-ec-gold text-white hover:bg-[#e6b800] rounded-sm transition-all">
+                  Guardar
+                </button>
+                <button onClick={() => { setAddingField(false); setFieldTitle(''); setFieldValue(''); setFieldBotAsk(false); setCustomTitle(''); }}
+                  className="flex-1 py-2 font-ui text-[9px] tracking-[0.15em] uppercase border border-black/[0.1] text-ec-text-muted hover:bg-ec-cream rounded-sm transition-all">
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Acciones de estado */}
         <div className="space-y-2 pt-2 border-t border-black/[0.06]">
-          {client.remarketing_status !== 'lost' ? (
+          {client.remarketingStatus !== 'lost' ? (
             <button
               onClick={() => onUpdateStatus(client.phone, 'lost')}
               className="w-full py-3 font-ui text-[10px] tracking-[0.2em] uppercase border border-red-200 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-sm transition-all">
@@ -401,6 +497,7 @@ export default function AdminClients() {
           remarketingCount:   c.remarketing_count   || existing?.remarketingCount  || 0,
           botPaused:          c.bot_paused          || false,
           direccion:          c.direccion           || existing?.direccion         || null,
+          customFields:       c.custom_fields       || existing?.customFields      || [],
         });
       }
 
@@ -441,6 +538,15 @@ export default function AdminClients() {
     );
     setClients(prev => prev.map(c => c.phone === phone ? { ...c, botPaused: paused } : c));
     if (selected?.phone === phone) setSelected(prev => ({ ...prev, botPaused: paused }));
+  };
+
+  const updateCustomFields = async (phone, fields) => {
+    await supabase.from('conversations').upsert(
+      { phone, custom_fields: fields, updated_at: new Date().toISOString() },
+      { onConflict: 'phone' }
+    );
+    setClients(prev => prev.map(c => c.phone === phone ? { ...c, customFields: fields } : c));
+    if (selected?.phone === phone) setSelected(prev => ({ ...prev, customFields: fields }));
   };
 
   const markRemarketing = async (phone) => {
@@ -561,6 +667,7 @@ export default function AdminClients() {
                 onRemarketing={markRemarketing}
                 onDelete={deleteClient}
                 onToggleBot={setBotPaused}
+                onUpdateCustomFields={updateCustomFields}
               />
             )}
           </AnimatePresence>
