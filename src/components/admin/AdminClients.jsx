@@ -131,6 +131,15 @@ function ClientCard({ client, apptCount, isSelected, onClick }) {
         )}
       </div>
 
+      {/* Sin nombre aún */}
+      {!client.name && (
+        <div className="mt-2.5 px-3 py-1.5 bg-gray-50 border border-gray-200 rounded-sm flex items-center gap-2">
+          <span className="font-ui text-[9px] text-gray-400 tracking-[0.1em] uppercase">
+            Nombre pendiente · Solo tenemos el teléfono
+          </span>
+        </div>
+      )}
+
       {/* Atención manual activa */}
       {client.botPaused && (
         <div className="mt-2.5 px-3 py-2 bg-orange-50 border border-orange-200 rounded-sm flex items-center gap-2">
@@ -443,6 +452,7 @@ export default function AdminClients() {
   const FILTERS = [
     { id: "all",        label: "Todos" },
     { id: "manual",     label: "⚠️ Manual" },
+    { id: "noname",     label: "❓ Sin nombre" },
     { id: "regateador", label: "🫰 Regateadores" },
     { id: "analista",   label: "📚 Analistas" },
     { id: "embalado",   label: "⚡ Embalados" },
@@ -455,6 +465,7 @@ export default function AdminClients() {
     if (filter === "lost")      return c.remarketingStatus === "lost";
     if (filter === "remarket")  return shouldSendRemarketing(c);
     if (filter === "manual")    return c.botPaused === true;
+    if (filter === "noname")    return !c.name;
     if (filter !== "all")       return c.leadType === filter;
     const q = search.toLowerCase();
     if (!q) return true;
@@ -472,6 +483,7 @@ export default function AdminClients() {
   const remarkCount  = clients.filter(shouldSendRemarketing).length;
   const lostCount    = clients.filter(c => c.remarketingStatus === 'lost').length;
   const manualCount  = clients.filter(c => c.botPaused).length;
+  const noNameCount  = clients.filter(c => !c.name).length;
 
   return (
     <div className="space-y-6">
@@ -501,6 +513,7 @@ export default function AdminClients() {
             }`}>
             {f.label}
             {f.id === "manual"   && manualCount  > 0 && <span className="ml-1.5 bg-orange-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{manualCount}</span>}
+            {f.id === "noname"   && noNameCount  > 0 && <span className="ml-1.5 bg-gray-400 text-white rounded-full text-[8px] px-1.5 py-0.5">{noNameCount}</span>}
             {f.id === "remarket" && remarkCount  > 0 && <span className="ml-1.5 bg-amber-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{remarkCount}</span>}
             {f.id === "lost"     && lostCount    > 0 && <span className="ml-1.5 bg-red-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{lostCount}</span>}
           </button>

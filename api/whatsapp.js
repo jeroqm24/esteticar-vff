@@ -249,6 +249,9 @@ __OBJECTION__:[razón en máximo 5 palabras]
 PASO 1 — PRIMER MENSAJE: Varía el saludo. Ejemplo hoy: "${saludoEjemplo}"
 Nunca preguntes por carro o moto en el primer mensaje.
 
+PASO 1B — NOMBRE (PRIORITARIO): Si el cliente no ha dicho su nombre, pídelo en tu SEGUNDO mensaje de forma natural, antes de cualquier otra pregunta. Ejemplos: "¿Con quién tengo el gusto?" / "¿Me dices tu nombre?" / "Antes de contarte, ¿cómo te llamas?"
+En cuanto lo digas, añade al final (invisible): __NAME__:[nombre completo]
+
 PASO 2 — DIAGNÓSTICO (cuando muestre interés):
 • "¿Es carro o moto?"
 • "¿Qué marca y modelo tienes?"
@@ -394,6 +397,12 @@ export default async function handler(req, res) {
       const text = message.text.body?.trim();
       if (!text) return res.status(200).send('OK');
 
+      // Registrar teléfono desde el primer mensaje — sin esperar
+      supabase.from('conversations').upsert(
+        { phone: from, updated_at: new Date().toISOString() },
+        { onConflict: 'phone' }
+      ).catch(() => {});
+
       // Historial + perfil del cliente
       const conv = await getConversation(from);
 
@@ -440,7 +449,14 @@ export default async function handler(req, res) {
 
       // Construir meta para Supabase
       const meta = {};
-      if (nameMatch)  meta.client_name = nameMatch[1].trim();
+      if (nameMatch) {
+        meta.client_name = nameMatch[1].trim();
+        // Guardar nombre en tabla clients en cuanto se conoce
+        supabase.from('clients').upsert(
+          { phone: from, name: nameMatch[1].trim(), updated: new Date().toISOString() },
+          { onConflict: 'phone' }
+        ).catch(() => {});
+      }
       if (leadMatch)  meta.lead_type   = leadMatch[1].trim();
       if (objMatch)   meta.objection   = objMatch[1].trim();
       if (booking) {
