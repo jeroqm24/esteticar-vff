@@ -409,18 +409,19 @@ export default async function handler(req, res) {
       // Si el bot está pausado, una persona está atendiendo — solo guardar el mensaje, no responder
       if (conv.bot_paused) {
         const history = conv.history || [];
-        history.push({ role: 'user', content: text });
-        if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
 
-        // Intentar capturar nombre si aún no lo tenemos
-        const meta = {};
-        if (!conv.client_name) {
-          // Guardar el número como referencia mínima
-          meta.client_phone = from;
+        // Historial vacío = cliente eliminado y reingresó → limpiar pausa y dejar que el bot responda
+        if (history.length === 0) {
+          await supabase.from('conversations')
+            .update({ bot_paused: false })
+            .eq('phone', from);
+          // Continúa al flujo normal sin return
+        } else {
+          history.push({ role: 'user', content: text });
+          if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
+          await saveHistory(from, history, {});
+          return res.status(200).send('OK');
         }
-
-        await saveHistory(from, history, meta);
-        return res.status(200).send('OK');
       }
 
       const history = conv.history || [];
