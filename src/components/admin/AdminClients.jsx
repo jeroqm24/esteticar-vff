@@ -131,6 +131,16 @@ function ClientCard({ client, apptCount, isSelected, onClick }) {
         )}
       </div>
 
+      {/* Atención manual activa */}
+      {client.botPaused && (
+        <div className="mt-2.5 px-3 py-2 bg-orange-50 border border-orange-200 rounded-sm flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse flex-shrink-0" />
+          <p className="font-ui text-[9px] text-orange-700 tracking-[0.1em] uppercase">
+            Sara está atendiendo manualmente
+          </p>
+        </div>
+      )}
+
       {/* Remarketing alert */}
       {needsRemarketing && (
         <div className="mt-2.5 px-3 py-1.5 bg-amber-50 border border-amber-200 rounded-sm">
@@ -160,7 +170,7 @@ function ClientCard({ client, apptCount, isSelected, onClick }) {
 }
 
 // ─── Panel de detalle ─────────────────────────────────────────────
-function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketing, onDelete }) {
+function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketing, onDelete, onToggleBot }) {
   const [confirmDelete, setConfirmDelete] = useState(false);
   const profile = LEAD_PROFILES[client.lead_type];
   const status  = STATUS_CONFIG[client.remarketing_status] || STATUS_CONFIG.active;
@@ -243,6 +253,38 @@ function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketin
             </div>
           </div>
         )}
+
+        {/* Control del bot */}
+        <div className="pt-2 border-t border-black/[0.06]">
+          {client.botPaused ? (
+            <div className="space-y-2">
+              <div className="px-4 py-3 bg-orange-50 border border-orange-200 rounded-sm flex items-center gap-3">
+                <span className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse flex-shrink-0" />
+                <div>
+                  <p className="font-ui text-[10px] tracking-[0.15em] text-orange-700 uppercase font-bold">Bot pausado</p>
+                  <p className="font-body text-xs text-orange-600 mt-0.5">Sara está atendiendo manualmente a este cliente.</p>
+                </div>
+              </div>
+              <button
+                onClick={() => onToggleBot(client.phone, false)}
+                className="w-full py-3 font-ui text-[10px] tracking-[0.2em] uppercase bg-ec-gold text-white hover:bg-[#e6b800] rounded-sm transition-all flex items-center justify-center gap-2">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Reactivar bot (Sara)
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => onToggleBot(client.phone, true)}
+              className="w-full py-3 font-ui text-[10px] tracking-[0.2em] uppercase border border-orange-200 text-orange-500 hover:bg-orange-50 rounded-sm transition-all flex items-center justify-center gap-2">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                <rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>
+              </svg>
+              Pausar bot manualmente
+            </button>
+          )}
+        </div>
 
         {/* Acciones de estado */}
         <div className="space-y-2 pt-2 border-t border-black/[0.06]">
@@ -345,6 +387,7 @@ export default function AdminClients() {
           objection:       c.objection     || existing?.objection    || null,
           remarketingStatus: c.remarketing_status || existing?.remarketingStatus || 'active',
           lastVisitDate:   c.last_visit_date || existing?.lastVisitDate || null,
+          botPaused:       c.bot_paused    || false,
         });
       }
 
@@ -378,6 +421,15 @@ export default function AdminClients() {
     if (selected?.phone === phone) setSelected(prev => ({ ...prev, remarketingStatus: status }));
   };
 
+  const setBotPaused = async (phone, paused) => {
+    await supabase.from('conversations').upsert(
+      { phone, bot_paused: paused, updated_at: new Date().toISOString() },
+      { onConflict: 'phone' }
+    );
+    setClients(prev => prev.map(c => c.phone === phone ? { ...c, botPaused: paused } : c));
+    if (selected?.phone === phone) setSelected(prev => ({ ...prev, botPaused: paused }));
+  };
+
   const markRemarketing = async (phone) => {
     const now = new Date().toISOString();
     await supabase.from('conversations').upsert({
@@ -390,6 +442,7 @@ export default function AdminClients() {
   // Filtros
   const FILTERS = [
     { id: "all",        label: "Todos" },
+    { id: "manual",     label: "⚠️ Manual" },
     { id: "regateador", label: "🫰 Regateadores" },
     { id: "analista",   label: "📚 Analistas" },
     { id: "embalado",   label: "⚡ Embalados" },
@@ -401,6 +454,7 @@ export default function AdminClients() {
   const filtered = clients.filter(c => {
     if (filter === "lost")      return c.remarketingStatus === "lost";
     if (filter === "remarket")  return shouldSendRemarketing(c);
+    if (filter === "manual")    return c.botPaused === true;
     if (filter !== "all")       return c.leadType === filter;
     const q = search.toLowerCase();
     if (!q) return true;
@@ -415,8 +469,9 @@ export default function AdminClients() {
            c.email?.toLowerCase().includes(q) || c.vehiclePlate?.toLowerCase().includes(q);
   });
 
-  const remarkCount = clients.filter(shouldSendRemarketing).length;
-  const lostCount   = clients.filter(c => c.remarketingStatus === 'lost').length;
+  const remarkCount  = clients.filter(shouldSendRemarketing).length;
+  const lostCount    = clients.filter(c => c.remarketingStatus === 'lost').length;
+  const manualCount  = clients.filter(c => c.botPaused).length;
 
   return (
     <div className="space-y-6">
@@ -425,7 +480,7 @@ export default function AdminClients() {
         <div>
           <h2 className="font-heading text-2xl text-ec-dark">Tabla Maestra de Clientes</h2>
           <p className="font-body text-sm text-ec-text-muted mt-1 font-light">
-            {clients.length} clientes · {remarkCount > 0 ? <span className="text-amber-600">{remarkCount} para remarketar · </span> : null}
+            {clients.length} clientes · {manualCount > 0 ? <span className="text-orange-500 font-medium">{manualCount} en atención manual · </span> : null}{remarkCount > 0 ? <span className="text-amber-600">{remarkCount} para remarketar · </span> : null}
             {lastUpdate ? `Actualizado hace ${Math.floor((Date.now() - lastUpdate) / 1000)}s` : 'Cargando...'}
           </p>
         </div>
@@ -445,8 +500,9 @@ export default function AdminClients() {
               filter === f.id ? "bg-ec-gold text-white border-ec-gold" : "bg-white text-ec-text-muted border-black/[0.06] hover:border-ec-gold/30"
             }`}>
             {f.label}
-            {f.id === "remarket" && remarkCount > 0 && <span className="ml-1.5 bg-amber-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{remarkCount}</span>}
-            {f.id === "lost"     && lostCount   > 0 && <span className="ml-1.5 bg-red-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{lostCount}</span>}
+            {f.id === "manual"   && manualCount  > 0 && <span className="ml-1.5 bg-orange-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{manualCount}</span>}
+            {f.id === "remarket" && remarkCount  > 0 && <span className="ml-1.5 bg-amber-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{remarkCount}</span>}
+            {f.id === "lost"     && lostCount    > 0 && <span className="ml-1.5 bg-red-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{lostCount}</span>}
           </button>
         ))}
       </div>
@@ -487,6 +543,7 @@ export default function AdminClients() {
                 onUpdateStatus={updateStatus}
                 onRemarketing={markRemarketing}
                 onDelete={deleteClient}
+                onToggleBot={setBotPaused}
               />
             )}
           </AnimatePresence>

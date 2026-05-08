@@ -21,10 +21,10 @@ const MAX_TURNS = 20;
 const getConversation = async (phone) => {
   const { data } = await supabase
     .from('conversations')
-    .select('history, lead_type, client_name')
+    .select('history, lead_type, client_name, bot_paused')
     .eq('phone', phone)
     .single();
-  return data || { history: [], lead_type: null, client_name: null };
+  return data || { history: [], lead_type: null, client_name: null, bot_paused: false };
 };
 
 const saveHistory = async (phone, history, meta = {}) => {
@@ -396,6 +396,10 @@ export default async function handler(req, res) {
 
       // Historial + perfil del cliente
       const conv = await getConversation(from);
+
+      // Si el bot está pausado, una persona está atendiendo — no interrumpir
+      if (conv.bot_paused) return res.status(200).send('OK');
+
       const history = conv.history || [];
       history.push({ role: 'user', content: text });
       if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
@@ -435,6 +439,9 @@ export default async function handler(req, res) {
         meta.last_visit_date = new Date().toISOString();
         meta.remarketing_status = 'converted';
       }
+
+      // Pausar bot automáticamente cuando escala a Sara
+      if (escalateMatch) meta.bot_paused = true;
 
       history.push({ role: 'assistant', content: rawReply });
       await saveHistory(from, history, meta);
@@ -493,8 +500,14 @@ export default async function handler(req, res) {
         }).catch(() => {});
       }
 
-      // Escalación al equipo
-      if (escalateMatch) await notifyTeam(from, escalateMatch[1].trim());
+      // Escalación al equipo — notificar y confirmar pausa
+      if (escalateMatch) {
+        await notifyTeam(from, escalateMatch[1].trim());
+        // Mensaje adicional a Sara informando que el bot ya está pausado
+        await sendMessage(TEAM_NUMBER,
+          `⏸️ *Bot pausado* para este cliente.\nPuedes responderle directamente desde la app.\nCuando termines, reactiva el bot desde el dashboard de Esteticar.`
+        );
+      }
 
       // Delay humanizador
       await sleep(2000 + Math.random() * 2000);
