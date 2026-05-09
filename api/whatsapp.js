@@ -447,37 +447,33 @@ export default async function handler(req, res) {
     return res.status(403).send('Forbidden');
   }
 
-  if (req.method !== 'POST') return res.status(405).send('Method not allowed');
+  if (req.method === 'POST') {
+    try {
+      const body = req.body;
+      if (body.object !== 'whatsapp_business_account') return res.status(200).send('OK');
 
-  // ── Responder 200 INMEDIATAMENTE para evitar reintentos de WhatsApp ──
-  res.status(200).send('OK');
+      const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+      if (!message || message.type !== 'text') return res.status(200).send('OK');
 
-  try {
-    const body = req.body;
-    if (body.object !== 'whatsapp_business_account') return;
+      const from  = message.from;
+      const text  = message.text.body?.trim();
+      const msgId = message.id;
+      if (!text) return res.status(200).send('OK');
 
-    const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-    if (!message || message.type !== 'text') return;
+      // ── Deduplicación: ignorar si este message.id ya fue procesado ──
+      const { data: dedupRow } = await supabase
+        .from('conversations')
+        .select('last_message_id')
+        .eq('phone', from)
+        .single();
 
-    const from  = message.from;
-    const text  = message.text.body?.trim();
-    const msgId = message.id;
-    if (!text) return;
+      if (dedupRow?.last_message_id === msgId) return res.status(200).send('OK');
 
-    // ── Deduplicación: ignorar si este message.id ya fue procesado ──
-    const { data: dedupRow } = await supabase
-      .from('conversations')
-      .select('last_message_id')
-      .eq('phone', from)
-      .single();
-
-    if (dedupRow?.last_message_id === msgId) return;
-
-    // Marcar mensaje como en proceso antes de llamar a Claude
-    await supabase.from('conversations').upsert(
-      { phone: from, last_message_id: msgId, updated_at: new Date().toISOString() },
-      { onConflict: 'phone' }
-    );
+      // Marcar mensaje como en proceso antes de llamar a Claude
+      await supabase.from('conversations').upsert(
+        { phone: from, last_message_id: msgId, updated_at: new Date().toISOString() },
+        { onConflict: 'phone' }
+      );
 
       // Historial + perfil del cliente
       const conv = await getConversation(from);
@@ -496,7 +492,7 @@ export default async function handler(req, res) {
           history.push({ role: 'user', content: text });
           if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
           await saveHistory(from, history, {});
-          return;
+          return res.status(200).send('OK');
         }
       }
 
@@ -633,13 +629,17 @@ export default async function handler(req, res) {
         );
       }
 
-      // Delay humanizador
-      await sleep(2000 + Math.random() * 2000);
+      // Delay humanizador (corto para no exceder timeout de WhatsApp)
+      await sleep(600 + Math.random() * 600);
 
       const reply = cleanReply(rawReply);
       if (reply) await sendMessage(from, reply);
 
-  } catch (err) {
-    console.error('WhatsApp webhook error:', err);
+    } catch (err) {
+      console.error('WhatsApp webhook error:', err);
+    }
+    return res.status(200).send('OK');
   }
+
+  res.status(405).send('Method not allowed');
 }
