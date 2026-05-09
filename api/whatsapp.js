@@ -447,27 +447,37 @@ export default async function handler(req, res) {
     return res.status(403).send('Forbidden');
   }
 
-  if (req.method === 'POST') {
-    try {
-      const body = req.body;
-      if (body.object !== 'whatsapp_business_account') return res.status(200).send('OK');
+  if (req.method !== 'POST') return res.status(405).send('Method not allowed');
 
-      const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-      if (!message || message.type !== 'text') return res.status(200).send('OK');
+  // ── Responder 200 INMEDIATAMENTE para evitar reintentos de WhatsApp ──
+  res.status(200).send('OK');
 
-      const from = message.from;
-      const text = message.text.body?.trim();
-      if (!text) return res.status(200).send('OK');
+  try {
+    const body = req.body;
+    if (body.object !== 'whatsapp_business_account') return;
 
-      // Registrar teléfono desde el primer mensaje — sin esperar
-      (async () => {
-        try {
-          await supabase.from('conversations').upsert(
-            { phone: from, updated_at: new Date().toISOString() },
-            { onConflict: 'phone' }
-          );
-        } catch (_) {}
-      })();
+    const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+    if (!message || message.type !== 'text') return;
+
+    const from  = message.from;
+    const text  = message.text.body?.trim();
+    const msgId = message.id;
+    if (!text) return;
+
+    // ── Deduplicación: ignorar si este message.id ya fue procesado ──
+    const { data: dedupRow } = await supabase
+      .from('conversations')
+      .select('last_message_id')
+      .eq('phone', from)
+      .single();
+
+    if (dedupRow?.last_message_id === msgId) return;
+
+    // Marcar mensaje como en proceso antes de llamar a Claude
+    await supabase.from('conversations').upsert(
+      { phone: from, last_message_id: msgId, updated_at: new Date().toISOString() },
+      { onConflict: 'phone' }
+    );
 
       // Historial + perfil del cliente
       const conv = await getConversation(from);
@@ -486,7 +496,7 @@ export default async function handler(req, res) {
           history.push({ role: 'user', content: text });
           if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
           await saveHistory(from, history, {});
-          return res.status(200).send('OK');
+          return;
         }
       }
 
@@ -629,11 +639,7 @@ export default async function handler(req, res) {
       const reply = cleanReply(rawReply);
       if (reply) await sendMessage(from, reply);
 
-    } catch (err) {
-      console.error('WhatsApp webhook error:', err);
-    }
-    return res.status(200).send('OK');
+  } catch (err) {
+    console.error('WhatsApp webhook error:', err);
   }
-
-  res.status(405).send('Method not allowed');
 }
