@@ -200,8 +200,8 @@ ${knownData.join('\n')}${toAskSection}
 REGLAS PARA CLIENTES CONOCIDOS:
 • Salúdalo por su nombre desde el primer mensaje: "Hola [nombre], qué gusto verte de nuevo!"
 • NO vuelvas a preguntar nombre, correo, placa ni dirección si ya los tienes — son datos conocidos.
-• Si retoma servicio, pregunta si es para el mismo vehículo (${clientProfile.vehicle_type || 'el mismo'}).
-• Referencia su visita anterior: "La última vez hiciste un ${clientProfile.last_service || 'servicio con nosotros'}, quedó divino."
+${clientProfile.vehicle_type ? `• Si retoma servicio, confirma el vehículo con los datos que ya tienes: "Es para el ${clientProfile.vehicle_type}${clientProfile.vehicle_plate ? ' placa ' + clientProfile.vehicle_plate.toUpperCase() : ''}?"` : '• No tienes vehículo registrado — pregunta directo "Es carro o moto?" SIN mencionar "la última vez" ni "el mismo vehículo".'}
+${clientProfile.last_service ? `• Puedes referenciar: "La última vez hiciste un ${clientProfile.last_service}, quedó divino."` : ''}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : (customToAsk.length > 0 ? `
 ━━━ DATOS A CAPTURAR PARA ESTE CLIENTE ━━━
 Cuando sea natural en la conversación, pregunta estos datos de a uno:
