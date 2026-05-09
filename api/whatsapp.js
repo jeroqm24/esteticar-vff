@@ -19,12 +19,24 @@ const MAX_TURNS = 20;
 
 // ─── Historial persistente en Supabase ───────────────────────────
 const getConversation = async (phone) => {
-  const { data } = await supabase
-    .from('conversations')
-    .select('history, lead_type, client_name, bot_paused, vehicle_type, vehicle_plate, client_email, last_service, direccion, custom_fields')
-    .eq('phone', phone)
-    .single();
-  return data || { history: [], lead_type: null, client_name: null, bot_paused: false };
+  // Intentar con todas las columnas; si falla (columna no existe), usar las garantizadas
+  try {
+    const { data, error } = await supabase
+      .from('conversations')
+      .select('history, lead_type, client_name, bot_paused, vehicle_type, vehicle_plate, client_email, last_service, direccion, custom_fields')
+      .eq('phone', phone)
+      .single();
+    if (error && error.code !== 'PGRST116') throw error; // PGRST116 = no rows (ok)
+    return data || { history: [], lead_type: null, client_name: null, bot_paused: false };
+  } catch {
+    // Fallback: solo columnas base que siempre existen
+    const { data } = await supabase
+      .from('conversations')
+      .select('history, lead_type, client_name, bot_paused')
+      .eq('phone', phone)
+      .single();
+    return data || { history: [], lead_type: null, client_name: null, bot_paused: false };
+  }
 };
 
 const saveHistory = async (phone, history, meta = {}) => {
