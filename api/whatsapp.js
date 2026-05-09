@@ -516,7 +516,7 @@ export default async function handler(req, res) {
       // Llamar a Claude pasando lead_type y perfil completo del cliente
       const systemPrompt = await buildPrompt(conv.lead_type, conv);
       const aiResponse = await anthropic.messages.create({
-        model: 'claude-haiku-4-5-20251001',
+        model: 'claude-sonnet-4-6',
         max_tokens: 600,
         system: systemPrompt,
         messages: history,
