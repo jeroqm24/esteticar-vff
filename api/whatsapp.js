@@ -525,7 +525,7 @@ export default async function handler(req, res) {
       const systemPrompt = await buildPrompt(conv.lead_type, conv);
       const aiResponse = await anthropic.messages.create({
         model: 'claude-sonnet-4-6',
-        max_tokens: 400,
+        max_tokens: 600,
         system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
         messages: history,
       });
@@ -576,6 +576,7 @@ export default async function handler(req, res) {
       await saveHistory(from, history, meta);
 
       // Guardar cita en appointments
+      console.log('BOOKING PARSED:', booking ? JSON.stringify({ service: booking.service, date: booking.date, client: booking.clientName }) : 'null');
       if (booking) {
         // Extraer hora del campo FECHA (ej: "miércoles, 7 de mayo de 2026 a las 9:00")
         const timeMatch = booking.date?.match(/(\d{1,2}):(\d{2})/);
