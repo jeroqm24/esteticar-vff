@@ -15,6 +15,12 @@ const supabase = createClient(
   process.env.SUPABASE_ANON_KEY
 );
 
+// Cliente con service role — bypasea RLS para inserts desde el server
+const supabaseAdmin = createClient(
+  process.env.SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
+);
+
 const MAX_TURNS = 20;
 
 // ─── Historial persistente en Supabase ───────────────────────────
@@ -592,7 +598,6 @@ export default async function handler(req, res) {
         }
 
         const insertPayload = {
-          id: Math.random().toString(36).slice(2, 11),
           service: booking.service,
           vehicle_type: booking.vehicleType,
           date: booking.date,
@@ -610,11 +615,11 @@ export default async function handler(req, res) {
           created_date: new Date().toISOString(),
         };
 
-        const { error: insertError } = await supabase.from('appointments').insert(insertPayload);
+        const { error: insertError } = await supabaseAdmin.from('appointments').insert(insertPayload);
         if (insertError) console.error('APPT INSERT ERROR:', JSON.stringify(insertError), 'PAYLOAD:', JSON.stringify(insertPayload));
 
         // Sincronizar cliente en tabla clients — siempre usar 'from' (número WhatsApp real)
-        const { error: clientUpsertError } = await supabase.from('clients').upsert({
+        const { error: clientUpsertError } = await supabaseAdmin.from('clients').upsert({
           phone: from,
           name: booking.clientName,
           last_service: booking.service,
