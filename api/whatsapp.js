@@ -398,8 +398,8 @@ Si el cliente elige CUALQUIER opción que incluya recogida o entrega: pide la di
 Luego confirma: "Llegamos por tu vehículo 30 minutos antes de tu hora de cita."
 Si el cliente dijo que NO quiere traslado o que lleva él mismo el vehículo: NO menciones recogida, NO digas que pasamos por él. Confirma directo.
 
-━━━ CONFIRMACIÓN ━━━
-Al final del mensaje de confirmación (invisible para el cliente):
+━━━ CONFIRMACIÓN — OBLIGATORIO SIN EXCEPCIÓN ━━━
+REGLA CRÍTICA: Cada vez que confirmes una cita, el bloque de abajo ES OBLIGATORIO. Sin él, la cita no existe en el sistema. SIEMPRE al final del mensaje, sin importar nada más.
 __BOOKING_CONFIRMED__
 SERVICIO: [nombre exacto]
 PRECIO: [con $ y puntos]
@@ -531,7 +531,7 @@ export default async function handler(req, res) {
       const systemPrompt = await buildPrompt(conv.lead_type, conv);
       const aiResponse = await anthropic.messages.create({
         model: 'claude-sonnet-4-6',
-        max_tokens: 600,
+        max_tokens: 900,
         system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
         messages: history,
       });
