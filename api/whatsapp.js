@@ -452,6 +452,45 @@ const parseBooking = (text) => {
   };
 };
 
+const isConfirmationMessage = (text) =>
+  /te confirm[oó]|cita.*confirmad|nos vemos|te esperamos|llegamos por tu|pasamos por tu|quedamos para el|cita queda/i.test(text);
+
+const extractBookingWithHaiku = async (history) => {
+  try {
+    const msgs = history.slice(-14).filter(m => m.role === 'user' || m.role === 'assistant');
+    const { content } = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 400,
+      system: `Eres un extractor de datos. Del historial extrae los datos de la cita confirmada.
+Responde SOLO con JSON puro, sin markdown, sin explicación:
+{"service":"nombre exacto del servicio","priceDisplay":"$XX.XXX","date":"fecha y hora completa","vehicleType":"Moto o Carro","clientName":"nombre completo o null","clientEmail":"correo o null","traslado":"descripción del traslado o null","direccion":"dirección o null","cedula":"número o null","placa":"placa en mayúsculas o null"}`,
+      messages: [...msgs, { role: 'user', content: 'Extrae los datos de la cita que acaba de confirmarse en esta conversación.' }],
+    });
+    const raw = content[0]?.text || '';
+    const jsonStr = raw.match(/\{[\s\S]*\}/)?.[0];
+    if (!jsonStr) return null;
+    const d = JSON.parse(jsonStr);
+    return {
+      service: d.service || null,
+      priceDisplay: d.priceDisplay || null,
+      date: d.date || null,
+      vehicleType: /moto/i.test(d.vehicleType || '') ? 'Moto' : 'Carro',
+      clientName: d.clientName || null,
+      clientPhone: null,
+      clientEmail: d.clientEmail || null,
+      traslado: d.traslado || null,
+      direccion: d.direccion || null,
+      cedula: d.cedula || null,
+      placa: d.placa ? d.placa.toUpperCase() : null,
+      confirmationCode: `EST-${Math.random().toString(36).slice(2, 6).toUpperCase()}`,
+      status: 'pending', channel: 'whatsapp',
+    };
+  } catch (e) {
+    console.error('HAIKU EXTRACT ERROR:', e.message);
+    return null;
+  }
+};
+
 const cleanReply = (text) => text
   .replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, '')
   .replace(/__ESCALATE__:[^\n]*/g, '')
@@ -544,8 +583,14 @@ export default async function handler(req, res) {
       const objMatch      = rawReply.match(/__OBJECTION__:([^\n]+)/);
       const escalateMatch = rawReply.match(/__ESCALATE__:([^\n]*)/);
 
-      // Procesar cita confirmada
-      const booking = parseBooking(rawReply);
+      // Procesar cita confirmada — primero intenta el bloque, si no hay usa extracción con Haiku
+      let booking = parseBooking(rawReply);
+      if (!booking && isConfirmationMessage(cleanReply(rawReply))) {
+        const historyWithReply = [...history, { role: 'assistant', content: rawReply }];
+        booking = await extractBookingWithHaiku(historyWithReply);
+        if (booking) booking.clientPhone = from;
+        console.log('HAIKU EXTRACTED:', booking ? JSON.stringify({ service: booking.service, date: booking.date, client: booking.clientName }) : 'null');
+      }
 
       // Construir meta para Supabase
       const meta = { last_visit_date: new Date().toISOString() };
