@@ -46,17 +46,17 @@ function RevealCard({ item, index }) {
 
   return (
     <motion.div ref={cardRef} style={{ opacity, y }} className="relative w-full">
-      <div className={`grid grid-cols-1 lg:grid-cols-12 gap-0 items-stretch ${isReversed ? "lg:flex-row-reverse" : ""}`}>
+      <div className={`grid grid-cols-1 lg:grid-cols-12 gap-0 items-start ${isReversed ? "lg:flex-row-reverse" : ""}`}>
 
         {/* ── Imagen: double-bezel ── */}
         <div className={`lg:col-span-8 ${isReversed ? "lg:order-2" : ""}`}>
           {/* Outer bezel */}
-          <div className="p-[6px] rounded-[1.5rem] h-full"
+          <div className="p-[6px] rounded-[1.5rem]"
             style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(184,134,11,0.15)" }}
           >
             {/* Inner bezel */}
             <div
-              className="relative overflow-hidden aspect-[16/9] rounded-[calc(1.5rem-6px)] touch-none cursor-ew-resize select-none h-full"
+              className="relative overflow-hidden aspect-[16/9] rounded-[calc(1.5rem-6px)] touch-none cursor-ew-resize select-none"
               style={{ boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06), 0 32px 80px rgba(0,0,0,0.5)" }}
               onMouseDown={() => setIsDragging(true)}
               onMouseUp={() => setIsDragging(false)}
