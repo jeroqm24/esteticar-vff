@@ -142,7 +142,7 @@ function RevealCard({ item, index }) {
             viewport={{ once: true }}
             transition={{ duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
             className="font-ui text-[9px] tracking-[0.6em] uppercase mb-5 block"
-            style={{ color: "#B8860B" }}
+            style={{ color: "rgba(0,0,0,0.45)" }}
           >
             {item.tag}
           </motion.span>
@@ -153,13 +153,14 @@ function RevealCard({ item, index }) {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.08, ease: [0.32, 0.72, 0, 1] }}
-            className="font-heading text-3xl sm:text-4xl text-white font-light leading-tight mb-5"
+            className="font-heading text-3xl sm:text-4xl font-light leading-tight mb-5"
+            style={{ color: "#1A1A1A" }}
           >
             {item.label}
           </motion.h3>
 
           {/* Divider */}
-          <div className="w-10 h-px mb-5" style={{ background: "rgba(184,134,11,0.4)" }} />
+          <div className="w-10 h-px mb-5" style={{ background: "rgba(0,0,0,0.2)" }} />
 
           {/* Description */}
           <motion.p
@@ -168,7 +169,7 @@ function RevealCard({ item, index }) {
             viewport={{ once: true }}
             transition={{ duration: 0.7, delay: 0.18, ease: [0.32, 0.72, 0, 1] }}
             className="font-body text-sm leading-relaxed mb-8 font-light"
-            style={{ color: "rgba(255,255,255,0.45)" }}
+            style={{ color: "rgba(0,0,0,0.55)" }}
           >
             {item.desc}
           </motion.p>
@@ -183,15 +184,15 @@ function RevealCard({ item, index }) {
           >
             {/* Price card */}
             <div className="flex-1 p-[5px] rounded-[1rem]"
-              style={{ background: "rgba(184,134,11,0.06)", border: "1px solid rgba(184,134,11,0.18)" }}
+              style={{ background: "rgba(0,0,0,0.08)", border: "1px solid rgba(0,0,0,0.15)" }}
             >
               <div className="rounded-[calc(1rem-5px)] px-5 py-4 h-full flex flex-col justify-center"
-                style={{ background: "rgba(0,0,0,0.3)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}
+                style={{ background: "rgba(255,255,255,0.25)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.5)" }}
               >
-                <span className="font-ui text-[8px] tracking-[0.5em] uppercase block mb-1.5" style={{ color: "rgba(184,134,11,0.6)" }}>
+                <span className="font-ui text-[8px] tracking-[0.5em] uppercase block mb-1.5" style={{ color: "rgba(0,0,0,0.45)" }}>
                   Inversión
                 </span>
-                <span className="font-heading text-2xl font-light" style={{ color: "#D4A017" }}>
+                <span className="font-heading text-2xl font-light" style={{ color: "#1A1A1A" }}>
                   {item.price}
                 </span>
               </div>
@@ -202,10 +203,10 @@ function RevealCard({ item, index }) {
               onClick={() => setShowProcess(!showProcess)}
               className="flex-1 rounded-[1rem] font-ui text-[9px] tracking-[0.35em] uppercase transition-all duration-[650ms]"
               style={{
-                background: showProcess ? "linear-gradient(135deg, #B8860B, #8B6914)" : "transparent",
-                border: showProcess ? "1px solid rgba(184,134,11,0.4)" : "1px solid rgba(255,255,255,0.1)",
-                color: showProcess ? "#fff" : "rgba(255,255,255,0.4)",
-                boxShadow: showProcess ? "0 8px 28px rgba(184,134,11,0.25)" : "none",
+                background: showProcess ? "rgba(0,0,0,0.7)" : "rgba(0,0,0,0.15)",
+                border: "1px solid rgba(0,0,0,0.2)",
+                color: showProcess ? "#fff" : "rgba(0,0,0,0.6)",
+                boxShadow: showProcess ? "0 8px 28px rgba(0,0,0,0.2)" : "none",
               }}
             >
               {showProcess ? "Ocultar" : "Ver Proceso"}
@@ -223,12 +224,12 @@ function RevealCard({ item, index }) {
                 className="overflow-hidden"
               >
                 <div className="mt-4 p-[5px] rounded-[1.25rem]"
-                  style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)" }}
+                  style={{ background: "rgba(0,0,0,0.08)", border: "1px solid rgba(0,0,0,0.15)" }}
                 >
                   <div className="rounded-[calc(1.25rem-5px)] p-5"
-                    style={{ background: "rgba(0,0,0,0.3)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.04)" }}
+                    style={{ background: "rgba(255,255,255,0.3)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)" }}
                   >
-                    <span className="font-ui text-[8px] tracking-[0.5em] uppercase block mb-4" style={{ color: "rgba(184,134,11,0.6)" }}>
+                    <span className="font-ui text-[8px] tracking-[0.5em] uppercase block mb-4" style={{ color: "rgba(0,0,0,0.4)" }}>
                       Protocolo de tratamiento
                     </span>
                     <div className="space-y-0">
@@ -239,14 +240,14 @@ function RevealCard({ item, index }) {
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ delay: i * 0.1, duration: 0.45, ease: "circOut" }}
                           className="flex gap-4 items-start py-3 border-b last:border-b-0"
-                          style={{ borderColor: "rgba(255,255,255,0.05)" }}
+                          style={{ borderColor: "rgba(0,0,0,0.08)" }}
                         >
                           <div className="w-6 h-6 rounded-full flex-shrink-0 flex items-center justify-center"
-                            style={{ background: "rgba(184,134,11,0.12)", border: "1px solid rgba(184,134,11,0.25)" }}
+                            style={{ background: "rgba(0,0,0,0.1)", border: "1px solid rgba(0,0,0,0.2)" }}
                           >
-                            <span className="font-ui text-[9px] font-bold" style={{ color: "#B8860B" }}>{i + 1}</span>
+                            <span className="font-ui text-[9px] font-bold" style={{ color: "#1A1A1A" }}>{i + 1}</span>
                           </div>
-                          <p className="font-body text-[12px] leading-relaxed pt-0.5" style={{ color: "rgba(255,255,255,0.5)" }}>
+                          <p className="font-body text-[12px] leading-relaxed pt-0.5" style={{ color: "rgba(0,0,0,0.6)" }}>
                             {step}
                           </p>
                         </motion.div>
@@ -266,39 +267,36 @@ function RevealCard({ item, index }) {
 export default function BeforeAfterScroll() {
   return (
     <section id="transformacion" className="relative py-28 sm:py-36 px-6 overflow-hidden"
-      style={{ background: "#111111" }}
+      style={{ background: "linear-gradient(160deg, #C8970A 0%, #B8860B 35%, #8B6508 70%, #A07510 100%)" }}
     >
-      {/* Ambient gold glow */}
+      {/* Noise texture overlay */}
+      <div className="absolute inset-0 pointer-events-none opacity-[0.06]"
+        style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E\")" }}
+      />
+      {/* Radial light center */}
       <div className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 80% 50% at 50% 100%, rgba(184,134,11,0.06) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(ellipse 70% 60% at 50% 30%, rgba(255,220,80,0.18) 0%, transparent 70%)" }}
       />
       {/* Top separator line */}
       <div className="absolute top-0 inset-x-0 h-px"
-        style={{ background: "linear-gradient(90deg, transparent, rgba(184,134,11,0.2), transparent)" }}
+        style={{ background: "linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent)" }}
       />
       {/* Bottom separator line */}
       <div className="absolute bottom-0 inset-x-0 h-px"
-        style={{ background: "linear-gradient(90deg, transparent, rgba(184,134,11,0.2), transparent)" }}
+        style={{ background: "linear-gradient(90deg, transparent, rgba(0,0,0,0.15), transparent)" }}
       />
 
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-24">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.8, ease: [0.32, 0.72, 0, 1] }}>
-            <span className="font-ui text-[9px] tracking-[0.7em] uppercase mb-6 block" style={{ color: "rgba(184,134,11,0.7)" }}>
+            <span className="font-ui text-[9px] tracking-[0.7em] uppercase mb-6 block" style={{ color: "rgba(0,0,0,0.45)" }}>
               — La Transformación —
             </span>
-            <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl font-light mt-4 italic"
-              style={{
-                background: "linear-gradient(135deg, #B8860B 0%, #D4A017 40%, #F8C840 60%, #B8860B 100%)",
-                WebkitBackgroundClip: "text",
-                WebkitTextFillColor: "transparent",
-                backgroundClip: "text",
-              }}
-            >
+            <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl font-light mt-4 italic" style={{ color: "#1A1A1A" }}>
               Ver para Creer
             </h2>
-            <p className="font-body text-sm mt-8 max-w-md mx-auto leading-relaxed font-light" style={{ color: "rgba(255,255,255,0.3)" }}>
+            <p className="font-body text-sm mt-8 max-w-md mx-auto leading-relaxed font-light" style={{ color: "rgba(0,0,0,0.5)" }}>
               Desliza para descubrir la diferencia que el detalle artesanal hace en cada superficie.
             </p>
           </motion.div>
