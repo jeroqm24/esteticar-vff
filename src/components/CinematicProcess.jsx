@@ -48,7 +48,7 @@ function ProcessStep({ step, index, scrollYProgress }) {
           style={{ fontSize: "clamp(2.2rem, 7vw, 4.5rem)", lineHeight: 0.92, letterSpacing: "-0.03em", textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
           {step.title}
         </h2>
-        <div className="w-8 h-px" style={{ background: "rgba(184,134,11,0.6)" }} />
+        <div className="w-14 h-[3px] rounded-full" style={{ background: "rgba(184,134,11,0.75)" }} />
         <p className="font-body text-sm sm:text-base max-w-[280px] sm:max-w-sm leading-relaxed"
           style={{ color: "rgba(255,255,255,0.5)" }}>{step.desc}</p>
       </div>
@@ -157,11 +157,11 @@ export default function CinematicProcess() {
           </div>
         </div>
 
-        {/* Dark base */}
-        <div className="absolute inset-0 z-[1] pointer-events-none" style={{ background: "rgba(0,0,0,0.35)" }} />
+        {/* Dark base — solo desktop */}
+        <div className="hidden md:block absolute inset-0 z-[1] pointer-events-none" style={{ background: "rgba(0,0,0,0.35)" }} />
 
-        {/* Gold glow */}
-        <motion.div className="absolute inset-0 pointer-events-none z-[2]"
+        {/* Gold glow — solo desktop */}
+        <motion.div className="hidden md:block absolute inset-0 pointer-events-none z-[2]"
           style={{ opacity: glowOpacity, background: "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(212,160,23,0.14) 0%, transparent 65%)" }}
         />
 
@@ -227,7 +227,7 @@ export default function CinematicProcess() {
 
         {/* ── Showroom badge ── */}
         <motion.div style={{ opacity: badgeOpacity }}
-          className="absolute bottom-20 sm:bottom-24 inset-x-0 z-20 flex justify-center pointer-events-none">
+          className="absolute bottom-28 sm:bottom-32 inset-x-0 z-20 flex justify-center pointer-events-none">
           <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full"
             style={{ background: "linear-gradient(135deg, rgba(184,134,11,0.95), rgba(212,160,23,0.95))", boxShadow: "0 4px 28px rgba(184,134,11,0.5)" }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.9)", flexShrink: 0 }} />
