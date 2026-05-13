@@ -87,24 +87,41 @@ export default function Navigation({ onBookingClick, cartCount }) {
             </button>
           </div>
 
-          {/* Mobile hamburger */}
+          {/* Mobile hamburger / X */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className={`lg:hidden relative z-[110] w-8 h-6 flex flex-col justify-between ${mobileOpen ? "gap-0" : ""}`}
+            className="lg:hidden relative z-[110] w-10 h-10 flex items-center justify-center rounded-full transition-all duration-300"
+            style={{
+              background: mobileOpen ? "rgba(184,134,11,0.15)" : "transparent",
+              border: mobileOpen ? "1px solid rgba(184,134,11,0.35)" : "1px solid transparent",
+            }}
+            aria-label={mobileOpen ? "Cerrar menú" : "Abrir menú"}
           >
-            <span className={`block w-full h-px transition-all duration-500 ${
-              mobileOpen
-                ? "rotate-45 translate-y-[10px] bg-ec-dark"
-                : scrolled ? "bg-ec-dark" : "bg-white"
-            }`} />
-            <span className={`block w-full h-px transition-all duration-500 ${
-              mobileOpen ? "opacity-0" : scrolled ? "bg-ec-dark" : "bg-white"
-            }`} />
-            <span className={`block w-full h-px transition-all duration-500 ${
-              mobileOpen
-                ? "-rotate-45 -translate-y-[10px] bg-ec-dark"
-                : scrolled ? "bg-ec-dark" : "bg-white"
-            }`} />
+            <div className="relative w-5 h-5">
+              {/* Línea superior / brazo 1 de X */}
+              <span className="absolute left-0 right-0 h-[1.5px] rounded-full transition-all duration-400"
+                style={{
+                  top: mobileOpen ? "50%" : "20%",
+                  transform: mobileOpen ? "translateY(-50%) rotate(45deg)" : "none",
+                  background: mobileOpen ? "#D4A017" : (scrolled ? "#1A1A1A" : "#ffffff"),
+                }}
+              />
+              {/* Línea media */}
+              <span className="absolute left-0 right-0 h-[1.5px] rounded-full top-1/2 -translate-y-1/2 transition-all duration-400"
+                style={{
+                  opacity: mobileOpen ? 0 : 1,
+                  background: scrolled ? "#1A1A1A" : "#ffffff",
+                }}
+              />
+              {/* Línea inferior / brazo 2 de X */}
+              <span className="absolute left-0 right-0 h-[1.5px] rounded-full transition-all duration-400"
+                style={{
+                  bottom: mobileOpen ? "50%" : "20%",
+                  transform: mobileOpen ? "translateY(50%) rotate(-45deg)" : "none",
+                  background: mobileOpen ? "#D4A017" : (scrolled ? "#1A1A1A" : "#ffffff"),
+                }}
+              />
+            </div>
           </button>
         </div>
       </motion.nav>
