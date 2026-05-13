@@ -63,7 +63,7 @@ function ServicePod({ service, index }) {
             {/* Price — massive display text */}
             <div className="mb-6">
               <span
-                className={`font-heading text-5xl sm:text-6xl font-light leading-none transition-all duration-700 ${
+                className={`font-heading text-4xl sm:text-5xl font-light leading-none transition-all duration-700 ${
                   isHovered
                     ? "text-ec-gold"
                     : "text-ec-dark/[0.12]"
@@ -169,7 +169,7 @@ export default function ServicesSection({ onAddService, onRemoveService, selecte
             className="flex-1"
           >
             <span className="section-label mb-6 block">NUESTROS TRATAMIENTOS</span>
-            <h2 className="font-heading text-5xl md:text-7xl lg:text-8xl text-ec-dark font-light mt-6 leading-tight tracking-tighter">
+            <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl text-ec-dark font-light mt-6 leading-tight tracking-tighter">
               Excelencia en <br />
               <span className="italic" style={{
                 background: "linear-gradient(135deg, #B8860B 0%, #D4A017 50%, #B8860B 100%)",

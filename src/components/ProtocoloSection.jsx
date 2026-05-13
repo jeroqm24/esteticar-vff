@@ -284,7 +284,7 @@ export default function ProtocoloSection() {
               className="max-w-2xl"
             >
               <span className="section-label mb-6 block">PROTOCOLO DE CUSTODIA</span>
-              <h2 className="font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-ec-dark font-light mt-6 leading-tight tracking-tighter">
+              <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl text-ec-dark font-light mt-6 leading-tight tracking-tighter">
                 Sistema de <br />
                 <span className="italic" style={{
                   background: "linear-gradient(135deg, #B8860B 0%, #D4A017 50%, #B8860B 100%)",

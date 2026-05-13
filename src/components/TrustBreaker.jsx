@@ -50,7 +50,7 @@ export default function TrustBreaker() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, ease: [0.32, 0.72, 0, 1] }}
-          className="trust-text text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] leading-[0.9] tracking-tighter mb-2"
+          className="trust-text text-5xl sm:text-6xl md:text-7xl leading-[0.95] tracking-tighter mb-2"
           style={{ fontWeight: 700, color: "#1A1A1A" }}
         >
           ¿Nosotros? Sí.
@@ -62,7 +62,7 @@ export default function TrustBreaker() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, delay: 0.12, ease: [0.32, 0.72, 0, 1] }}
-          className="trust-text text-5xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.95] tracking-tighter"
+          className="trust-text text-4xl sm:text-5xl md:text-6xl leading-[0.95] tracking-tighter"
           style={{
             fontWeight: 300,
             fontStyle: "italic",

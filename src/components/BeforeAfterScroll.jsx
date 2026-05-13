@@ -161,7 +161,7 @@ export default function BeforeAfterScroll() {
         <div className="text-center mb-24">
           <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
             <span className="section-label justify-center mb-6">LA TRANSFORMACIÓN</span>
-            <h2 className="font-heading text-4xl sm:text-5xl md:text-7xl lg:text-8xl text-ec-dark font-light mt-6 italic gold-gradient-text">
+            <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl text-ec-dark font-light mt-6 italic gold-gradient-text">
               Ver para Creer
             </h2>
             <p className="font-body text-sm text-ec-text-muted mt-8 max-w-xl mx-auto leading-relaxed font-light">

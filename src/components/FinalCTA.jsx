@@ -23,12 +23,12 @@ export default function FinalCTA({ onOpenChat }) {
 
         <div className="overflow-hidden">
           <motion.h2 initial={{ y: "100%" }} animate={inView ? { y: 0 } : {}} transition={{ duration: 1.4, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="font-heading text-4xl sm:text-6xl md:text-8xl text-white font-light leading-[0.95] tracking-tighter"
+            className="font-heading text-4xl sm:text-5xl md:text-6xl text-white font-light leading-[0.95] tracking-tighter"
           >{FINAL_CTA.line1}</motion.h2>
         </div>
         <div className="overflow-hidden mt-2">
           <motion.h2 initial={{ y: "100%" }} animate={inView ? { y: 0 } : {}} transition={{ duration: 1.4, delay: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className="font-heading text-4xl sm:text-6xl md:text-8xl italic leading-[0.95] tracking-tighter"
+            className="font-heading text-4xl sm:text-5xl md:text-6xl italic leading-[0.95] tracking-tighter"
             style={{ background: "linear-gradient(135deg, #F8C840 0%, #FCE48C 50%, #F8C840 100%)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent" }}
           >{FINAL_CTA.line2}</motion.h2>
         </div>

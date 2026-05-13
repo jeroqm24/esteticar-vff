@@ -128,7 +128,7 @@ export default function VIPSection() {
             className="max-w-2xl"
           >
             <span className="section-label mb-6 block" style={{ color: "#D4A017" }}>EXPERIENCIA VIP</span>
-            <h2 className="font-heading text-5xl md:text-7xl lg:text-8xl text-white font-light mt-6 leading-tight">
+            <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl text-white font-light mt-6 leading-tight">
               Tu Espera es{" "}
               <span
                 className="italic"
@@ -194,7 +194,7 @@ export default function VIPSection() {
               </div>
               <div className="text-center shrink-0">
                 <span
-                  className="font-heading text-7xl block"
+                  className="font-heading text-5xl block"
                   style={{
                     background: "linear-gradient(135deg, #D4A017 0%, #F8C840 100%)",
                     WebkitBackgroundClip: "text",

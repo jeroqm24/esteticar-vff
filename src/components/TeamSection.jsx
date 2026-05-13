@@ -103,7 +103,7 @@ export default function TeamSection() {
             transition={{ duration: 0.9, ease: [0.32, 0.72, 0, 1] }}
           >
             <span className="section-label mb-6 block">NUESTRO EQUIPO</span>
-            <h2 className="font-heading text-5xl md:text-7xl lg:text-8xl text-ec-dark font-light mt-6 leading-tight tracking-tighter">
+            <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl text-ec-dark font-light mt-6 leading-tight tracking-tighter">
               El Equipo detrás <br />
               <span className="italic" style={{
                 background: "linear-gradient(135deg, #B8860B 0%, #D4A017 50%, #B8860B 100%)",

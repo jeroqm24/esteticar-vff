@@ -262,7 +262,7 @@ export default function ReviewsSection() {
             transition={{ duration: 0.9, ease: [0.32, 0.72, 0, 1] }}
           >
             <span className="font-ui text-[10px] tracking-[0.8em] text-ec-gold uppercase block mb-10">RESEÑAS DE CLIENTES</span>
-            <h2 className="font-heading text-5xl sm:text-6xl md:text-8xl text-white font-light leading-tight mb-8 tracking-tighter">
+            <h2 className="font-heading text-4xl sm:text-5xl md:text-6xl text-white font-light leading-tight mb-8 tracking-tighter">
               Lo que dicen
               <span className="italic block" style={{
                 background: "linear-gradient(135deg, #D4A017 0%, #F8C840 50%, #D4A017 100%)",
