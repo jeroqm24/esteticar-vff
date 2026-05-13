@@ -10,7 +10,7 @@ function GuaranteeModal({ onClose }) {
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-center justify-center px-4"
+        className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-start justify-center px-4 pt-20 pb-6 overflow-y-auto"
         onClick={onClose}
       >
         <motion.div
@@ -19,9 +19,8 @@ function GuaranteeModal({ onClose }) {
           exit={{ opacity: 0, y: 20, scale: 0.97 }}
           transition={{ type: "spring", damping: 28, stiffness: 320 }}
           onClick={(e) => e.stopPropagation()}
-          className="bezel-outer w-full max-w-2xl shadow-[0_24px_80px_rgba(0,0,0,0.18)]"
+          className="w-full max-w-2xl rounded-2xl bg-white shadow-[0_24px_80px_rgba(0,0,0,0.2)] overflow-hidden"
         >
-        <div className="bezel-inner bg-white max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="p-8 sm:p-10 border-b border-black/[0.06] flex items-start justify-between gap-6">
             <div>
@@ -147,7 +146,6 @@ function GuaranteeModal({ onClose }) {
               CERRAR
             </button>
           </div>
-        </div>{/* /bezel-inner */}
         </motion.div>
       </motion.div>
     </AnimatePresence>
