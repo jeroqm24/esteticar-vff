@@ -308,7 +308,7 @@ export const TEAM = [
   },
   {
     name: "Jerónimo Quintero",
-    role: "Estratega",
+    role: "Estratega y desarrollador",
     authority: "Diseñador de la experiencia Esteticar. Responsable de elevar el estándar del detailing en Manizales.",
     image: "/team-jeronimo.jpg",
   },
