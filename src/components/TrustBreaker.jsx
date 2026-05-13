@@ -52,39 +52,35 @@ export default function TrustBreaker() {
         </motion.p>
 
         {/* Line 1 — heavy weight, white */}
-        <div className="overflow-hidden mb-2">
-          <motion.h2
-            initial={{ y: "110%" }}
-            whileInView={{ y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.1, ease: [0.32, 0.72, 0, 1] }}
-            className="trust-text text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] text-white leading-[0.9] tracking-tighter"
-            style={{ fontWeight: 700 }}
-          >
-            ¿Nosotros? Sí.
-          </motion.h2>
-        </div>
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, ease: [0.32, 0.72, 0, 1] }}
+          className="trust-text text-6xl sm:text-8xl md:text-9xl lg:text-[10rem] text-white leading-[0.9] tracking-tighter mb-2"
+          style={{ fontWeight: 700 }}
+        >
+          ¿Nosotros? Sí.
+        </motion.h2>
 
         {/* Line 2 — light weight, gold gradient */}
-        <div className="overflow-hidden">
-          <motion.h2
-            initial={{ y: "110%" }}
-            whileInView={{ y: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 1.1, delay: 0.12, ease: [0.32, 0.72, 0, 1] }}
-            className="trust-text text-5xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.95] tracking-tighter gold-gradient-text"
-            style={{
-              fontWeight: 300,
-              fontStyle: "italic",
-              background: "linear-gradient(135deg, #D4A017 0%, #F8C840 50%, #D4A017 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}
-          >
-            Sólo nosotros lo hacemos único.
-          </motion.h2>
-        </div>
+        <motion.h2
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.9, delay: 0.12, ease: [0.32, 0.72, 0, 1] }}
+          className="trust-text text-5xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.95] tracking-tighter"
+          style={{
+            fontWeight: 300,
+            fontStyle: "italic",
+            background: "linear-gradient(135deg, #D4A017 0%, #F8C840 50%, #D4A017 100%)",
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+            backgroundClip: "text",
+          }}
+        >
+          Sólo nosotros lo hacemos único.
+        </motion.h2>
 
         <motion.div
           initial={{ scaleX: 0 }}
