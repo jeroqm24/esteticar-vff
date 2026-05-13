@@ -174,9 +174,14 @@ function ReviewCard({ review, index }) {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-4%" }}
       transition={{ duration: 0.65, delay: (index % 4) * 0.06, ease: [0.32, 0.72, 0, 1] }}
-      className="bezel-outer break-inside-avoid hover:bezel-outer-gold group/card transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)]"
+      className="break-inside-avoid group/card"
     >
-    <div className="bezel-inner bg-white p-5 flex flex-col gap-3.5 shadow-[0_2px_12px_rgba(0,0,0,0.05)] group-hover/card:shadow-[0_6px_28px_rgba(0,0,0,0.08)] transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] border border-black/[0.03]">
+    <div
+      className="relative bg-white rounded-2xl p-5 flex flex-col gap-3.5 border border-black/[0.05] transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] group-hover/card:shadow-[0_12px_40px_rgba(0,0,0,0.09)] group-hover/card:border-ec-gold/20 group-hover/card:-translate-y-1"
+      style={{ boxShadow: "0 2px 16px rgba(0,0,0,0.05)" }}
+    >
+      {/* Gold sweep bottom line */}
+      <div className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-ec-gold/60 to-transparent w-0 group-hover/card:w-full transition-all duration-700 rounded-b-2xl" />
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -232,7 +237,7 @@ function ReviewCard({ review, index }) {
         </svg>
         <span className="text-[10px] text-ec-text-muted">Reseña verificada en Google</span>
       </div>
-    </div>{/* /bezel-inner */}
+    </div>
     </motion.div>
   );
 }
@@ -243,53 +248,68 @@ export default function ReviewsSection() {
   const totalReviews = REVIEWS.length;
 
   return (
-    <section id="resenas" className="relative py-24 sm:py-32 px-4 sm:px-6 bg-ec-white overflow-hidden">
-      {/* Subtle background */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_0%,rgba(184,134,11,0.04)_0%,transparent_60%)] pointer-events-none" />
+    <section id="resenas" className="relative overflow-hidden bg-ec-white">
+      {/* Dark header band */}
+      <div className="relative bg-ec-dark px-4 sm:px-6 pt-32 pb-24 overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_50%_100%,rgba(184,134,11,0.08)_0%,transparent_60%)] pointer-events-none" />
+        <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-ec-gold/30 to-transparent" />
 
-      <div className="relative z-10 max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 30 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8 }}
-          className="text-center mb-14 sm:mb-18"
-        >
-          <span className="section-label mb-6 block justify-center">RESEÑAS DE CLIENTES</span>
-          <h2 className="font-heading text-4xl sm:text-5xl md:text-7xl text-ec-dark font-light leading-tight mb-6">
-            Lo que dicen
-            <span className="italic gold-gradient-text"> quienes volvieron</span>
-          </h2>
+        <div className="relative z-10 max-w-7xl mx-auto text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.9, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <span className="font-ui text-[10px] tracking-[0.8em] text-ec-gold uppercase block mb-10">RESEÑAS DE CLIENTES</span>
+            <h2 className="font-heading text-5xl sm:text-6xl md:text-8xl text-white font-light leading-tight mb-8 tracking-tighter">
+              Lo que dicen
+              <span className="italic block" style={{
+                background: "linear-gradient(135deg, #D4A017 0%, #F8C840 50%, #D4A017 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                backgroundClip: "text",
+              }}> quienes volvieron</span>
+            </h2>
 
-          {/* Google rating summary — Double-Bezel */}
-          <div className="bezel-outer inline-flex mt-4">
-          <div className="bezel-inner inline-flex items-center gap-5 bg-white px-6 py-4 shadow-[0_2px_20px_rgba(0,0,0,0.04)]">
-            <GoogleLogo size={24} />
-            <div className="w-px h-8 bg-black/[0.06]" />
-            <div className="flex items-center gap-2">
-              <span className="font-heading text-4xl text-ec-dark leading-none">{avgRating.toFixed(1)}</span>
-              <div>
-                <Stars n={5} size={14} />
-                <p className="text-[11px] text-ec-text-muted mt-0.5">{totalReviews} reseñas en Google</p>
-              </div>
-            </div>
-            <div className="w-px h-8 bg-black/[0.06]" />
-            {/* Star distribution */}
-            <div className="hidden sm:flex flex-col gap-0.5">
-              {[5, 4, 3].map((s) => (
-                <div key={s} className="flex items-center gap-1.5">
-                  <span className="text-[10px] text-ec-text-muted w-2 text-right">{s}</span>
-                  <div className="w-16 h-1 bg-black/[0.06] rounded-full overflow-hidden">
-                    <div className="h-full rounded-full bg-[#FBBC05]" style={{ width: s === 5 ? "100%" : "0%" }} />
+            {/* Google rating summary */}
+            <div className="inline-flex mt-6">
+              <div
+                className="flex items-center gap-5 px-7 py-4 rounded-2xl border border-white/[0.1]"
+                style={{
+                  background: "rgba(255,255,255,0.05)",
+                  backdropFilter: "blur(12px)",
+                  WebkitBackdropFilter: "blur(12px)",
+                }}
+              >
+                <GoogleLogo size={22} />
+                <div className="w-px h-7 bg-white/[0.12]" />
+                <div className="flex items-center gap-2.5">
+                  <span className="font-heading text-4xl text-white leading-none">{avgRating.toFixed(1)}</span>
+                  <div>
+                    <Stars n={5} size={13} />
+                    <p className="text-[11px] text-white/40 mt-0.5">{totalReviews} reseñas en Google</p>
                   </div>
                 </div>
-              ))}
+                <div className="w-px h-7 bg-white/[0.12]" />
+                <div className="hidden sm:flex flex-col gap-0.5">
+                  {[5, 4, 3].map((s) => (
+                    <div key={s} className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-white/30 w-2 text-right">{s}</span>
+                      <div className="w-16 h-1 bg-white/[0.08] rounded-full overflow-hidden">
+                        <div className="h-full rounded-full bg-[#FBBC05]" style={{ width: s === 5 ? "100%" : "0%" }} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>{/* /bezel-inner */}
-          </div>{/* /bezel-outer */}
-        </motion.div>
+          </motion.div>
+        </div>
+      </div>
 
+      {/* Review cards on white background */}
+      <div className="px-4 sm:px-6 py-20 max-w-7xl mx-auto">
         {/* Masonry review grid */}
         <div className="columns-1 sm:columns-2 lg:columns-3 gap-5 [column-fill:_balance]">
           {REVIEWS.map((r, i) => (

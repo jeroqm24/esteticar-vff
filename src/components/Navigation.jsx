@@ -17,40 +17,40 @@ export default function Navigation({ onBookingClick, cartCount }) {
       <motion.nav
         initial={{ y: -100 }}
         animate={{ y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.9, ease: [0.32, 0.72, 0, 1] }}
         className={`fixed top-0 inset-x-0 z-[100] transition-all duration-700 ${
           scrolled
-            ? "bg-white/90 backdrop-blur-xl border-b border-black/[0.06] shadow-[0_2px_20px_rgba(0,0,0,0.04)]"
+            ? "bg-white/92 backdrop-blur-2xl border-b border-black/[0.06] shadow-[0_4px_30px_rgba(0,0,0,0.06)]"
             : "bg-transparent"
         }`}
       >
         <div className="relative max-w-7xl mx-auto px-6 flex items-center justify-between h-20">
-          {/* Logo — visible on all breakpoints, size adapts to scroll state */}
+          {/* Logo */}
           <a href="#" className="relative z-10 flex items-center">
             <img
               src={BRAND.logo}
               alt="Esteticar"
-              className={`object-contain transition-all duration-500 ${
+              className={`object-contain transition-all duration-700 ${
                 scrolled ? "h-10 sm:h-11" : "h-10 sm:h-12"
               }`}
               style={{
                 filter: scrolled
                   ? "drop-shadow(0 0 4px rgba(184,134,11,0.2))"
-                  : "drop-shadow(0 0 12px rgba(248,200,64,0.5)) drop-shadow(0 0 4px rgba(248,200,64,0.3))",
+                  : "drop-shadow(0 0 16px rgba(248,200,64,0.55)) drop-shadow(0 0 4px rgba(248,200,64,0.3))",
               }}
             />
           </a>
 
-          {/* Desktop links — each in its own pill/banner */}
-          <div className="hidden lg:flex items-center gap-2 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+          {/* Desktop links — rounded-full pills */}
+          <div className="hidden lg:flex items-center gap-1.5 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
             {NAV_ITEMS.map((item) => (
               <a
                 key={item.label}
                 href={item.href}
-                className={`font-ui text-[11px] tracking-[0.2em] uppercase transition-all duration-500 px-5 py-2 border rounded-sm ${
+                className={`font-ui text-[11px] tracking-[0.2em] uppercase transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] px-5 py-2.5 rounded-full ${
                   scrolled
-                    ? "text-ec-text-secondary border-black/[0.06] bg-ec-cream/50 hover:bg-ec-gold hover:text-white hover:border-ec-gold"
-                    : "text-white/80 border-white/[0.12] bg-white/[0.06] backdrop-blur-sm hover:bg-ec-gold hover:text-white hover:border-ec-gold"
+                    ? "text-ec-text-secondary bg-transparent hover:bg-ec-gold hover:text-white"
+                    : "text-white/75 bg-white/[0.07] backdrop-blur-sm border border-white/[0.1] hover:bg-ec-gold hover:text-white hover:border-transparent"
                 }`}
               >
                 {item.label}
@@ -58,13 +58,23 @@ export default function Navigation({ onBookingClick, cartCount }) {
             ))}
           </div>
 
-          {/* Right actions — no Admin link, gold RESERVA button always */}
+          {/* Right: RESERVA pill button */}
           <div className="hidden lg:flex items-center gap-5">
             <button
               onClick={onBookingClick}
-              className="relative px-8 py-3 font-ui text-[11px] tracking-[0.3em] uppercase transition-all duration-500 font-bold bg-ec-gold text-white hover:shadow-[0_4px_20px_rgba(184,134,11,0.25)] hover:scale-[1.02] rounded-sm"
+              className="relative group/nav px-8 py-3 font-ui text-[11px] tracking-[0.3em] uppercase font-bold rounded-full transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] flex items-center gap-3"
+              style={{
+                background: "linear-gradient(135deg, #B8860B 0%, #D4A017 100%)",
+                color: "#fff",
+                boxShadow: "0 4px 20px rgba(184,134,11,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+              }}
             >
               RESERVA
+              <span className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center transition-transform duration-500 group-hover/nav:translate-x-0.5">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </span>
               {cartCount > 0 && (
                 <motion.span
                   initial={{ scale: 0 }}
@@ -99,15 +109,24 @@ export default function Navigation({ onBookingClick, cartCount }) {
         </div>
       </motion.nav>
 
-      {/* Mobile menu */}
+      {/* Mobile menu — full screen dark overlay */}
       <AnimatePresence>
         {mobileOpen && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[90] bg-white/95 backdrop-blur-xl flex flex-col items-center justify-start pt-32 pb-10 gap-10 overflow-y-auto"
+            transition={{ duration: 0.4 }}
+            className="fixed inset-0 z-[90] flex flex-col items-center justify-center pt-8 pb-12 gap-0 overflow-y-auto"
+            style={{
+              background: "rgba(10,10,10,0.96)",
+              backdropFilter: "blur(24px)",
+              WebkitBackdropFilter: "blur(24px)",
+            }}
           >
+            {/* Gold line accent */}
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-ec-gold/40 to-transparent" />
+
             {NAV_ITEMS.map((item, i) => (
               <motion.a
                 key={item.label}
@@ -117,31 +136,35 @@ export default function Navigation({ onBookingClick, cartCount }) {
                   setMobileOpen(false);
                   setTimeout(() => {
                     const target = document.querySelector(item.href);
-                    if (target) {
-                      target.scrollIntoView({ behavior: 'smooth' });
-                    }
+                    if (target) target.scrollIntoView({ behavior: "smooth" });
                   }, 400);
                 }}
-                initial={{ opacity: 0, y: 20 }}
+                initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: i * 0.06 }}
-                className="font-heading text-3xl text-ec-dark hover:text-ec-gold transition-colors"
+                transition={{ delay: i * 0.07, ease: [0.32, 0.72, 0, 1] }}
+                className="font-heading text-4xl sm:text-5xl text-white/80 hover:text-ec-gold transition-colors duration-300 py-4"
               >
                 {item.label}
               </motion.a>
             ))}
+
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.4 }}
-              className="mt-4"
+              transition={{ delay: 0.45, ease: [0.32, 0.72, 0, 1] }}
+              className="mt-10"
             >
               <button
-                onClick={() => { 
-                  setMobileOpen(false); 
-                  setTimeout(() => onBookingClick(), 400); 
+                onClick={() => {
+                  setMobileOpen(false);
+                  setTimeout(() => onBookingClick(), 400);
                 }}
-                className="btn-gold rounded-sm"
+                className="px-10 py-5 font-ui text-[12px] tracking-[0.4em] uppercase font-bold rounded-full transition-all duration-500 active:scale-[0.97]"
+                style={{
+                  background: "linear-gradient(135deg, #B8860B 0%, #D4A017 100%)",
+                  color: "#fff",
+                  boxShadow: "0 8px 30px rgba(184,134,11,0.35)",
+                }}
               >
                 RESERVAR AHORA
               </button>

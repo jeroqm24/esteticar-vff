@@ -167,16 +167,25 @@ function ProtocolBlock({ protocol, index }) {
       viewport={{ once: true, margin: "-5%" }}
       transition={{ duration: 0.8, delay: index * 0.1 }}
     >
-      {/* Double-Bezel outer shell */}
-      <div className={`bezel-outer transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] ${expanded ? "bezel-outer-gold border-ec-gold/[0.14]" : ""}`}>
-      {/* Double-Bezel inner core */}
+      <div
+        className={`p-[6px] rounded-[1.75rem] transition-all duration-[700ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] ${
+          expanded
+            ? "bg-ec-gold/[0.08] border border-ec-gold/25"
+            : "bg-black/[0.02] border border-black/[0.05]"
+        }`}
+      >
       <div
         onClick={() => setExpanded(!expanded)}
-        className={`system-block bezel-inner relative p-8 sm:p-10 transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] cursor-pointer group ${
+        className={`system-block relative p-8 sm:p-10 transition-all duration-[700ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] cursor-pointer group rounded-[calc(1.75rem-6px)] ${
           expanded
-            ? "bg-ec-gold/[0.05] border border-ec-gold/[0.12] shadow-[0_8px_40px_rgba(184,134,11,0.07)]"
-            : "bg-white border border-black/[0.04] hover:border-ec-gold/15 shadow-[0_2px_20px_rgba(0,0,0,0.04)]"
+            ? "bg-[#FEFBF3] border border-ec-gold/[0.15]"
+            : "bg-white border border-black/[0.04] hover:border-ec-gold/15"
         }`}
+        style={{
+          boxShadow: expanded
+            ? "inset 0 1px 1px rgba(255,255,255,0.9), 0 12px 40px rgba(184,134,11,0.06)"
+            : "inset 0 1px 1px rgba(255,255,255,0.9), 0 2px 20px rgba(0,0,0,0.04)",
+        }}
       >
         {/* System identifier */}
         <div className="flex items-center justify-between mb-8">
@@ -238,8 +247,8 @@ function ProtocolBlock({ protocol, index }) {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>{/* /bezel-inner */}
-      </div>{/* /bezel-outer */}
+      </div>
+      </div>
     </motion.div>
   );
 }
@@ -262,13 +271,18 @@ export default function ProtocoloSection() {
               initial={{ opacity: 0, x: -30 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              transition={{ duration: 0.8 }}
+              transition={{ duration: 0.9, ease: [0.32, 0.72, 0, 1] }}
               className="max-w-2xl"
             >
               <span className="section-label mb-6 block">PROTOCOLO DE CUSTODIA</span>
-              <h2 className="font-heading text-4xl sm:text-5xl md:text-7xl text-ec-dark font-light mt-6 leading-tight">
+              <h2 className="font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl text-ec-dark font-light mt-6 leading-tight tracking-tighter">
                 Sistema de <br />
-                <span className="italic gold-gradient-text">Custodia Absoluta</span>
+                <span className="italic" style={{
+                  background: "linear-gradient(135deg, #B8860B 0%, #D4A017 50%, #B8860B 100%)",
+                  WebkitBackgroundClip: "text",
+                  WebkitTextFillColor: "transparent",
+                  backgroundClip: "text",
+                }}>Custodia Absoluta</span>
               </h2>
             </motion.div>
 
@@ -286,43 +300,57 @@ export default function ProtocoloSection() {
           </div>
 
           {/* Protocol blocks */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
             {PROTOCOLS.map((p, i) => (
               <ProtocolBlock key={p.id} protocol={p} index={i} />
             ))}
           </div>
 
-          {/* Guarantee banner — Double-Bezel */}
+          {/* Guarantee banner */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-16 sm:mt-20 bezel-outer-gold"
+            transition={{ duration: 0.9, ease: [0.32, 0.72, 0, 1] }}
+            className="mt-16 sm:mt-20"
           >
-          <div className="bezel-inner p-8 sm:p-12 bg-ec-gold/[0.035] border border-ec-gold/[0.1] flex flex-col md:flex-row items-center justify-between gap-8">
-            <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
-              <div className="w-16 h-16 border-2 border-ec-gold flex items-center justify-center p-2.5 rounded-sm shrink-0">
-                <img
-                  src={BRAND.logo}
-                  alt="Garantía Esteticar"
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <div className="text-center sm:text-left">
-                <h4 className="font-heading text-xl sm:text-2xl text-ec-dark">Garantía de $5.000.000 COP</h4>
-                <p className="font-body text-sm text-ec-text-secondary max-w-md mt-2 font-light">
-                  Cada tratamiento incluye una póliza de responsabilidad civil mientras su vehículo esté bajo nuestro cuidado.
-                </p>
+            <div
+              className="p-[6px] rounded-[1.75rem]"
+              style={{
+                background: "rgba(184,134,11,0.06)",
+                border: "1px solid rgba(184,134,11,0.2)",
+              }}
+            >
+              <div
+                className="rounded-[calc(1.75rem-6px)] p-8 sm:p-12 flex flex-col md:flex-row items-center justify-between gap-8"
+                style={{
+                  background: "linear-gradient(135deg, rgba(184,134,11,0.04) 0%, rgba(212,160,23,0.06) 100%)",
+                  boxShadow: "inset 0 1px 1px rgba(255,255,255,0.5)",
+                }}
+              >
+                <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
+                  <div
+                    className="w-16 h-16 flex items-center justify-center p-2.5 rounded-2xl shrink-0"
+                    style={{ border: "2px solid rgba(184,134,11,0.4)", background: "rgba(184,134,11,0.06)" }}
+                  >
+                    <img src={BRAND.logo} alt="Garantía Esteticar" className="w-full h-full object-contain" />
+                  </div>
+                  <div className="text-center sm:text-left">
+                    <h4 className="font-heading text-2xl sm:text-3xl text-ec-dark">Garantía de $5.000.000 COP</h4>
+                    <p className="font-body text-sm text-ec-text-secondary max-w-md mt-2 font-light">
+                      Cada tratamiento incluye una póliza de responsabilidad civil mientras su vehículo esté bajo nuestro cuidado.
+                    </p>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => setShowGuarantee(true)}
+                  className="btn-gold whitespace-nowrap w-full sm:w-auto"
+                >
+                  VER GARANTÍA
+                </button>
               </div>
             </div>
-
-            <button
-              onClick={() => setShowGuarantee(true)}
-              className="btn-gold whitespace-nowrap rounded-sm w-full sm:w-auto"
-            >
-              VER GARANTÍA
-            </button>
-          </div>{/* /bezel-inner */}
           </motion.div>
         </div>
       </section>
