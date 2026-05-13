@@ -95,15 +95,6 @@ export default function LandingPage() {
       <Navigation onBookingClick={openBooking} cartCount={selectedServices.length} />
 
       <main>
-        <HeroSection />
-
-        {/* Cinematic gradient transition: dark → light */}
-        <div className="relative h-40 -mt-1"
-          style={{
-            background: "linear-gradient(to bottom, #000000, #0a0a08 20%, #1a1a17 40%, #3a382f 55%, #6b675a 65%, #a09a88 75%, #d2cfc4 85%, var(--color-ec-cream) 100%)"
-          }}
-        />
-
         <CinematicProcess />
         <TrustBreaker />
         <ReviewsSection />

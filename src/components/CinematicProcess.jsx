@@ -1,8 +1,11 @@
 import React, { useRef } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
+import { BRAND } from "../lib/constants";
 
-// 3-act sticky scroll: dirty → foam → showroom
-// Acts: 0–0.33 = Act I (dirty), 0.33–0.66 = Act II (foam), 0.66–1 = Act III (clean)
+// 3-act hero + process sticky scroll
+// Act I  (0 → 0.33): dirty Fortuner — hero content overlay
+// Act II (0.33 → 0.66): foam process
+// Act III(0.66 → 1.0): showroom gleam + "De sucio a Showroom"
 
 const STEPS = [
   { n: "01", title: "Diagnóstico perimetral", desc: "Escaneo fotográfico 360° bajo luz forense." },
@@ -13,7 +16,7 @@ const STEPS = [
 
 const STEP_RANGES = [
   [0.05, 0.30],
-  [0.33, 0.55],
+  [0.35, 0.55],
   [0.55, 0.72],
   [0.72, 0.90],
 ];
@@ -37,7 +40,7 @@ function StepCard({ step, scrollYProgress, inStart, inEnd, isLast }) {
         <div
           className="rounded-[calc(1rem-4px)] px-4 py-3"
           style={{
-            background: "rgba(0,0,0,0.7)",
+            background: "rgba(0,0,0,0.72)",
             backdropFilter: "blur(14px)",
             boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)",
           }}
@@ -74,31 +77,35 @@ export default function CinematicProcess() {
     offset: ["start start", "end end"],
   });
 
-  // ── Act transitions ──
-  // Act I (dirty):    fully visible 0 → 0.28, fades out 0.28 → 0.40
-  // Act II (foam):    fades in 0.28 → 0.40, fully visible 0.40 → 0.60, fades out 0.60 → 0.72
-  // Act III (clean):  fades in 0.60 → 0.72, fully visible → end
-  const act1Opacity = useTransform(scrollYProgress, [0, 0.06, 0.28, 0.40], [0, 1, 1, 0]);
-  const act2Opacity = useTransform(scrollYProgress, [0.28, 0.40, 0.60, 0.72], [0, 1, 1, 0]);
-  const act3Opacity = useTransform(scrollYProgress, [0.60, 0.72, 1, 1], [0, 1, 1, 1]);
+  // ── Image act crossfades ──
+  // Act I starts at opacity 1 immediately
+  const act1Opacity = useTransform(scrollYProgress, [0, 0.30, 0.42], [1, 1, 0]);
+  const act2Opacity = useTransform(scrollYProgress, [0.30, 0.42, 0.62, 0.74], [0, 1, 1, 0]);
+  const act3Opacity = useTransform(scrollYProgress, [0.62, 0.74], [0, 1]);
 
   // Gold glow arrives with Act III
-  const glowOpacity = useTransform(scrollYProgress, [0.65, 0.88], [0, 0.85]);
+  const glowOpacity = useTransform(scrollYProgress, [0.68, 0.90], [0, 0.85]);
 
-  // "De sucio a Showroom" headline — arrives at Act III
+  // Hero content (logo + headline + CTA) — visible in Act I, fades mid-scroll
+  const heroOpacity = useTransform(scrollYProgress, [0, 0.08, 0.22, 0.34], [0, 1, 1, 0]);
+  const heroY       = useTransform(scrollYProgress, [0, 0.08], [30, 0]);
+
+  // "El Proceso" pill — fades in after hero fades, fades out at Act III
+  const pillOpacity = useTransform(scrollYProgress, [0.28, 0.38, 0.88, 0.96], [0, 1, 1, 0]);
+
+  // Act III headline
   const headlineOpacity = useTransform(scrollYProgress, [0.72, 0.84], [0, 1]);
   const headlineY       = useTransform(scrollYProgress, [0.72, 0.84], [24, 0]);
 
-  // "Showroom" label badge — Act III
-  const afterLabelOpacity = useTransform(scrollYProgress, [0.78, 0.90], [0, 1]);
+  // Showroom badge
+  const afterLabelOpacity = useTransform(scrollYProgress, [0.80, 0.91], [0, 1]);
 
-  // Hint fades out quickly
+  // Scroll hint
   const hintOpacity = useTransform(scrollYProgress, [0, 0.07], [1, 0]);
 
   return (
-    <div ref={containerRef} style={{ height: "500vh", position: "relative" }}>
+    <div ref={containerRef} style={{ height: "520vh", position: "relative" }}>
 
-      {/* ── Sticky panel ── */}
       <div
         style={{
           position: "sticky",
@@ -108,9 +115,9 @@ export default function CinematicProcess() {
           background: "#060606",
         }}
       >
-        {/* Grain overlay */}
+        {/* Grain */}
         <div
-          className="absolute inset-0 pointer-events-none z-0 opacity-[0.035]"
+          className="absolute inset-0 pointer-events-none z-0 opacity-[0.03]"
           style={{
             backgroundImage:
               "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")",
@@ -119,72 +126,104 @@ export default function CinematicProcess() {
 
         {/* ── Image layers ── */}
         <div className="absolute inset-0 z-0">
-
-          {/* Act I — Dirty */}
+          {/* Act I — Sucio */}
           <motion.img
             src="/process-dirty.jpg.png"
             alt="Antes — sucio"
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{
-              opacity: act1Opacity,
-              filter: "saturate(0.55) brightness(0.72) contrast(1.1)",
-            }}
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ opacity: act1Opacity, filter: "saturate(0.5) brightness(0.65) contrast(1.12)" }}
           />
 
-          {/* Act II — Foam process */}
+          {/* Act II — Espuma */}
           <motion.img
             src="/process-foam.jpg.png"
-            alt="Proceso — espuma activa"
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{
-              opacity: act2Opacity,
-              filter: "saturate(0.85) brightness(0.80) contrast(1.08)",
-            }}
+            alt="Proceso — espuma"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ opacity: act2Opacity, filter: "saturate(0.8) brightness(0.75) contrast(1.08)" }}
           />
 
-          {/* Act III — Showroom clean */}
+          {/* Act III — Showroom */}
           <motion.img
             src="/process-clean.jpg.png"
-            alt="Después — acabado showroom"
-            className="absolute inset-0 w-full h-full object-cover"
-            style={{
-              opacity: act3Opacity,
-              filter: "saturate(1.18) brightness(1.02) contrast(1.06)",
-            }}
+            alt="Después — showroom"
+            className="absolute inset-0 w-full h-full object-cover object-center"
+            style={{ opacity: act3Opacity, filter: "saturate(1.2) brightness(1.0) contrast(1.06)" }}
           />
 
-          {/* Gold glow on Act III */}
+          {/* Gold glow Act III */}
           <motion.div
             className="absolute inset-0 pointer-events-none"
             style={{
               opacity: glowOpacity,
-              background:
-                "radial-gradient(ellipse 70% 65% at 55% 52%, rgba(212,160,23,0.18) 0%, transparent 62%)",
+              background: "radial-gradient(ellipse 70% 65% at 55% 52%, rgba(212,160,23,0.18) 0%, transparent 62%)",
             }}
           />
         </div>
 
         {/* Vignette */}
-        <div
-          className="absolute inset-0 z-[1] pointer-events-none"
-          style={{
-            background:
-              "radial-gradient(ellipse at center, transparent 38%, rgba(0,0,0,0.58) 100%)",
-          }}
-        />
+        <div className="absolute inset-0 z-[1] pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at center, transparent 38%, rgba(0,0,0,0.55) 100%)" }} />
         {/* Top fade */}
-        <div
-          className="absolute top-0 inset-x-0 h-1/4 z-[1] pointer-events-none"
-          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.6), transparent)" }}
-        />
+        <div className="absolute top-0 inset-x-0 h-1/4 z-[1] pointer-events-none"
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.65), transparent)" }} />
         {/* Bottom fade */}
-        <div
-          className="absolute bottom-0 inset-x-0 h-2/5 z-[1] pointer-events-none"
-          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.82), transparent)" }}
-        />
+        <div className="absolute bottom-0 inset-x-0 h-2/5 z-[1] pointer-events-none"
+          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.82), transparent)" }} />
 
-        {/* ── Top pill ── */}
-        <div className="absolute top-8 inset-x-0 z-20 flex justify-center">
+        {/* ── HERO CONTENT (Act I overlay) ── */}
+        <motion.div
+          style={{ opacity: heroOpacity, y: heroY }}
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center px-6 text-center pointer-events-none pb-24 sm:pb-16"
+        >
+          {/* Logo */}
+          <motion.img
+            src={BRAND.logo}
+            alt="Esteticar"
+            className="h-14 sm:h-18 md:h-20 object-contain mb-6 sm:mb-8"
+            style={{
+              filter: "drop-shadow(0 0 40px rgba(248,200,64,0.3)) drop-shadow(0 0 80px rgba(248,200,64,0.12))",
+            }}
+          />
+
+          {/* Headline */}
+          <h1
+            className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light leading-[0.92] tracking-[-0.03em] text-white mb-5"
+            style={{ textShadow: "0 2px 40px rgba(0,0,0,0.5)" }}
+          >
+            {BRAND.heroLines[0]}<br />{BRAND.heroLines[1]}
+          </h1>
+
+          {/* Sub */}
+          <p
+            className="font-ui text-[10px] sm:text-xs tracking-[0.5em] uppercase mb-8"
+            style={{ color: "rgba(212,160,23,0.85)" }}
+          >
+            {BRAND.heroSub}
+          </p>
+
+          {/* CTA */}
+          <a
+            href="#servicios"
+            className="pointer-events-auto inline-flex items-center gap-3 px-8 py-4 rounded-full font-ui text-[11px] tracking-[0.3em] uppercase font-bold text-white"
+            style={{
+              background: "linear-gradient(135deg, #B8860B 0%, #D4A017 100%)",
+              boxShadow: "0 4px 28px rgba(184,134,11,0.4), inset 0 1px 0 rgba(255,255,255,0.15)",
+            }}
+          >
+            RESERVAR TRATAMIENTO
+            <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
+              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14M12 5l7 7-7 7" />
+              </svg>
+            </span>
+          </a>
+        </motion.div>
+
+        {/* ── "El Proceso" pill (Acts II-III) ── */}
+        <motion.div
+          style={{ opacity: pillOpacity }}
+          className="absolute top-8 inset-x-0 z-20 flex justify-center pointer-events-none"
+        >
           <div
             className="px-5 py-2 rounded-full"
             style={{
@@ -193,33 +232,23 @@ export default function CinematicProcess() {
               backdropFilter: "blur(12px)",
             }}
           >
-            <span
-              className="font-ui text-[9px] tracking-[0.6em] uppercase"
-              style={{ color: "rgba(184,134,11,0.85)" }}
-            >
+            <span className="font-ui text-[9px] tracking-[0.6em] uppercase" style={{ color: "rgba(184,134,11,0.85)" }}>
               — El Proceso —
             </span>
           </div>
-        </div>
+        </motion.div>
 
-        {/* ── Headline Act III ── */}
+        {/* ── Act III: Headline "De sucio a Showroom" ── */}
         <motion.div
           style={{ opacity: headlineOpacity, y: headlineY }}
-          className="absolute top-1/2 inset-x-0 -translate-y-[calc(50%+4rem)] z-20 flex flex-col items-center gap-3 px-6 text-center pointer-events-none"
+          className="absolute top-1/2 inset-x-0 -translate-y-[calc(50%+4.5rem)] z-20 flex flex-col items-center gap-3 px-6 text-center pointer-events-none"
         >
-          <p
-            className="font-ui text-[9px] tracking-[0.55em] uppercase"
-            style={{ color: "rgba(184,134,11,0.75)" }}
-          >
+          <p className="font-ui text-[9px] tracking-[0.55em] uppercase" style={{ color: "rgba(184,134,11,0.75)" }}>
             Resultado final
           </p>
           <h2
             className="font-heading text-4xl sm:text-6xl md:text-7xl font-light leading-none"
-            style={{
-              color: "#F5EDD8",
-              textShadow: "0 2px 40px rgba(0,0,0,0.6)",
-              letterSpacing: "-0.02em",
-            }}
+            style={{ color: "#F5EDD8", textShadow: "0 2px 40px rgba(0,0,0,0.6)", letterSpacing: "-0.02em" }}
           >
             De sucio<br />a <em style={{ fontStyle: "italic", color: "#D4A017" }}>Showroom</em>
           </h2>
@@ -238,18 +267,8 @@ export default function CinematicProcess() {
               backdropFilter: "blur(8px)",
             }}
           >
-            <div
-              style={{
-                width: 6,
-                height: 6,
-                borderRadius: "50%",
-                background: "rgba(255,255,255,0.9)",
-                flexShrink: 0,
-              }}
-            />
-            <span className="font-ui text-[9px] tracking-[0.4em] uppercase text-white font-bold">
-              Showroom
-            </span>
+            <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.9)", flexShrink: 0 }} />
+            <span className="font-ui text-[9px] tracking-[0.4em] uppercase text-white font-bold">Showroom</span>
           </div>
         </motion.div>
 
@@ -274,20 +293,13 @@ export default function CinematicProcess() {
           style={{ opacity: hintOpacity }}
           className="absolute bottom-7 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2"
         >
-          <span
-            className="font-ui text-[8px] tracking-[0.5em] uppercase"
-            style={{ color: "rgba(255,255,255,0.3)" }}
-          >
+          <span className="font-ui text-[8px] tracking-[0.5em] uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>
             Desliza
           </span>
           <motion.div
             animate={{ y: [0, 7, 0] }}
             transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-            style={{
-              width: 1,
-              height: 26,
-              background: "linear-gradient(to bottom, rgba(184,134,11,0.7), transparent)",
-            }}
+            style={{ width: 1, height: 26, background: "linear-gradient(to bottom, rgba(184,134,11,0.7), transparent)" }}
           />
         </motion.div>
 
