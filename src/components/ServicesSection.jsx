@@ -17,7 +17,7 @@ function ServicePod({ service, index }) {
       <div
         className={`p-[6px] rounded-[1.75rem] transition-all duration-700 service-pod-inner ${
           isHovered
-            ? "bg-ec-dark/[0.08] border border-ec-dark/20"
+            ? "bg-ec-gold/[0.08] border border-ec-gold/30"
             : "bg-black/[0.025] border border-black/[0.05]"
         }`}
       >
@@ -27,12 +27,12 @@ function ServicePod({ service, index }) {
           onMouseLeave={() => setIsHovered(false)}
           className={`relative rounded-[calc(1.75rem-6px)] overflow-hidden transition-all duration-700 ${
             isHovered
-              ? "bg-ec-dark border border-white/[0.06]"
+              ? "bg-[#FFFBF0] border border-ec-gold/20"
               : "bg-white border border-black/[0.04]"
           }`}
           style={{
             boxShadow: isHovered
-              ? "inset 0 1px 1px rgba(255,255,255,0.06), 0 24px 60px rgba(0,0,0,0.25)"
+              ? "inset 0 1px 1px rgba(255,255,255,0.9), 0 24px 60px rgba(184,134,11,0.12)"
               : "inset 0 1px 1px rgba(255,255,255,0.9), 0 2px 20px rgba(0,0,0,0.04)",
           }}
         >
@@ -56,7 +56,7 @@ function ServicePod({ service, index }) {
             </div>
 
             {/* Service name — heading font, large */}
-            <h3 className={`font-heading text-2xl sm:text-3xl leading-tight mb-3 transition-colors duration-700 ${isHovered ? "text-white" : "text-ec-dark"}`}>
+            <h3 className={`font-heading text-2xl sm:text-3xl leading-tight mb-3 transition-colors duration-700 ${isHovered ? "text-ec-dark" : "text-ec-dark"}`}>
               {service.name}
             </h3>
 
@@ -85,7 +85,7 @@ function ServicePod({ service, index }) {
             </div>
 
             {/* Description */}
-            <p className={`font-body text-sm leading-relaxed mb-8 font-light transition-colors duration-700 ${isHovered ? "text-white/50" : "text-ec-text-secondary/70"}`}>
+            <p className={`font-body text-sm leading-relaxed mb-8 font-light transition-colors duration-700 ${isHovered ? "text-ec-text-secondary" : "text-ec-text-secondary/70"}`}>
               {service.description}
             </p>
 
@@ -99,11 +99,11 @@ function ServicePod({ service, index }) {
                   transition={{ duration: 0.45, ease: [0.32, 0.72, 0, 1] }}
                   className="overflow-hidden"
                 >
-                  <div className="pt-5 mb-7 border-t border-white/[0.08]">
-                    <span className="font-ui text-[9px] tracking-[0.4em] text-ec-gold/50 uppercase block mb-2">
+                  <div className="pt-5 mb-7 border-t border-ec-gold/20">
+                    <span className="font-ui text-[9px] tracking-[0.4em] text-ec-gold/70 uppercase block mb-2">
                       POR QUÉ IMPORTA
                     </span>
-                    <p className="font-body text-xs text-white/40 leading-relaxed italic">
+                    <p className="font-body text-xs text-ec-text-secondary/60 leading-relaxed italic">
                       {service.why}
                     </p>
                   </div>
