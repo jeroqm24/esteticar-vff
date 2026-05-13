@@ -25,7 +25,12 @@ function ScrollToTop() {
   useEffect(() => {
     const handleScroll = () => {
       if (blocked.current) return;
-      setShow(window.scrollY > 600);
+      const y = window.scrollY;
+      setShow(prev => {
+        if (!prev && y > 700) return true;
+        if (prev && y < 500) return false;
+        return prev;
+      });
     };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
