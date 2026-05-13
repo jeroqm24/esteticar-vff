@@ -3,45 +3,52 @@ import { motion, useScroll, useTransform, useMotionValueEvent } from "framer-mot
 import { BRAND } from "../lib/constants";
 
 const STEPS = [
-  { n: "01", title: "Diagnóstico perimetral", desc: "Escaneo fotográfico 360° bajo luz forense." },
-  { n: "02", title: "Descontaminación", desc: "Espuma activa y arcilla descontaminante." },
-  { n: "03", title: "Corrección de pintura", desc: "Pulidora orbital DA — cero swirl marks." },
-  { n: "04", title: "Sellado cerámico", desc: "Garantía de custodia $5.000.000 COP activa." },
+  { n: "01", title: "Diagnóstico\nperimetral",   desc: "Escaneo fotográfico 360° bajo luz forense." },
+  { n: "02", title: "Descontam-\ninación",        desc: "Espuma activa y arcilla descontaminante." },
+  { n: "03", title: "Corrección\nde pintura",     desc: "Pulidora orbital DA — cero swirl marks." },
+  { n: "04", title: "Sellado\ncerámico",          desc: "Garantía de custodia $5.000.000 COP activa." },
 ];
 
+// Each step: [fadeIn, hold, fadeOut]
 const STEP_RANGES = [
-  [0.05, 0.28],
-  [0.32, 0.52],
-  [0.52, 0.70],
-  [0.70, 0.88],
+  [0.05, 0.22, 0.30],
+  [0.32, 0.48, 0.56],
+  [0.56, 0.66, 0.72],
+  [0.72, 0.84, 0.92],
 ];
 
-function StepCard({ step, scrollYProgress, inStart, inEnd, isLast }) {
+function StepOverlay({ step, scrollYProgress, fadeIn, hold, fadeOut, isLast }) {
   const opacity = useTransform(
     scrollYProgress,
-    isLast
-      ? [inStart, inStart + 0.07, 0.95, 1]
-      : [inStart, inStart + 0.07, inEnd - 0.04, inEnd],
-    isLast ? [0, 1, 1, 1] : [0, 1, 1, 0.2]
+    isLast ? [fadeIn, hold, 1] : [fadeIn, hold, fadeOut, fadeOut + 0.06],
+    isLast ? [0, 1, 1]          : [0, 1, 1, 0]
   );
-  const y = useTransform(scrollYProgress, [inStart, inStart + 0.09], [20, 0]);
+  const y = useTransform(scrollYProgress, [fadeIn, fadeIn + 0.08], [32, 0]);
+
   return (
-    <motion.div style={{ opacity, y }}>
-      <div className="p-[4px] rounded-[1rem]"
-        style={{ background: "rgba(184,134,11,0.09)", border: "1px solid rgba(184,134,11,0.22)" }}>
-        <div className="rounded-[calc(1rem-4px)] px-4 py-3"
-          style={{ background: "rgba(0,0,0,0.72)", backdropFilter: "blur(14px)", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.05)" }}>
-          <span className="font-ui text-[9px] font-bold block mb-1" style={{ color: "rgba(184,134,11,0.65)", letterSpacing: "0.1em" }}>
-            {step.n}
-          </span>
-          <p className="font-heading text-sm sm:text-base font-light leading-snug mb-1" style={{ color: "#F0EBE0" }}>
-            {step.title}
-          </p>
-          <p className="font-body text-[11px] leading-relaxed hidden sm:block" style={{ color: "rgba(255,255,255,0.38)" }}>
-            {step.desc}
-          </p>
-        </div>
-      </div>
+    <motion.div
+      style={{ opacity, y }}
+      className="absolute inset-0 z-20 flex flex-col items-center justify-center px-6 text-center pointer-events-none"
+    >
+      {/* Step number */}
+      <span className="font-ui text-[11px] sm:text-xs tracking-[0.5em] uppercase mb-4 block"
+        style={{ color: "rgba(184,134,11,0.75)" }}>
+        {step.n} — El Proceso
+      </span>
+
+      {/* Big title — same scale as hero headline */}
+      <h2
+        className="font-heading text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-light leading-[0.9] tracking-[-0.03em] text-white mb-6"
+        style={{ textShadow: "0 2px 60px rgba(0,0,0,0.8)", whiteSpace: "pre-line" }}
+      >
+        {step.title}
+      </h2>
+
+      {/* Description */}
+      <p className="font-body text-sm sm:text-base max-w-xs sm:max-w-sm leading-relaxed"
+        style={{ color: "rgba(255,255,255,0.55)" }}>
+        {step.desc}
+      </p>
     </motion.div>
   );
 }
@@ -51,6 +58,7 @@ export default function CinematicProcess() {
   const videoRef     = useRef(null);
   const rafRef       = useRef(null);
   const targetTime   = useRef(0);
+  const unlockedRef  = useRef(false);
   const [videoReady, setVideoReady] = useState(false);
 
   const { scrollY } = useScroll();
@@ -61,29 +69,34 @@ export default function CinematicProcess() {
     return max > 0 ? Math.max(0, Math.min(1, (v - el.offsetTop) / max)) : 0;
   });
 
-  // Autoplay trick: start + immediately pause so browser loads the video on mobile
+  // Unlock video on first user gesture (required by iOS/Android)
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
-    const tryLoad = () => {
+    const unlock = () => {
+      if (unlockedRef.current) return;
+      const video = videoRef.current;
+      if (!video) return;
+      unlockedRef.current = true;
       video.play().then(() => {
         video.pause();
         video.currentTime = 0;
       }).catch(() => {});
     };
-    if (video.readyState >= 2) {
-      tryLoad();
-    } else {
-      video.addEventListener("loadeddata", tryLoad, { once: true });
-    }
+    // Try immediately (works on desktop), also on first touch/scroll (mobile)
+    unlock();
+    window.addEventListener("touchstart", unlock, { once: true, passive: true });
+    window.addEventListener("scroll",     unlock, { once: true, passive: true });
+    return () => {
+      window.removeEventListener("touchstart", unlock);
+      window.removeEventListener("scroll",     unlock);
+    };
   }, []);
 
-  // Smooth rAF scrub
+  // rAF lerp scrub
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
     const tick = () => {
-      if (video.readyState >= 2) {
+      if (video.readyState >= 2 && unlockedRef.current) {
         const diff = targetTime.current - video.currentTime;
         if (Math.abs(diff) > 0.001) video.currentTime += diff * 0.3;
       }
@@ -99,14 +112,12 @@ export default function CinematicProcess() {
     targetTime.current = p * video.duration;
   });
 
-  // Overlays
-  const heroOpacity       = useTransform(scrollYProgress, [0, 0.18, 0.30], [1, 1, 0]);
-  const pillOpacity       = useTransform(scrollYProgress, [0.28, 0.38, 0.88, 0.96], [0, 1, 1, 0]);
-  const headlineOpacity   = useTransform(scrollYProgress, [0.72, 0.84], [0, 1]);
-  const headlineY         = useTransform(scrollYProgress, [0.72, 0.84], [24, 0]);
-  const afterLabelOpacity = useTransform(scrollYProgress, [0.80, 0.90], [0, 1]);
-  const hintOpacity       = useTransform(scrollYProgress, [0, 0.07], [1, 0]);
-  const glowOpacity       = useTransform(scrollYProgress, [0.68, 0.90], [0, 0.7]);
+  // Hero content fades out early
+  const heroOpacity       = useTransform(scrollYProgress, [0, 0.03, 0.06], [0, 1, 1]);
+  const heroFadeOut       = useTransform(scrollYProgress, [0, 0.03, 0.15, 0.25], [0, 1, 1, 0]);
+  const afterLabelOpacity = useTransform(scrollYProgress, [0.84, 0.93], [0, 1]);
+  const hintOpacity       = useTransform(scrollYProgress, [0, 0.06], [1, 0]);
+  const glowOpacity       = useTransform(scrollYProgress, [0.68, 0.92], [0, 0.7]);
 
   return (
     <div ref={containerRef} style={{ height: "520vh", position: "relative" }}>
@@ -128,46 +139,43 @@ export default function CinematicProcess() {
           onLoadedData={() => setVideoReady(true)}
         />
 
-        {/* Fallback imagen hasta que cargue el video */}
+        {/* Fallback imagen */}
         <img
           src="/process-dirty.webp"
-          alt="Esteticar proceso"
+          alt="Esteticar"
           fetchpriority="high"
           className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-          style={{
-            opacity: videoReady ? 0 : 1,
-            filter: "saturate(0.5) brightness(0.6)",
-          }}
+          style={{ opacity: videoReady ? 0 : 1, filter: "saturate(0.5) brightness(0.6)" }}
         />
 
-        {/* Oscurecimiento general del video — capa principal */}
-        <div className="absolute inset-0 z-[1] pointer-events-none"
-          style={{ background: "rgba(0,0,0,0.45)" }} />
+        {/* Dark overlay */}
+        <div className="absolute inset-0 z-[1] pointer-events-none" style={{ background: "rgba(0,0,0,0.45)" }} />
 
-        {/* Gold glow final */}
+        {/* Gold glow */}
         <motion.div className="absolute inset-0 pointer-events-none z-[2]"
           style={{ opacity: glowOpacity, background: "radial-gradient(ellipse 70% 65% at 55% 52%, rgba(212,160,23,0.16) 0%, transparent 62%)" }}
         />
 
-        {/* Vignette perimetral */}
+        {/* Vignette */}
         <div className="absolute inset-0 z-[2] pointer-events-none"
           style={{ background: "radial-gradient(ellipse at center, transparent 30%, rgba(0,0,0,0.65) 100%)" }} />
-        {/* Fade top */}
         <div className="absolute top-0 inset-x-0 h-1/3 z-[2] pointer-events-none"
-          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.75), transparent)" }} />
-        {/* Fade bottom */}
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.80), transparent)" }} />
         <div className="absolute bottom-0 inset-x-0 h-1/2 z-[2] pointer-events-none"
           style={{ background: "linear-gradient(to top, rgba(0,0,0,0.90), transparent)" }} />
 
-        {/* Hero overlay */}
-        <motion.div style={{ opacity: heroOpacity }}
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center px-6 text-center pointer-events-none pb-20 sm:pb-12">
-          <img src={BRAND.logo} alt="Esteticar"
+        {/* ── Hero overlay ── */}
+        <motion.div style={{ opacity: heroFadeOut }}
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center px-6 text-center pointer-events-none pb-16">
+          <motion.img src={BRAND.logo} alt="Esteticar"
+            initial={{ opacity: 0, scale: 0.92, filter: "blur(12px)" }}
+            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+            transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
             className="h-14 sm:h-[4.5rem] md:h-20 object-contain mb-6"
-            style={{ filter: "drop-shadow(0 0 40px rgba(248,200,64,0.35)) drop-shadow(0 0 80px rgba(248,200,64,0.15))" }}
+            style={{ filter: "drop-shadow(0 0 40px rgba(248,200,64,0.35))" }}
           />
           <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light leading-[0.92] tracking-[-0.03em] text-white mb-5"
-            style={{ textShadow: "0 2px 60px rgba(0,0,0,0.9), 0 1px 0 rgba(0,0,0,0.5)" }}>
+            style={{ textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
             {BRAND.heroLines[0]}<br />{BRAND.heroLines[1]}
           </h1>
           <p className="font-ui text-[10px] sm:text-xs tracking-[0.5em] uppercase mb-8"
@@ -186,32 +194,22 @@ export default function CinematicProcess() {
           </a>
         </motion.div>
 
-        {/* "El Proceso" pill */}
-        <motion.div style={{ opacity: pillOpacity }}
-          className="absolute top-8 inset-x-0 z-20 flex justify-center pointer-events-none">
-          <div className="px-5 py-2 rounded-full"
-            style={{ background: "rgba(0,0,0,0.65)", border: "1px solid rgba(184,134,11,0.25)", backdropFilter: "blur(12px)" }}>
-            <span className="font-ui text-[9px] tracking-[0.6em] uppercase" style={{ color: "rgba(184,134,11,0.9)" }}>
-              — El Proceso —
-            </span>
-          </div>
-        </motion.div>
+        {/* ── Pasos grandes — uno a la vez ── */}
+        {STEPS.map((step, i) => (
+          <StepOverlay
+            key={step.n}
+            step={step}
+            scrollYProgress={scrollYProgress}
+            fadeIn={STEP_RANGES[i][0]}
+            hold={STEP_RANGES[i][1]}
+            fadeOut={STEP_RANGES[i][2]}
+            isLast={i === STEPS.length - 1}
+          />
+        ))}
 
-        {/* Final headline */}
-        <motion.div style={{ opacity: headlineOpacity, y: headlineY }}
-          className="absolute top-1/2 inset-x-0 -translate-y-[calc(50%+4.5rem)] z-20 flex flex-col items-center gap-3 px-6 text-center pointer-events-none">
-          <p className="font-ui text-[9px] tracking-[0.55em] uppercase" style={{ color: "rgba(184,134,11,0.8)" }}>
-            Resultado final
-          </p>
-          <h2 className="font-heading text-4xl sm:text-6xl md:text-7xl font-light leading-none"
-            style={{ color: "#F5EDD8", textShadow: "0 2px 60px rgba(0,0,0,0.8)", letterSpacing: "-0.02em" }}>
-            De sucio<br />a <em style={{ fontStyle: "italic", color: "#D4A017" }}>Showroom</em>
-          </h2>
-        </motion.div>
-
-        {/* Showroom badge */}
+        {/* ── Showroom badge (final) ── */}
         <motion.div style={{ opacity: afterLabelOpacity }}
-          className="absolute top-1/2 right-5 sm:right-10 -translate-y-1/2 z-20">
+          className="absolute top-1/2 right-5 sm:right-10 -translate-y-[120%] z-20">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full"
             style={{ background: "linear-gradient(135deg, rgba(184,134,11,0.95), rgba(212,160,23,0.95))", boxShadow: "0 4px 28px rgba(184,134,11,0.5)", backdropFilter: "blur(8px)" }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.9)", flexShrink: 0 }} />
@@ -219,17 +217,7 @@ export default function CinematicProcess() {
           </div>
         </motion.div>
 
-        {/* Step cards */}
-        <div className="absolute bottom-10 sm:bottom-14 inset-x-0 z-20 px-4 sm:px-10">
-          <div className="max-w-3xl mx-auto grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
-            {STEPS.map((step, i) => (
-              <StepCard key={step.n} step={step} scrollYProgress={scrollYProgress}
-                inStart={STEP_RANGES[i][0]} inEnd={STEP_RANGES[i][1]} isLast={i === STEPS.length - 1} />
-            ))}
-          </div>
-        </div>
-
-        {/* Scroll hint */}
+        {/* ── Scroll hint ── */}
         <motion.div style={{ opacity: hintOpacity }}
           className="absolute bottom-7 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
           <span className="font-ui text-[8px] tracking-[0.5em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
