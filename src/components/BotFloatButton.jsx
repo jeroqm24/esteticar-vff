@@ -1,7 +1,8 @@
 import React from "react";
 import { motion } from "framer-motion";
 
-const WA_URL = `https://wa.me/573181983601?text=${encodeURIComponent("Hola, me gustaría obtener información sobre sus servicios de detailing")}`;
+const WA_URL = `https://wa.me/573181983601?text=${encodeURIComponent("Hola 👋 acabo de ver la página de Esteticar y me gustaría conocer más sobre sus tratamientos premium. ¿Me pueden asesorar?")}`;
+
 
 export default function BotFloatButton() {
   return (

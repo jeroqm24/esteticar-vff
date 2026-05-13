@@ -237,7 +237,7 @@ export const check20DayReminders = async () => {
       if (diffDays >= 20) {
         const subject = `⏰ Recordatorio 20 días — ${client.name} (${diffDays}d)`;
         const whatsappMsg = encodeURIComponent(
-          `${getGreeting()}, ${client.name}. Te saluda Esteticar. Han pasado unos días desde que atendimos tu vehículo. Cuando quieras renovar el tratamiento, aquí estamos.`
+          `${getGreeting()}, ${client.name} 👋 Te saluda el equipo de *Esteticar*.\n\nHan pasado ${diffDays} días desde el último tratamiento de tu vehículo — el momento ideal para renovar la protección y mantener ese acabado impecable.\n\n¿Te agendamos esta semana? ✨`
         );
         const whatsappUrl = `https://wa.me/57${(client.phone || '').replace(/\D/g, '')}?text=${whatsappMsg}`;
         const html = `
@@ -397,7 +397,7 @@ const getAvailableSlots = (appointments = []) => {
 export const generateEscalationURL = (userQuestion) => {
   const g = getGreeting().toLowerCase();
   const msg = encodeURIComponent(
-    `Hola Sara, ${g}. Un cliente nos está preguntando: "${userQuestion}". Te lo paso para que lo puedas atender.`
+    `Hola Sara 👋 ${g}. Un cliente en la web nos está preguntando:\n\n_"${userQuestion}"_\n\nTe lo paso para que lo puedas atender personalmente. 🙏`
   );
   return `https://wa.me/573181983601?text=${msg}`;
 };
