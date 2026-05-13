@@ -322,21 +322,13 @@ export default function BotChat({ isOpen, onClose }) {
       }
     };
 
-    // Fix iOS: position:fixed en el body evita que Safari scrollee la página
-    // cuando el teclado abre, lo que empujaría el header fuera de pantalla
-    const scrollY = window.scrollY;
-    document.body.style.setProperty('overflow', 'hidden', 'important');
-    document.body.style.position = 'fixed';
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = '100%';
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.overflow = "hidden";
     document.addEventListener('touchmove', preventScroll, { passive: false });
 
     return () => {
+      document.documentElement.style.overflow = "";
       document.body.style.overflow = "";
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.width = "";
-      window.scrollTo(0, scrollY);
       document.removeEventListener('touchmove', preventScroll);
     };
   }, [isOpen, adminMode]);
