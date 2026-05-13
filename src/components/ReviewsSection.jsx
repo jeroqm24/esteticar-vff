@@ -173,9 +173,10 @@ function ReviewCard({ review, index }) {
       initial={{ opacity: 0, y: 24 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: "-4%" }}
-      transition={{ duration: 0.55, delay: (index % 4) * 0.06, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-white rounded-xl p-5 flex flex-col gap-3.5 shadow-[0_2px_12px_rgba(0,0,0,0.06)] hover:shadow-[0_6px_28px_rgba(0,0,0,0.1)] transition-all duration-400 border border-black/[0.04] break-inside-avoid"
+      transition={{ duration: 0.65, delay: (index % 4) * 0.06, ease: [0.32, 0.72, 0, 1] }}
+      className="bezel-outer break-inside-avoid hover:bezel-outer-gold group/card transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)]"
     >
+    <div className="bezel-inner bg-white p-5 flex flex-col gap-3.5 shadow-[0_2px_12px_rgba(0,0,0,0.05)] group-hover/card:shadow-[0_6px_28px_rgba(0,0,0,0.08)] transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] border border-black/[0.03]">
       {/* Header */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3">
@@ -231,6 +232,7 @@ function ReviewCard({ review, index }) {
         </svg>
         <span className="text-[10px] text-ec-text-muted">Reseña verificada en Google</span>
       </div>
+    </div>{/* /bezel-inner */}
     </motion.div>
   );
 }
@@ -260,8 +262,9 @@ export default function ReviewsSection() {
             <span className="italic gold-gradient-text"> quienes volvieron</span>
           </h2>
 
-          {/* Google rating summary */}
-          <div className="inline-flex items-center gap-5 bg-white border border-black/[0.06] rounded-2xl px-6 py-4 shadow-[0_2px_20px_rgba(0,0,0,0.05)] mt-4">
+          {/* Google rating summary — Double-Bezel */}
+          <div className="bezel-outer inline-flex mt-4">
+          <div className="bezel-inner inline-flex items-center gap-5 bg-white px-6 py-4 shadow-[0_2px_20px_rgba(0,0,0,0.04)]">
             <GoogleLogo size={24} />
             <div className="w-px h-8 bg-black/[0.06]" />
             <div className="flex items-center gap-2">
@@ -283,7 +286,8 @@ export default function ReviewsSection() {
                 </div>
               ))}
             </div>
-          </div>
+          </div>{/* /bezel-inner */}
+          </div>{/* /bezel-outer */}
         </motion.div>
 
         {/* Masonry review grid */}

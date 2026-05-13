@@ -57,10 +57,13 @@ function AmenityCard({ amenity, index }) {
       onMouseLeave={() => setHovered(false)}
       className="group relative"
     >
-      <div className={`relative p-8 sm:p-10 h-full transition-all duration-700 overflow-hidden border rounded-sm ${
+      {/* Double-Bezel outer shell */}
+      <div className={`bezel-outer h-full transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] ${hovered ? "bezel-outer-gold border-ec-gold/[0.14]" : ""}`}>
+      {/* Double-Bezel inner core */}
+      <div className={`bezel-inner relative p-8 sm:p-10 h-full transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] overflow-hidden ${
         hovered
-          ? "bg-ec-gold/[0.05] border-ec-gold/20 shadow-[0_8px_40px_rgba(184,134,11,0.08)]"
-          : "bg-white border-black/[0.06] shadow-[0_2px_20px_rgba(0,0,0,0.04)]"
+          ? "bg-ec-gold/[0.04] border border-ec-gold/[0.12] shadow-[0_8px_40px_rgba(184,134,11,0.07)]"
+          : "bg-white border border-black/[0.04] shadow-[0_2px_20px_rgba(0,0,0,0.04)]"
       }`}>
         <div className="absolute top-0 right-0 w-16 h-16 border-r border-t border-ec-gold/10 opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
         
@@ -77,7 +80,8 @@ function AmenityCard({ amenity, index }) {
         <h3 className={`font-heading text-xl sm:text-2xl transition-colors duration-500 mb-4 ${hovered ? "text-ec-gold" : "text-ec-dark"}`}>{amenity.title}</h3>
         <p className="font-body text-sm text-ec-text-secondary/70 leading-relaxed font-light">{amenity.description}</p>
         <div className={`absolute bottom-0 left-0 h-[2px] bg-ec-gold transition-all duration-1000 ${hovered ? "w-full" : "w-0"}`} />
-      </div>
+      </div>{/* /bezel-inner */}
+      </div>{/* /bezel-outer */}
     </motion.div>
   );
 }
@@ -105,7 +109,8 @@ export default function VIPSection() {
         </div>
 
         <motion.div initial={{ opacity: 0, y: 40 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="mt-20 relative overflow-hidden">
-          <div className="p-12 sm:p-16 border border-ec-gold/15 bg-ec-gold/[0.04] rounded-sm">
+          <div className="bezel-outer-gold">
+          <div className="bezel-inner p-12 sm:p-16 bg-ec-gold/[0.035] border border-ec-gold/[0.1]">
             <div className="flex flex-col md:flex-row items-center justify-between gap-12">
               <div className="max-w-xl">
                 <span className="font-ui text-[10px] tracking-[0.5em] text-ec-gold uppercase block mb-4">INCLUIDO EN TODOS LOS SERVICIOS</span>
@@ -121,7 +126,8 @@ export default function VIPSection() {
                 <p className="font-ui text-[10px] tracking-[0.4em] text-ec-text-muted uppercase mt-2">Cortesía</p>
               </div>
             </div>
-          </div>
+          </div>{/* /bezel-inner */}
+          </div>{/* /bezel-outer */}
         </motion.div>
       </div>
     </section>

@@ -154,6 +154,28 @@
 }
 
 /* ═══════════════════════════════════════════
+   DOUBLE-BEZEL (Doppelrand) — Premium nested card architecture
+   ═══════════════════════════════════════════ */
+.bezel-outer {
+  padding: 6px;
+  background: rgba(0, 0, 0, 0.018);
+  border: 1px solid rgba(0, 0, 0, 0.045);
+  border-radius: 1.75rem;
+}
+
+.bezel-inner {
+  border-radius: calc(1.75rem - 6px);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.85);
+}
+
+.bezel-outer-gold {
+  padding: 6px;
+  background: rgba(184, 134, 11, 0.025);
+  border: 1px solid rgba(184, 134, 11, 0.1);
+  border-radius: 1.75rem;
+}
+
+/* ═══════════════════════════════════════════
    SERVICE POD
    ═══════════════════════════════════════════ */
 .service-pod {
@@ -161,11 +183,11 @@
 }
 
 .service-pod-inner {
-  transition: transform 0.4s ease;
+  transition: transform 0.65s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .service-pod:hover .service-pod-inner {
-  transform: translateY(-4px);
+  transform: translateY(-5px);
 }
 
 /* ═══════════════════════════════════════════
@@ -228,7 +250,7 @@
   height: 100vh;
   pointer-events: none;
   z-index: 9990;
-  opacity: 0.015;
+  opacity: 0.028;
   background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
 }
 
@@ -302,12 +324,17 @@
   cursor: pointer;
   position: relative;
   overflow: hidden;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 9999px;
+  transition: all 0.65s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .btn-gold:hover {
   transform: scale(1.02);
-  box-shadow: 0 8px 30px rgba(184, 134, 11, 0.25);
+  box-shadow: 0 8px 30px rgba(184, 134, 11, 0.28);
+}
+
+.btn-gold:active {
+  transform: scale(0.98);
 }
 
 .btn-gold::after {
@@ -340,13 +367,18 @@
   text-transform: uppercase;
   border: 1px solid rgba(0, 0, 0, 0.12);
   cursor: pointer;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  border-radius: 9999px;
+  transition: all 0.65s cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 .btn-ghost:hover {
   border-color: var(--color-ec-gold);
   color: var(--color-ec-gold);
   background: rgba(184, 134, 11, 0.04);
+}
+
+.btn-ghost:active {
+  transform: scale(0.98);
 }
 
 /* ═══════════════════════════════════════════

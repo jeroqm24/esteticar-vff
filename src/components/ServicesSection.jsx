@@ -28,8 +28,11 @@ function ServicePod({ service, index }) {
         className="service-pod-inner"
         style={{ position: "relative", zIndex: 1 }}
       >
+        {/* Double-Bezel outer shell */}
+        <div className={`bezel-outer transition-all duration-700 ${isHovered ? "bezel-outer-gold bg-ec-gold/[0.025] border-ec-gold/[0.12]" : ""}`}>
+        {/* Double-Bezel inner core */}
         <div
-          className="relative p-8 sm:p-10 transition-all duration-700 group rounded-sm bg-white border border-black/[0.06] hover:border-ec-gold/25 shadow-[0_2px_20px_rgba(0,0,0,0.04)]"
+          className="bezel-inner relative p-8 sm:p-10 transition-all duration-700 group bg-white border border-black/[0.04] hover:border-ec-gold/20 shadow-[0_2px_20px_rgba(0,0,0,0.04)]"
         >
           {/* Glow on hover */}
           <div
@@ -86,34 +89,42 @@ function ServicePod({ service, index }) {
               )}
             </AnimatePresence>
 
-            {/* Action button */}
+            {/* Action button — pill + button-in-button architecture */}
             <a
               href={`https://wa.me/573181983601?text=${encodeURIComponent(service.cotizacion
                 ? `Hola, me interesa el servicio de *${service.name}*. ¿Me pueden dar una cotización personalizada?`
                 : `Hola, quiero reservar:\n*${service.name}* (${service.priceDisplay})\n\n¿Tienen disponibilidad esta semana?`)}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-4 font-ui text-[11px] tracking-[0.2em] uppercase transition-all duration-500 border rounded-sm flex items-center justify-center gap-2.5 font-semibold hover:brightness-110 active:scale-95"
+              className="group/btn w-full py-3.5 px-5 font-ui text-[11px] tracking-[0.2em] uppercase transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] rounded-full flex items-center justify-between font-semibold active:scale-[0.98]"
               style={{
                 background: service.cotizacion
                   ? "linear-gradient(135deg, #B4821E 0%, #8B6014 100%)"
                   : "linear-gradient(135deg, #1FAD5A 0%, #128C7E 100%)",
                 color: "white",
-                border: service.cotizacion ? "1px solid rgba(184,130,30,0.3)" : "1px solid rgba(37,211,102,0.3)",
                 boxShadow: service.cotizacion
-                  ? "0 4px 20px rgba(184,130,30,0.3), inset 0 1px 0 rgba(255,255,255,0.15)"
-                  : "0 4px 20px rgba(18,140,126,0.3), inset 0 1px 0 rgba(255,255,255,0.15)",
+                  ? "0 4px 20px rgba(184,130,30,0.28), inset 0 1px 0 rgba(255,255,255,0.15)"
+                  : "0 4px 20px rgba(18,140,126,0.28), inset 0 1px 0 rgba(255,255,255,0.15)",
                 textDecoration: "none",
               }}
             >
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
-                <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                <path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.553 4.103 1.523 5.828L.057 23.857a.5.5 0 0 0 .636.607l6.218-1.63A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.953 9.953 0 0 1-5.077-1.384l-.364-.216-3.767.988 1.006-3.665-.236-.377A9.952 9.952 0 0 1 2 12c0-5.514 4.486-10 10-10s10 4.486 10 10-4.486 10-10 10z"/>
-              </svg>
-              {service.cotizacion ? "COTIZAR" : "RESERVAR"}
+              <span className="flex items-center gap-2.5">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" style={{ flexShrink: 0 }}>
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
+                  <path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.553 4.103 1.523 5.828L.057 23.857a.5.5 0 0 0 .636.607l6.218-1.63A11.953 11.953 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.953 9.953 0 0 1-5.077-1.384l-.364-.216-3.767.988 1.006-3.665-.236-.377A9.952 9.952 0 0 1 2 12c0-5.514 4.486-10 10-10s10 4.486 10 10-4.486 10-10 10z"/>
+                </svg>
+                {service.cotizacion ? "COTIZAR" : "RESERVAR"}
+              </span>
+              {/* Trailing icon in nested circle */}
+              <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center shrink-0 transition-transform duration-500 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-px group-hover/btn:scale-110">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+              </span>
             </a>
           </div>
-        </div>
+        </div>{/* /bezel-inner */}
+        </div>{/* /bezel-outer */}
       </div>
     </motion.div>
   );
@@ -149,7 +160,7 @@ export default function ServicesSection({ onAddService, onRemoveService, selecte
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="inline-flex justify-center p-1 bg-ec-cream border border-black/[0.06] h-fit rounded-sm w-fit mx-auto lg:mx-0"
+            className="inline-flex justify-center p-1.5 bg-ec-cream border border-black/[0.06] h-fit rounded-full w-fit mx-auto lg:mx-0 shadow-[0_2px_12px_rgba(0,0,0,0.04)]"
           >
             {[
               { id: "car", label: "CARROS" },
@@ -160,9 +171,9 @@ export default function ServicesSection({ onAddService, onRemoveService, selecte
                 <button
                   key={type.id}
                   onClick={() => onVehicleTypeChange(type.id)}
-                  className={`w-28 py-3.5 transition-all duration-500 font-ui text-[12px] tracking-[0.3em] uppercase rounded-sm ${
+                  className={`w-28 py-3.5 transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] font-ui text-[12px] tracking-[0.3em] uppercase rounded-full ${
                     isActive
-                      ? "bg-ec-gold text-white font-bold shadow-[0_4px_20px_rgba(184,134,11,0.2)]"
+                      ? "bg-ec-gold text-white font-bold shadow-[0_4px_20px_rgba(184,134,11,0.25)]"
                       : "text-ec-text-muted hover:text-ec-dark bg-transparent"
                   }`}
                 >

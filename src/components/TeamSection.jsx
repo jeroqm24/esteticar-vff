@@ -15,11 +15,13 @@ function TeamMember({ member, index }) {
       onMouseLeave={() => setHovered(false)}
       className="relative group cursor-default"
     >
-      <div className="relative aspect-[3/4] overflow-hidden mb-6 bg-ec-cream rounded-sm shadow-[0_4px_30px_rgba(0,0,0,0.08)]">
+      {/* Double-Bezel photo frame */}
+      <div className={`bezel-outer mb-6 transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] ${hovered ? "bezel-outer-gold border-ec-gold/[0.14]" : ""}`}>
+      <div className="bezel-inner relative aspect-[3/4] overflow-hidden bg-ec-cream shadow-[0_4px_30px_rgba(0,0,0,0.08)]">
         <img
           src={member.image}
           alt={member.name}
-          className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
+          className="absolute inset-0 w-full h-full object-cover transition-all duration-[1200ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] group-hover:scale-105"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent" />
 
@@ -41,7 +43,8 @@ function TeamMember({ member, index }) {
             hovered ? "bg-ec-gold shadow-[0_0_8px_rgba(184,134,11,0.6)]" : "bg-white/60"
           }`} />
         </div>
-      </div>
+      </div>{/* /bezel-inner */}
+      </div>{/* /bezel-outer */}
 
       <div>
         <h3 className="font-heading text-xl text-ec-dark group-hover:text-ec-gold transition-colors duration-500">

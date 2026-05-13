@@ -19,8 +19,9 @@ function GuaranteeModal({ onClose }) {
           exit={{ opacity: 0, y: 20, scale: 0.97 }}
           transition={{ type: "spring", damping: 28, stiffness: 320 }}
           onClick={(e) => e.stopPropagation()}
-          className="bg-white w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-sm shadow-[0_24px_80px_rgba(0,0,0,0.2)]"
+          className="bezel-outer w-full max-w-2xl shadow-[0_24px_80px_rgba(0,0,0,0.18)]"
         >
+        <div className="bezel-inner bg-white max-h-[90vh] overflow-y-auto">
           {/* Header */}
           <div className="p-8 sm:p-10 border-b border-black/[0.06] flex items-start justify-between gap-6">
             <div>
@@ -131,7 +132,7 @@ function GuaranteeModal({ onClose }) {
               target="_blank"
               rel="noopener noreferrer"
               onClick={onClose}
-              className="flex-1 py-4 font-ui text-[11px] tracking-[0.2em] uppercase font-bold flex items-center justify-center gap-2 rounded-sm transition-colors"
+              className="flex-1 py-4 font-ui text-[11px] tracking-[0.2em] uppercase font-bold flex items-center justify-center gap-2 rounded-full transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"
               style={{ background: "#128C7E", color: "#fff", textDecoration: "none" }}
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
@@ -141,11 +142,12 @@ function GuaranteeModal({ onClose }) {
             </a>
             <button
               onClick={onClose}
-              className="px-6 py-4 border border-black/[0.06] font-ui text-[11px] tracking-[0.2em] text-ec-text-muted uppercase hover:bg-ec-cream transition-colors rounded-sm"
+              className="px-6 py-4 border border-black/[0.06] font-ui text-[11px] tracking-[0.2em] text-ec-text-muted uppercase hover:bg-ec-cream transition-all duration-500 rounded-full active:scale-[0.98]"
             >
               CERRAR
             </button>
           </div>
+        </div>{/* /bezel-inner */}
         </motion.div>
       </motion.div>
     </AnimatePresence>
@@ -165,12 +167,15 @@ function ProtocolBlock({ protocol, index }) {
       viewport={{ once: true, margin: "-5%" }}
       transition={{ duration: 0.8, delay: index * 0.1 }}
     >
+      {/* Double-Bezel outer shell */}
+      <div className={`bezel-outer transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] ${expanded ? "bezel-outer-gold border-ec-gold/[0.14]" : ""}`}>
+      {/* Double-Bezel inner core */}
       <div
         onClick={() => setExpanded(!expanded)}
-        className={`system-block relative p-8 sm:p-10 transition-all duration-700 cursor-pointer group rounded-sm ${
+        className={`system-block bezel-inner relative p-8 sm:p-10 transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] cursor-pointer group ${
           expanded
-            ? "bg-ec-gold/[0.06] border border-ec-gold/25 shadow-[0_8px_40px_rgba(184,134,11,0.08)]"
-            : "bg-white border border-black/[0.06] hover:border-ec-gold/20 shadow-[0_2px_20px_rgba(0,0,0,0.04)]"
+            ? "bg-ec-gold/[0.05] border border-ec-gold/[0.12] shadow-[0_8px_40px_rgba(184,134,11,0.07)]"
+            : "bg-white border border-black/[0.04] hover:border-ec-gold/15 shadow-[0_2px_20px_rgba(0,0,0,0.04)]"
         }`}
       >
         {/* System identifier */}
@@ -233,7 +238,8 @@ function ProtocolBlock({ protocol, index }) {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
+      </div>{/* /bezel-inner */}
+      </div>{/* /bezel-outer */}
     </motion.div>
   );
 }
@@ -286,13 +292,14 @@ export default function ProtocoloSection() {
             ))}
           </div>
 
-          {/* Guarantee banner */}
+          {/* Guarantee banner — Double-Bezel */}
           <motion.div
             initial={{ opacity: 0, y: 40 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="mt-16 sm:mt-20 p-8 sm:p-12 border border-ec-gold/15 bg-ec-gold/[0.04] rounded-sm flex flex-col md:flex-row items-center justify-between gap-8"
+            className="mt-16 sm:mt-20 bezel-outer-gold"
           >
+          <div className="bezel-inner p-8 sm:p-12 bg-ec-gold/[0.035] border border-ec-gold/[0.1] flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
               <div className="w-16 h-16 border-2 border-ec-gold flex items-center justify-center p-2.5 rounded-sm shrink-0">
                 <img
@@ -315,6 +322,7 @@ export default function ProtocoloSection() {
             >
               VER GARANTÍA
             </button>
+          </div>{/* /bezel-inner */}
           </motion.div>
         </div>
       </section>
