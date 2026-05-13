@@ -99,15 +99,16 @@ export default function CinematicProcess() {
 
         {/* ── Images ── */}
         <div className="absolute inset-0 z-0">
-          <motion.img src="/process-dirty.jpg.png" alt="Antes"
+          <motion.img src="/process-dirty.webp" alt="Antes"
+            fetchpriority="high"
             className="absolute inset-0 w-full h-full object-cover object-center"
             style={{ opacity: act1Opacity, filter: "saturate(0.5) brightness(0.65) contrast(1.12)" }}
           />
-          <motion.img src="/process-foam.jpg.png" alt="Espuma"
+          <motion.img src="/process-foam.webp" alt="Espuma"
             className="absolute inset-0 w-full h-full object-cover object-center"
             style={{ opacity: act2Opacity, filter: "saturate(0.85) brightness(0.75) contrast(1.08)" }}
           />
-          <motion.img src="/process-clean.jpg.png" alt="Showroom"
+          <motion.img src="/process-clean.webp" alt="Showroom"
             className="absolute inset-0 w-full h-full object-cover object-center"
             style={{ opacity: act3Opacity, filter: "saturate(1.2) brightness(1.0) contrast(1.06)" }}
           />

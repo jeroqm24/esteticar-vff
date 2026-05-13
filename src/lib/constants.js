@@ -292,25 +292,25 @@ export const TEAM = [
     name: "Sara Valencia",
     role: "Administradora",
     authority: "Gestión operativa y atención al cliente de primer nivel. Sara garantiza que cada proceso cumpla con los estándares Esteticar.",
-    image: "/team-sara.jpg",
+    image: "/team-sara.webp",
   },
   {
     name: "Juan Quintero",
     role: "Experto Técnico",
     authority: "Especialista en corrección de pintura y restauración. Más de 5 años de experiencia en detailing profesional.",
-    image: "/team-juan.jpg",
+    image: "/team-juan.webp",
   },
   {
     name: "Federico Cárdenas",
     role: "Experto Técnico",
     authority: "Maestro en protección cerámica e interiores. Formación continua en las últimas técnicas del sector.",
-    image: "/team-federico.jpg",
+    image: "/team-federico.webp",
   },
   {
     name: "Jerónimo Quintero",
     role: "Estratega y desarrollador",
     authority: "Diseñador de la experiencia Esteticar. Responsable de elevar el estándar del detailing en Manizales.",
-    image: "/team-jeronimo.jpg",
+    image: "/team-jeronimo.webp",
   },
 ];
 
@@ -369,8 +369,8 @@ export const PROTOCOLS = [
 // ─── TRANSFORMATIONS (BEFORE/AFTER) — Highest ticket services ────────────────
 export const TRANSFORMATIONS = [
   {
-    before: "/antes-1.jpg",
-    after: "/despues-1.jpg",
+    before: "/antes-1.webp",
+    after: "/despues-1.webp",
     label: "BMW X7 — Tratamiento 3 en 1 a Máquina",
     tag: "TRATAMIENTO 3 EN 1 A MÁQUINA",
     price: "$350.000",
@@ -397,8 +397,8 @@ export const TRANSFORMATIONS = [
     ],
   },
   {
-    before: "/antes-3.jpg",
-    after: "/despues-3.jpg",
+    before: "/antes-3.webp",
+    after: "/despues-3.webp",
     label: "Camaro ZL1 — Mantenimiento Interior",
     tag: "MANTENIMIENTO INTERIOR COMPLETO",
     price: "$280.000",
