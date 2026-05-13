@@ -108,18 +108,18 @@ function RevealCard({ item, index }) {
                 </div>
               </div>
 
-              {/* ANTES label — centrado en mitad izquierda */}
-              <div className="absolute bottom-5 z-10" style={{ left: "25%", transform: "translateX(-50%)" }}>
-                <div className="px-3 py-1.5 rounded-full"
+              {/* ANTES label */}
+              <div className="absolute top-5 left-5 z-10">
+                <div className="px-3 py-1.5 rounded-full flex items-center justify-center"
                   style={{ background: "rgba(0,0,0,0.55)", backdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.1)" }}
                 >
                   <span className="font-ui text-[9px] tracking-[0.45em] text-white/60 uppercase">Antes</span>
                 </div>
               </div>
 
-              {/* DESPUÉS label — centrado en mitad derecha */}
-              <div className="absolute bottom-5 z-10" style={{ left: "75%", transform: "translateX(-50%)" }}>
-                <div className="px-4 py-2 rounded-full"
+              {/* DESPUÉS label */}
+              <div className="absolute bottom-5 right-5 z-10">
+                <div className="px-4 py-2 rounded-full flex items-center justify-center"
                   style={{
                     background: "linear-gradient(135deg, #B8860B, #D4A017)",
                     boxShadow: "0 4px 20px rgba(184,134,11,0.4)",
