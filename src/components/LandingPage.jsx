@@ -44,23 +44,21 @@ function ScrollToTop() {
   };
 
   return (
-    <AnimatePresence>
-      {show && (
-        <motion.button
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.15 }}
-          onClick={handleClick}
-          className="fixed z-[55] bottom-24 left-4 sm:bottom-[104px] sm:left-6 w-10 h-10 rounded-full bg-white/90 border border-black/[0.06] backdrop-blur-sm text-ec-gold flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:bg-ec-gold hover:text-white transition-all duration-300"
-          aria-label="Volver arriba"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <polyline points="18 15 12 9 6 15" />
-          </svg>
-        </motion.button>
-      )}
-    </AnimatePresence>
+    <button
+      onClick={handleClick}
+      aria-label="Volver arriba"
+      className="fixed z-[55] bottom-24 left-4 sm:bottom-[104px] sm:left-6 w-10 h-10 rounded-full bg-white/90 border border-black/[0.06] backdrop-blur-sm text-ec-gold flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:bg-ec-gold hover:text-white"
+      style={{
+        opacity: show ? 1 : 0,
+        pointerEvents: show ? "auto" : "none",
+        transform: show ? "translateY(0)" : "translateY(12px)",
+        transition: "opacity 0.25s ease, transform 0.25s ease",
+      }}
+    >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <polyline points="18 15 12 9 6 15" />
+      </svg>
+    </button>
   );
 }
 
