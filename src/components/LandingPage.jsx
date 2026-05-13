@@ -20,25 +20,22 @@ import Navigation from "./Navigation";
 // Scroll to Top Button
 function ScrollToTop() {
   const [show, setShow] = useState(false);
+  const blocked = React.useRef(false);
 
   useEffect(() => {
-    const handleScroll = () => setShow(window.scrollY > 600);
+    const handleScroll = () => {
+      if (blocked.current) return;
+      setShow(window.scrollY > 600);
+    };
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleClick = () => {
+    blocked.current = true;
     setShow(false);
-    const startY = window.scrollY;
-    const startTime = performance.now();
-    const duration = 550;
-    const ease = (t) => 1 - Math.pow(1 - t, 3);
-    const step = (now) => {
-      const progress = Math.min((now - startTime) / duration, 1);
-      window.scrollTo(0, startY * (1 - ease(progress)));
-      if (progress < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
+    window.scrollTo(0, 0);
+    setTimeout(() => { blocked.current = false; }, 800);
   };
 
   return (
@@ -47,8 +44,8 @@ function ScrollToTop() {
         <motion.button
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.8 }}
-          transition={{ duration: 0.2 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.15 }}
           onClick={handleClick}
           className="fixed z-[55] bottom-24 left-4 sm:bottom-[104px] sm:left-6 w-10 h-10 rounded-full bg-white/90 border border-black/[0.06] backdrop-blur-sm text-ec-gold flex items-center justify-center shadow-[0_4px_20px_rgba(0,0,0,0.06)] hover:bg-ec-gold hover:text-white transition-all duration-300"
           aria-label="Volver arriba"
