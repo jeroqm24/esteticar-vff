@@ -29,7 +29,16 @@ function ScrollToTop() {
 
   const handleClick = () => {
     setShow(false);
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    const startY = window.scrollY;
+    const startTime = performance.now();
+    const duration = 550;
+    const ease = (t) => 1 - Math.pow(1 - t, 3);
+    const step = (now) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      window.scrollTo(0, startY * (1 - ease(progress)));
+      if (progress < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
   };
 
   return (
