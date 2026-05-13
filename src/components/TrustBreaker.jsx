@@ -63,21 +63,14 @@ export default function TrustBreaker() {
           ¿Nosotros? Sí.
         </motion.h2>
 
-        {/* Line 2 — light weight, gold gradient */}
+        {/* Line 2 — light weight, white italic */}
         <motion.h2
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.9, delay: 0.12, ease: [0.32, 0.72, 0, 1] }}
           className="trust-text text-5xl sm:text-7xl md:text-8xl lg:text-9xl leading-[0.95] tracking-tighter"
-          style={{
-            fontWeight: 300,
-            fontStyle: "italic",
-            background: "linear-gradient(135deg, #D4A017 0%, #F8C840 50%, #D4A017 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-          }}
+          style={{ fontWeight: 300, fontStyle: "italic", color: "#ffffff" }}
         >
           Sólo nosotros lo hacemos único.
         </motion.h2>
