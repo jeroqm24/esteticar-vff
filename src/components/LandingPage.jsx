@@ -9,6 +9,7 @@ import TeamSection from "./TeamSection";
 import ReviewsSection from "./ReviewsSection";
 import VIPSection from "./VIPSection";
 import CalendarSection from "./CalendarSection";
+import CinematicProcess from "./CinematicProcess";
 import FinalCTA from "./FinalCTA";
 import BookingPanel from "./BookingPanel";
 import BookingFAB from "./BookingFAB";
@@ -103,6 +104,7 @@ export default function LandingPage() {
           }}
         />
 
+        <CinematicProcess />
         <TrustBreaker />
         <ReviewsSection />
         <BeforeAfterScroll />
