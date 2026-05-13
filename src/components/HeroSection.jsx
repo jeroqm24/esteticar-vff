@@ -297,13 +297,13 @@ export default function HeroSection() {
         <div className="space-y-0 mb-6">
           <RevealLine
             delay={0.6}
-            className="font-heading text-5xl sm:text-7xl md:text-8xl lg:text-[7rem] text-white font-light tracking-[-0.03em] leading-[0.92]"
+            className="font-heading text-4xl sm:text-5xl md:text-6xl text-white font-light tracking-[-0.03em] leading-[0.92]"
           >
             {BRAND.heroLines[0]}
           </RevealLine>
           <RevealLine
             delay={0.85}
-            className="font-heading text-5xl sm:text-7xl md:text-8xl lg:text-[7rem] text-white font-light tracking-[-0.03em] leading-[0.92]"
+            className="font-heading text-4xl sm:text-5xl md:text-6xl text-white font-light tracking-[-0.03em] leading-[0.92]"
           >
             {BRAND.heroLines[1]}
           </RevealLine>
