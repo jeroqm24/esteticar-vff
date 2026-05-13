@@ -4,16 +4,25 @@ import { PROTOCOLS, BRAND } from "../lib/constants";
 
 // ─── Guarantee Modal ─────────────────────────────────────────────────
 function GuaranteeModal({ onClose }) {
-  // Lock body scroll while open
   useEffect(() => {
-    const prev = document.body.style.overflow;
+    const scrollY = window.scrollY;
+    // iOS-safe scroll lock
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
     document.body.style.overflow = "hidden";
-    return () => { document.body.style.overflow = prev; };
+    return () => {
+      document.body.style.position = "";
+      document.body.style.top = "";
+      document.body.style.width = "";
+      document.body.style.overflow = "";
+      window.scrollTo(0, scrollY);
+    };
   }, []);
 
   return (
     <AnimatePresence>
-      {/* Fixed backdrop — locks background completely */}
+      {/* Fixed backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -22,15 +31,20 @@ function GuaranteeModal({ onClose }) {
         className="fixed inset-0 z-[200] bg-black/55 backdrop-blur-sm"
         onClick={onClose}
       />
-      {/* Scrollable banner panel — slides down from top */}
-      <div className="fixed inset-0 z-[201] flex items-start justify-center px-4 pt-20 pb-8 overflow-y-auto pointer-events-none">
+      {/* Scrollable panel — full height, own scroll container */}
+      <div
+        className="fixed inset-0 z-[201] overflow-y-auto"
+        style={{ WebkitOverflowScrolling: "touch" }}
+        onClick={onClose}
+      >
+        <div className="flex min-h-full items-start justify-center px-4 py-16 sm:py-20">
         <motion.div
           initial={{ opacity: 0, y: -40 }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -30 }}
           transition={{ type: "spring", damping: 30, stiffness: 280 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-2xl rounded-2xl bg-white shadow-[0_24px_80px_rgba(0,0,0,0.22)] overflow-hidden pointer-events-auto"
+          className="w-full max-w-2xl rounded-2xl bg-white shadow-[0_24px_80px_rgba(0,0,0,0.22)] overflow-hidden"
         >
           {/* Header */}
           <div className="p-8 sm:p-10 border-b border-black/[0.06] flex items-start justify-between gap-6">
@@ -158,6 +172,7 @@ function GuaranteeModal({ onClose }) {
             </button>
           </div>
         </motion.div>
+        </div>
       </div>
     </AnimatePresence>
   );
