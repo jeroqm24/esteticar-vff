@@ -30,29 +30,27 @@ function ProcessStep({ step, index, scrollYProgress }) {
     <motion.div style={{ opacity, y }}
       className="absolute inset-0 z-20 pointer-events-none flex flex-col items-center">
 
-      {/* Pill — bajada para que respire del nav */}
-      <div className="flex justify-center mt-[20vh] sm:mt-[22vh]">
+      {/* Pill — posición absoluta desde arriba */}
+      <div className="absolute top-[20vh] inset-x-0 flex justify-center">
         <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full"
           style={{
             background: "rgba(0,0,0,0.70)",
-            border: "1.5px solid rgba(184,134,11,0.55)",
+            border: "2.5px solid rgba(184,134,11,0.85)",
             backdropFilter: "blur(12px)",
-            boxShadow: "0 2px 16px rgba(184,134,11,0.15)",
+            boxShadow: "0 2px 20px rgba(184,134,11,0.25)",
           }}>
-          <span className="font-ui text-[11px] font-bold tracking-[0.35em] uppercase" style={{ color: "rgba(184,134,11,1)" }}>
+          <span className="font-ui text-[13px] font-bold tracking-[0.35em] uppercase" style={{ color: "rgba(184,134,11,1)" }}>
             {step.n}
           </span>
-          <span className="w-px h-3.5" style={{ background: "rgba(184,134,11,0.45)" }} />
-          <span className="font-ui text-[11px] font-bold tracking-[0.3em] uppercase" style={{ color: "rgba(255,255,255,0.75)" }}>
+          <span className="w-[2px] h-4" style={{ background: "rgba(184,134,11,0.7)" }} />
+          <span className="font-ui text-[13px] font-bold tracking-[0.3em] uppercase" style={{ color: "rgba(255,255,255,0.95)" }}>
             {step.label}
           </span>
         </div>
       </div>
 
-      <div className="flex-1" />
-
-      {/* Título + desc abajo */}
-      <div className="flex flex-col items-center text-center px-6 pb-[14vh] sm:pb-[16vh] gap-3">
+      {/* Título + desc — posición absoluta desde abajo, igual que el hero */}
+      <div className="absolute bottom-[13vh] inset-x-0 flex flex-col items-center text-center px-6 gap-3">
         <h2 className="font-heading font-bold text-white"
           style={{ fontSize: "clamp(2.2rem, 7vw, 4.5rem)", lineHeight: 0.95, letterSpacing: "-0.02em", textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
           {step.title}
@@ -204,10 +202,8 @@ export default function CinematicProcess() {
             />
           </div>
 
-          <div className="flex-1" />
-
-          {/* Headline + CTA — abajo */}
-          <div className="flex flex-col items-center text-center px-6 pb-[12vh] sm:pb-[14vh] gap-3 sm:gap-4">
+          {/* Headline + CTA — abajo, misma posición que los pasos */}
+          <div className="absolute bottom-[13vh] inset-x-0 flex flex-col items-center text-center px-6 gap-3 sm:gap-4">
             <h1 className="font-heading font-light leading-[0.92] tracking-[-0.03em] text-white"
               style={{ fontSize: "clamp(2rem, 7vw, 4.5rem)", textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
               {BRAND.heroLines[0]}<br />{BRAND.heroLines[1]}
