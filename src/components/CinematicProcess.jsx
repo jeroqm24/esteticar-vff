@@ -24,24 +24,34 @@ function ProcessStep({ step, index, scrollYProgress }) {
     isLast ? [fi, hs, 1] : [fi, hs, he, fo],
     isLast ? [0, 1, 1]   : [0, 1, 1,  0]
   );
-  const y = useTransform(scrollYProgress, [fi, fi + 0.07], [28, 0]);
+  const y = useTransform(scrollYProgress, [fi, fi + 0.07], [20, 0]);
 
   return (
     <motion.div style={{ opacity, y }}
-      className="absolute inset-0 z-20 flex flex-col items-center justify-center px-8 sm:px-16 text-center pointer-events-none">
-      <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-5"
-        style={{ background: "rgba(0,0,0,0.6)", border: "1px solid rgba(184,134,11,0.3)", backdropFilter: "blur(10px)" }}>
-        <span className="font-ui text-[10px] tracking-[0.4em] uppercase" style={{ color: "rgba(184,134,11,0.9)" }}>{step.n}</span>
-        <span className="w-px h-3" style={{ background: "rgba(184,134,11,0.3)" }} />
-        <span className="font-ui text-[10px] tracking-[0.3em] uppercase" style={{ color: "rgba(255,255,255,0.45)" }}>El Proceso</span>
+      className="absolute inset-0 z-20 pointer-events-none flex flex-col items-center">
+
+      {/* Pill arriba — mismo lugar que el logo */}
+      <div className="flex justify-center mt-[15vh] sm:mt-[18vh]">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full"
+          style={{ background: "rgba(0,0,0,0.65)", border: "1px solid rgba(184,134,11,0.3)", backdropFilter: "blur(10px)" }}>
+          <span className="font-ui text-[10px] tracking-[0.4em] uppercase" style={{ color: "rgba(184,134,11,0.9)" }}>{step.n}</span>
+          <span className="w-px h-3" style={{ background: "rgba(184,134,11,0.3)" }} />
+          <span className="font-ui text-[10px] tracking-[0.3em] uppercase" style={{ color: "rgba(255,255,255,0.45)" }}>El Proceso</span>
+        </div>
       </div>
-      <h2 className="font-heading font-light text-white mb-4"
-        style={{ fontSize: "clamp(2.4rem, 7vw, 5rem)", lineHeight: 0.92, letterSpacing: "-0.03em", textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
-        {step.title}
-      </h2>
-      <div className="w-8 h-px mb-4" style={{ background: "rgba(184,134,11,0.6)" }} />
-      <p className="font-body text-sm sm:text-base max-w-[280px] sm:max-w-sm leading-relaxed"
-        style={{ color: "rgba(255,255,255,0.5)" }}>{step.desc}</p>
+
+      <div className="flex-1" />
+
+      {/* Título + desc abajo — mismo lugar que el titular */}
+      <div className="flex flex-col items-center text-center px-6 pb-[14vh] sm:pb-[16vh] gap-3">
+        <h2 className="font-heading font-light text-white"
+          style={{ fontSize: "clamp(2.2rem, 7vw, 4.5rem)", lineHeight: 0.92, letterSpacing: "-0.03em", textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
+          {step.title}
+        </h2>
+        <div className="w-8 h-px" style={{ background: "rgba(184,134,11,0.6)" }} />
+        <p className="font-body text-sm sm:text-base max-w-[280px] sm:max-w-sm leading-relaxed"
+          style={{ color: "rgba(255,255,255,0.5)" }}>{step.desc}</p>
+      </div>
     </motion.div>
   );
 }
