@@ -70,6 +70,20 @@ const getTomorrowStr = () => {
   return d.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long' });
 };
 
+const getWeekCalendar = () => {
+  const base = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+  const days = [];
+  for (let d = 1; d <= 8; d++) {
+    const date = new Date(base);
+    date.setDate(base.getDate() + d);
+    if (date.getDay() === 0) continue;
+    days.push(date.toLocaleDateString('es-CO', {
+      timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long',
+    }));
+  }
+  return days.join(' · ');
+};
+
 // ─── Disponibilidad + escasez ────────────────────────────────────
 const SERVICE_HOURS = {
   'Descontaminación de Vidrios (parabrisas)': 1, 'Descontaminacion de Vidrios (parabrisas)': 1,
@@ -169,6 +183,7 @@ const buildPrompt = async (leadType = null, clientProfile = {}) => {
   const greeting   = getGreeting();
   const today      = getTodayStr();
   const tomorrow   = getTomorrowStr();
+  const weekCalendar = getWeekCalendar();
   const { text: availability, availableBlocks } = await getAvailabilityInfo();
   const saludoEjemplo = SALUDOS[Math.floor(Math.random() * SALUDOS.length)](greeting);
 
@@ -217,6 +232,7 @@ ${customToAsk.map(f => `• ${f.title}`).join('\n')}
   return `Eres Sara Valencia, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales. Si alguien pregunta si eres IA o un bot: "Soy muy real, te lo aseguro."
 
 HOY: ${today}. SALUDO ACTIVO: "${greeting}". MAÑANA: ${tomorrow}.
+CALENDARIO EXACTO — USA ESTOS NOMBRES DE DÍA, NO CALCULES POR TU CUENTA: ${weekCalendar}
 DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}${scarcityNote}${leadStrategy}${clientContext}
 
 ━━━ REGLAS ABSOLUTAS ━━━
