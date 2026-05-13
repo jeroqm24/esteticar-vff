@@ -1,25 +1,36 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PROTOCOLS, BRAND } from "../lib/constants";
 
 // ─── Guarantee Modal ─────────────────────────────────────────────────
 function GuaranteeModal({ onClose }) {
+  // Lock body scroll while open
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => { document.body.style.overflow = prev; };
+  }, []);
+
   return (
     <AnimatePresence>
+      {/* Fixed backdrop — locks background completely */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm flex items-start justify-center px-4 pt-20 pb-6 overflow-y-auto"
+        transition={{ duration: 0.3 }}
+        className="fixed inset-0 z-[200] bg-black/55 backdrop-blur-sm"
         onClick={onClose}
-      >
+      />
+      {/* Scrollable banner panel — slides down from top */}
+      <div className="fixed inset-0 z-[201] flex items-start justify-center px-4 pt-20 pb-8 overflow-y-auto pointer-events-none">
         <motion.div
-          initial={{ opacity: 0, y: 30, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 20, scale: 0.97 }}
-          transition={{ type: "spring", damping: 28, stiffness: 320 }}
+          initial={{ opacity: 0, y: -40 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -30 }}
+          transition={{ type: "spring", damping: 30, stiffness: 280 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-2xl rounded-2xl bg-white shadow-[0_24px_80px_rgba(0,0,0,0.2)] overflow-hidden"
+          className="w-full max-w-2xl rounded-2xl bg-white shadow-[0_24px_80px_rgba(0,0,0,0.22)] overflow-hidden pointer-events-auto"
         >
           {/* Header */}
           <div className="p-8 sm:p-10 border-b border-black/[0.06] flex items-start justify-between gap-6">
@@ -147,7 +158,7 @@ function GuaranteeModal({ onClose }) {
             </button>
           </div>
         </motion.div>
-      </motion.div>
+      </div>
     </AnimatePresence>
   );
 }
