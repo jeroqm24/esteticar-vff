@@ -151,11 +151,10 @@ export default function CinematicProcess() {
           style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }}
         />
 
-        {/* Video — contain en móvil para que el carro no se corte */}
+        {/* Video */}
         <video
           ref={videoRef}
-          className="absolute inset-0 w-full h-full"
-          style={{ objectFit: "contain" }}
+          className="absolute inset-0 w-full h-full object-cover object-center"
           src="/process-hero.mp4"
           muted
           playsInline
@@ -168,8 +167,8 @@ export default function CinematicProcess() {
           src="/process-dirty.webp"
           alt="Esteticar"
           fetchpriority="high"
-          className="absolute inset-0 w-full h-full transition-opacity duration-700"
-          style={{ objectFit: "contain", opacity: videoReady ? 0 : 1, filter: "saturate(0.5) brightness(0.6)" }}
+          className="absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700"
+          style={{ opacity: videoReady ? 0 : 1, filter: "saturate(0.5) brightness(0.6)" }}
         />
 
         {/* Dark base */}
@@ -188,34 +187,51 @@ export default function CinematicProcess() {
         <div className="absolute bottom-0 inset-x-0 h-[45%] z-[2] pointer-events-none"
           style={{ background: "linear-gradient(to top, rgba(0,0,0,0.90), transparent)" }} />
 
-        {/* ── Hero ── */}
+        {/* ── Hero — distribuido verticalmente ── */}
         <motion.div style={{ opacity: heroOpacity }}
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center px-6 text-center pointer-events-none pb-16">
-          <motion.img src={BRAND.logo} alt="Esteticar"
-            initial={{ opacity: 0, scale: 0.92, filter: "blur(12px)" }}
-            animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-            transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
-            className="h-14 sm:h-[4.5rem] md:h-20 object-contain mb-6"
-            style={{ filter: "drop-shadow(0 0 40px rgba(248,200,64,0.35))" }}
-          />
-          <h1 className="font-heading text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-light leading-[0.92] tracking-[-0.03em] text-white mb-4"
-            style={{ textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
-            {BRAND.heroLines[0]}<br />{BRAND.heroLines[1]}
-          </h1>
-          <p className="font-ui text-[10px] sm:text-xs tracking-[0.5em] uppercase mb-8"
-            style={{ color: "rgba(212,160,23,0.9)" }}>
-            {BRAND.heroSub}
-          </p>
-          <a href="#servicios"
-            className="pointer-events-auto inline-flex items-center gap-3 px-8 py-4 rounded-full font-ui text-[11px] tracking-[0.3em] uppercase font-bold text-white"
-            style={{ background: "linear-gradient(135deg, #B8860B 0%, #D4A017 100%)", boxShadow: "0 4px 28px rgba(184,134,11,0.45), inset 0 1px 0 rgba(255,255,255,0.15)" }}>
-            RESERVAR TRATAMIENTO
-            <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
-              <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M5 12h14M12 5l7 7-7 7" />
-              </svg>
-            </span>
-          </a>
+          className="absolute inset-0 z-20 pointer-events-none flex flex-col">
+
+          {/* Logo — arriba centrado */}
+          <div className="flex justify-center pt-[18vh] sm:pt-[20vh]">
+            <motion.img src={BRAND.logo} alt="Esteticar"
+              initial={{ opacity: 0, scale: 0.92, filter: "blur(12px)" }}
+              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
+              transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
+              className="h-12 sm:h-16 md:h-20 object-contain"
+              style={{ filter: "drop-shadow(0 0 40px rgba(248,200,64,0.35))" }}
+            />
+          </div>
+
+          {/* Spacer */}
+          <div className="flex-1" />
+
+          {/* Headline + CTA — abajo */}
+          <div className="flex flex-col items-center text-center px-6 pb-[14vh] sm:pb-[16vh] gap-4">
+            <h1
+              className="font-heading font-light leading-[0.92] tracking-[-0.03em] text-white"
+              style={{
+                fontSize: "clamp(2.4rem, 8vw, 5rem)",
+                textShadow: "0 2px 60px rgba(0,0,0,0.9)",
+              }}
+            >
+              {BRAND.heroLines[0]}<br />{BRAND.heroLines[1]}
+            </h1>
+            <p className="font-ui text-[10px] sm:text-xs tracking-[0.5em] uppercase"
+              style={{ color: "rgba(212,160,23,0.9)" }}>
+              {BRAND.heroSub}
+            </p>
+            <div className="h-3" />
+            <a href="#servicios"
+              className="pointer-events-auto inline-flex items-center gap-3 px-8 py-4 rounded-full font-ui text-[11px] tracking-[0.3em] uppercase font-bold text-white"
+              style={{ background: "linear-gradient(135deg, #B8860B 0%, #D4A017 100%)", boxShadow: "0 4px 28px rgba(184,134,11,0.45), inset 0 1px 0 rgba(255,255,255,0.15)" }}>
+              RESERVAR TRATAMIENTO
+              <span className="w-7 h-7 rounded-full bg-white/20 flex items-center justify-center">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
+              </span>
+            </a>
+          </div>
         </motion.div>
 
         {/* ── Pasos del proceso ── */}
