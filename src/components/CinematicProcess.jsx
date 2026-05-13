@@ -147,21 +147,22 @@ export default function CinematicProcess() {
           <div className="w-full" style={{ aspectRatio: "16/9", position: "relative" }}>
             <video ref={videoRef}
               className="absolute inset-0 w-full h-full object-cover"
+              style={{ filter: "brightness(1.15) saturate(1.2)" }}
               src="/process-hero.mp4" muted playsInline preload="auto"
               onLoadedData={() => setVideoReady(true)}
             />
             <img src="/process-dirty.webp" alt="" fetchpriority="high"
               className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-              style={{ opacity: videoReady ? 0 : 1, filter: "saturate(0.5) brightness(0.6)" }}
+              style={{ opacity: videoReady ? 0 : 1, filter: "brightness(1.15) saturate(1.2)" }}
             />
           </div>
         </div>
 
-        {/* Dark base — solo desktop */}
-        <div className="hidden md:block absolute inset-0 z-[1] pointer-events-none" style={{ background: "rgba(0,0,0,0.35)" }} />
+        {/* Dark base */}
+        <div className="absolute inset-0 z-[1] pointer-events-none" style={{ background: "rgba(0,0,0,0.35)" }} />
 
-        {/* Gold glow — solo desktop */}
-        <motion.div className="hidden md:block absolute inset-0 pointer-events-none z-[2]"
+        {/* Gold glow */}
+        <motion.div className="absolute inset-0 pointer-events-none z-[2]"
           style={{ opacity: glowOpacity, background: "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(212,160,23,0.14) 0%, transparent 65%)" }}
         />
 
@@ -227,7 +228,7 @@ export default function CinematicProcess() {
 
         {/* ── Showroom badge ── */}
         <motion.div style={{ opacity: badgeOpacity }}
-          className="absolute bottom-28 sm:bottom-32 inset-x-0 z-20 flex justify-center pointer-events-none">
+          className="absolute bottom-14 sm:bottom-16 inset-x-0 z-20 flex justify-center pointer-events-none">
           <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full"
             style={{ background: "linear-gradient(135deg, rgba(184,134,11,0.95), rgba(212,160,23,0.95))", boxShadow: "0 4px 28px rgba(184,134,11,0.5)" }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.9)", flexShrink: 0 }} />
