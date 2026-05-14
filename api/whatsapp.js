@@ -2,6 +2,8 @@
 // Webhook de WhatsApp Cloud API — Sara Valencia con clasificación de leads
 
 import Anthropic from '@anthropic-ai/sdk';
+import OpenAI from 'openai';
+import { toFile } from 'openai';
 import { createClient } from '@supabase/supabase-js';
 
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
@@ -9,6 +11,7 @@ const WA_TOKEN     = process.env.WHATSAPP_TOKEN;
 const PHONE_ID     = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY });
+const openai    = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -556,21 +559,16 @@ export default async function handler(req, res) {
             headers: { Authorization: `Bearer ${WA_TOKEN}` },
           });
           const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
-          // 3. Enviar a Whisper vía multipart/form-data
-          const formData = new FormData();
-          formData.append('file', new Blob([audioBuffer], { type: 'audio/ogg' }), 'audio.ogg');
-          formData.append('model', 'whisper-1');
-          formData.append('language', 'es');
-          const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
-            method: 'POST',
-            headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
-            body: formData,
+          // 3. Transcribir con SDK oficial de OpenAI
+          const transcription = await openai.audio.transcriptions.create({
+            file: await toFile(audioBuffer, 'audio.ogg', { type: 'audio/ogg' }),
+            model: 'whisper-1',
+            language: 'es',
           });
-          const whisperData = await whisperRes.json();
-          text = whisperData.text?.trim() || '';
+          text = transcription.text?.trim() || '';
 
           // Log costo Whisper (~$0.006/min)
-          const durationSec = audioBuffer.length / 4000; // estimado
+          const durationSec = audioBuffer.length / 4000;
           const costUsd = (durationSec / 60) * 0.006;
           supabaseAdmin.from('api_costs').insert({
             provider: 'openai', model: 'whisper-1', channel: 'whatsapp',
