@@ -50,7 +50,7 @@ function ProcessStep({ step, index, scrollYProgress }) {
       </div>
 
       {/* Título + desc — posición absoluta desde abajo, igual que el hero */}
-      <div className="absolute top-[63vh] inset-x-0 flex flex-col items-center text-center px-6 gap-3">
+      <div className="absolute top-[66vh] inset-x-0 flex flex-col items-center text-center px-6 gap-3">
         <h2 className="font-heading font-bold text-white"
           style={{ fontSize: "clamp(2.2rem, 7vw, 4.5rem)", lineHeight: 0.95, letterSpacing: "-0.02em", textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
           {step.title}
@@ -204,7 +204,7 @@ export default function CinematicProcess() {
           </div>
 
           {/* Headline + CTA — misma posición que los pasos */}
-          <div className="absolute top-[63vh] inset-x-0 flex flex-col items-center text-center px-6 gap-3 sm:gap-4">
+          <div className="absolute top-[66vh] inset-x-0 flex flex-col items-center text-center px-6 gap-3 sm:gap-4">
             <h1 className="font-heading font-light leading-[0.92] tracking-[-0.03em] text-white"
               style={{ fontSize: "clamp(2rem, 7vw, 4.5rem)", textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
               {BRAND.heroLines[0]}<br />{BRAND.heroLines[1]}
