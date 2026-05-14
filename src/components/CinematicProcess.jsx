@@ -182,9 +182,9 @@ export default function CinematicProcess() {
           {/* Logo — arriba */}
           <div className="flex flex-col items-center mt-[15vh] sm:mt-[18vh] gap-4">
             <motion.img src={BRAND.logo} alt="Esteticar"
-              initial={{ opacity: 0, scale: 0.9, filter: "blur(12px)" }}
-              animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
-              transition={{ duration: 1.8, ease: [0.16, 1, 0.3, 1] }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
               className="h-12 sm:h-16 md:h-20 object-contain"
               style={{ filter: "drop-shadow(0 0 40px rgba(248,200,64,0.4))" }}
             />
