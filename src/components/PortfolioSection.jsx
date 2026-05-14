@@ -70,7 +70,7 @@ export default function PortfolioSection() {
     <section ref={sectionRef} id="portafolio" className="overflow-hidden">
 
       {/* Parte oscura: header + flipbook */}
-      <div className="relative bg-[#0A0A0A] pt-24 sm:pt-32 pb-16">
+      <div className="relative bg-[#0A0A0A] pt-24 sm:pt-32 pb-0">
         <div className="absolute inset-0 pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-10"
             style={{ background: "radial-gradient(ellipse, #B8860B 0%, transparent 70%)" }} />
@@ -110,7 +110,7 @@ export default function PortfolioSection() {
                   src={portfolioUrl}
                   title="Portafolio Esteticar"
                   className="w-full"
-                  style={{ height: "clamp(400px, 65vw, 720px)", border: "none" }}
+                  style={{ height: "clamp(560px, 90vw, 720px)", border: "none" }}
                   allow="fullscreen"
                   loading="lazy"
                 />
