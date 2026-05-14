@@ -64,11 +64,12 @@ function ProcessStep({ step, index, scrollYProgress }) {
 }
 
 export default function CinematicProcess() {
-  const containerRef = useRef(null);
-  const videoRef     = useRef(null);
-  const rafRef       = useRef(null);
-  const targetTime   = useRef(0);
-  const unlockedRef  = useRef(false);
+  const containerRef      = useRef(null);
+  const videoDesktopRef   = useRef(null);
+  const videoMobileRef    = useRef(null);
+  const rafRef            = useRef(null);
+  const targetTime        = useRef(0);
+  const unlockedRef       = useRef(false);
   const [videoReady, setVideoReady] = useState(false);
 
   const { scrollY } = useScroll();
@@ -79,15 +80,17 @@ export default function CinematicProcess() {
     return max > 0 ? Math.max(0, Math.min(1, (v - el.offsetTop) / max)) : 0;
   });
 
+  const allVideos = () =>
+    [videoDesktopRef.current, videoMobileRef.current].filter(Boolean);
+
   useEffect(() => {
     const unlock = () => {
       if (unlockedRef.current) return;
-      const video = videoRef.current;
-      if (!video) return;
       unlockedRef.current = true;
-      video.play().then(() => { video.pause(); video.currentTime = 0; }).catch(() => {});
+      allVideos().forEach(v => {
+        v.play().then(() => { v.pause(); v.currentTime = 0; }).catch(() => {});
+      });
     };
-    // Solo desbloquear con interacción del usuario — nunca al cargar
     window.addEventListener("touchstart",  unlock, { once: true, passive: true });
     window.addEventListener("pointerdown", unlock, { once: true, passive: true });
     return () => {
@@ -97,13 +100,13 @@ export default function CinematicProcess() {
   }, []);
 
   useEffect(() => {
-    const video = videoRef.current;
-    if (!video) return;
     const tick = () => {
-      if (video.readyState >= 2) {
-        const diff = targetTime.current - video.currentTime;
-        if (Math.abs(diff) > 0.001) video.currentTime += diff * 0.8;
-      }
+      allVideos().forEach(v => {
+        if (v.readyState >= 2) {
+          const diff = targetTime.current - v.currentTime;
+          if (Math.abs(diff) > 0.001) v.currentTime += diff * 0.8;
+        }
+      });
       rafRef.current = requestAnimationFrame(tick);
     };
     rafRef.current = requestAnimationFrame(tick);
@@ -111,9 +114,9 @@ export default function CinematicProcess() {
   }, []);
 
   useMotionValueEvent(scrollYProgress, "change", (p) => {
-    const video = videoRef.current;
-    if (!video || !video.duration) return;
-    targetTime.current = p * video.duration;
+    const v = videoDesktopRef.current || videoMobileRef.current;
+    if (!v || !v.duration) return;
+    targetTime.current = p * v.duration;
   });
 
   const heroOpacity    = useTransform(scrollYProgress, [0, 0.04, 0.07], [1, 1, 0]);
@@ -139,27 +142,27 @@ export default function CinematicProcess() {
           style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }}
         />
 
-        {/* ── DESKTOP: video scrubbed ── */}
-        <video ref={videoRef}
+        {/* ── DESKTOP: video scrubbed por scroll ── */}
+        <video ref={videoDesktopRef}
           className="hidden md:block absolute inset-0 w-full h-full object-cover object-center"
           src="/process-hero.mp4" muted playsInline preload="auto"
           onLoadedData={() => setVideoReady(true)}
         />
-        <img src="/process-dirty.webp" alt="" fetchpriority="high"
+        <img src="/process-dirty.webp" alt="" fetchPriority="high"
           className="hidden md:block absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700"
           style={{ opacity: videoReady ? 0 : 1, filter: "saturate(0.5) brightness(0.6)" }}
         />
 
-        {/* ── MÓVIL: video en ratio natural centrado ── */}
+        {/* ── MÓVIL: video en ratio 16/9 centrado ── */}
         <div className="md:hidden absolute inset-0 flex items-center justify-center">
           <div className="w-full" style={{ aspectRatio: "16/9", position: "relative" }}>
-            <video ref={videoRef}
+            <video ref={videoMobileRef}
               className="absolute inset-0 w-full h-full object-cover"
               style={{ filter: "brightness(1.15) saturate(1.2)" }}
               src="/process-hero.mp4" muted playsInline preload="auto"
               onLoadedData={() => setVideoReady(true)}
             />
-            <img src="/process-dirty.webp" alt="" fetchpriority="high"
+            <img src="/process-dirty.webp" alt="" fetchPriority="high"
               className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
               style={{ opacity: videoReady ? 0 : 1, filter: "brightness(1.15) saturate(1.2)" }}
             />
