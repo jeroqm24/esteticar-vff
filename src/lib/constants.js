@@ -41,6 +41,7 @@ export const NAV_ITEMS = [
   { label: "Transformación", href: "#transformacion" },
   { label: "Equipo", href: "#equipo" },
   { label: "VIP", href: "#vip" },
+  { label: "Portafolio", href: "#portafolio" },
 ];
 
 // ─── CAR SERVICES ────────────────────────────────
