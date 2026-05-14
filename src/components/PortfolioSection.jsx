@@ -121,7 +121,7 @@ export default function PortfolioSection() {
       </div>
 
       {/* CTA flotando sobre la barra blanca de Heyzine */}
-      <div className="relative z-10 flex justify-center -mt-[4.5rem] sm:-mt-[4.75rem]">
+      <div className="relative z-10 flex justify-center -mt-[6rem] sm:-mt-[6.5rem]">
         <AnimatePresence>
           {visible && (
             <motion.button
@@ -130,12 +130,12 @@ export default function PortfolioSection() {
               exit={{ opacity: 0, y: 8, scale: 0.95 }}
               transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
               onClick={() => setOpen(true)}
-              className="group flex items-center gap-3 px-7 py-3.5 rounded-full bg-ec-gold text-white font-ui text-[11px] tracking-[0.2em] uppercase shadow-[0_8px_32px_rgba(184,134,11,0.4)] hover:shadow-[0_12px_40px_rgba(184,134,11,0.5)]"
+              className="group flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-ec-gold text-white font-ui text-[10px] tracking-[0.2em] uppercase shadow-[0_6px_24px_rgba(184,134,11,0.4)] hover:shadow-[0_10px_32px_rgba(184,134,11,0.5)]"
               style={{ transition: "all 0.45s cubic-bezier(0.32,0.72,0,1)" }}
             >
               <span>Me interesa este servicio</span>
-              <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300">
-                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300">
+                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <path d="M7 17L17 7M17 7H7M17 7v10" />
                 </svg>
               </div>
