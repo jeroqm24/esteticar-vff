@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./components/LandingPage";
+import PortfolioPage from "./components/PortfolioPage";
 import AdminDashboard from "./components/admin/AdminDashboard";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
       )}
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/portafolio" element={<PortfolioPage />} />
         <Route path="/admin" element={<AdminDashboard onClose={() => { }} />} />
       </Routes>
     </Router>

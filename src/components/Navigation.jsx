@@ -149,6 +149,7 @@ export default function Navigation({ onBookingClick, cartCount }) {
                 key={item.label}
                 href={item.href}
                 onClick={(e) => {
+                  if (item.href.startsWith("/")) { setMobileOpen(false); return; }
                   e.preventDefault();
                   setMobileOpen(false);
                   setTimeout(() => {
