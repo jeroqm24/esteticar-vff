@@ -127,7 +127,7 @@ export default function PortfolioSection() {
                   exit={{ opacity: 0, scale: 0.95 }}
                   transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
                   onClick={() => setOpen(true)}
-                  className="group absolute bottom-[7.5rem] left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-ec-gold text-white font-ui text-[10px] tracking-[0.2em] uppercase shadow-[0_6px_24px_rgba(184,134,11,0.5)] hover:shadow-[0_10px_32px_rgba(184,134,11,0.6)] whitespace-nowrap"
+                  className="group absolute bottom-[9rem] left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-ec-gold text-white font-ui text-[10px] tracking-[0.2em] uppercase shadow-[0_6px_24px_rgba(184,134,11,0.5)] hover:shadow-[0_10px_32px_rgba(184,134,11,0.6)] whitespace-nowrap"
                   style={{ transition: "all 0.45s cubic-bezier(0.32,0.72,0,1)" }}
                 >
                   <span>Me interesa este servicio</span>
