@@ -87,7 +87,7 @@ export default function CinematicProcess() {
       unlockedRef.current = true;
       video.play().then(() => { video.pause(); video.currentTime = 0; }).catch(() => {});
     };
-    unlock();
+    // Solo desbloquear con interacción del usuario — nunca al cargar
     window.addEventListener("touchstart",  unlock, { once: true, passive: true });
     window.addEventListener("pointerdown", unlock, { once: true, passive: true });
     return () => {
@@ -251,7 +251,7 @@ export default function CinematicProcess() {
 
         {/* ── Scroll hint: flechas centro ── */}
         <motion.div style={{ opacity: hintOpacity }}
-          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-0">
+          className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-0">
           {[0, 1, 2].map((i) => (
             <motion.svg key={i} width="20" height="12" viewBox="0 0 20 12" fill="none"
               animate={{ opacity: [0.15, 0.9, 0.15] }}
