@@ -12,8 +12,14 @@ const PROVIDERS = {
   openai:    { label: "Whisper (OpenAI)",   color: "#10A37F", bg: "rgba(16,163,127,0.1)" },
 };
 
-const fmt = (n) => `$${(n || 0).toFixed(4)}`;
-const fmtUSD = (n) => `$${(n || 0).toFixed(2)}`;
+const fmt = (n) => `$${(n || 0).toFixed(6)}`;
+const fmtUSD = (n) => {
+  const v = n || 0;
+  if (v === 0) return "$0.000000";
+  if (v < 0.01) return `$${v.toFixed(6)}`;
+  if (v < 1) return `$${v.toFixed(4)}`;
+  return `$${v.toFixed(2)}`;
+};
 
 function StatCard({ label, value, sub, color }) {
   return (
