@@ -179,12 +179,12 @@ function TypingIndicator({ name }) {
 
 // ─── Quick chip replies ───────────────────────────────────────────
 const QUICK_REPLIES = [
-  { label: "Ver servicios \u{1F697}" },
-  { label: "Cuánto cuesta \u{1F4B0}" },
-  { label: "Quiero una cita \u{1F4C5}" },
-  { label: "Qué garantía dan \u{1F6E1}\uFE0F" },
-  { label: "Salón VIP \u2615\uFE0F" },
-  { label: "Servicios para motos \u{1F3CD}\uFE0F" },
+  { label: "Ver servicios" },
+  { label: "Cuánto cuesta" },
+  { label: "Quiero una cita" },
+  { label: "Qué garantía dan" },
+  { label: "Salón VIP" },
+  { label: "Servicios para motos" },
 ];
 
 // ─── Connection error state ───────────────────────────────────────
