@@ -171,14 +171,30 @@ const getAvailability = async () => {
   }
 };
 
+// ─── Citas activas del cliente ─────────────────────────────────────
+const getClientAppointments = async (sessionId) => {
+  if (!sessionId) return [];
+  try {
+    const { data } = await supabaseAdmin
+      .from('appointments')
+      .select('service, date, time, confirmation_code, status, vehicle_type, client_name')
+      .eq('client_phone', sessionId)
+      .not('status', 'in', '("cancelada","cancelada_ok","cancelled")')
+      .order('created_date', { ascending: false })
+      .limit(5);
+    return data || [];
+  } catch { return []; }
+};
+
 // ─── System prompt ─────────────────────────────────────────────────
-const buildPrompt = async (advisorName) => {
+const buildPrompt = async (advisorName, sessionId = null) => {
   const greeting = getGreeting();
   const today = getTodayStr();
   const todayISO = toISO(toColombiaDate());
   const tomorrow = getTomorrowStr();
   const { text: availability, available } = await getAvailability();
   const nextHolidays = getNextHolidaysText();
+  const clientAppts = await getClientAppointments(sessionId);
 
   const scarcity = available > 0 && available <= 3
     ? `\nESCASEZ ACTIVA: Solo quedan ${available} espacio${available === 1 ? '' : 's'} disponibles. Menciónalo con naturalidad.`
@@ -295,17 +311,26 @@ Antes de confirmar: "Contamos con traslado: recogida y entrega $9.000, solo una 
 Si elige recogida: pide dirección. Confirma: "Llegamos 30 minutos antes de tu cita."
 Si lleva él mismo: NO menciones recogida en la confirmación.
 
+━━━ CITAS ACTIVAS DE ESTE CLIENTE ━━━
+${clientAppts.length > 0
+  ? clientAppts.map((a, i) =>
+      `${i + 1}. ${a.service} · ${a.date}${a.time ? ' · ' + a.time : ''} · Código: ${a.confirmation_code} · Estado: ${a.status}`
+    ).join('\n')
+  : 'Sin citas activas registradas para este número.'}
+
 ━━━ CANCELACIONES ━━━
-Si el cliente quiere cancelar su cita:
-1. Pide el código de confirmación (ej: EST-A1234).
-2. Confirma: "Confirmo que quieres cancelar la cita con código [CÓDIGO], correcto?"
-3. Al confirmarlo, añade EXACTAMENTE al final del mensaje (invisible para el cliente):
+NUNCA le pidas el código al cliente. Tú ya tienes sus citas activas en la sección de arriba.
+Si el cliente quiere cancelar:
+1. Si tiene una sola cita activa: "Tienes agendado [servicio] para [fecha]. Quieres cancelarlo?"
+   Si tiene varias: lista las opciones y pregunta cuál quiere cancelar.
+2. Cuando confirme, añade EXACTAMENTE al final del mensaje (invisible para el cliente):
 __CANCEL_CONFIRMED__
-CODIGO: [código exacto que dio el cliente]
-NOMBRE: [nombre si lo conoces, o "no_disponible"]
+CODIGO: [código de la cita activa correspondiente, de la lista de arriba]
+NOMBRE: [nombre del cliente si lo conoces, o "no_disponible"]
 __END_CANCEL__
-4. Dile: "Listo, tu cita queda cancelada. Si en algún momento quieres reagendar, aquí estamos."
-REAGENDAMIENTO: Si quiere mover la cita, primero cancela la actual (pide el código) y luego agenda la nueva normalmente.
+3. Dile: "Listo, tu cita queda cancelada. Si en algún momento quieres reagendar, aquí estamos."
+Si NO hay citas activas para este número: "No encontré citas activas para tu número. Si crees que es un error, escríbenos directamente al 318 198 3601."
+REAGENDAMIENTO: Si quiere mover la cita, cancela la actual usando el flujo de arriba y luego agenda la nueva normalmente.
 
 ━━━ MÚLTIPLES SERVICIOS / OTRAS PERSONAS ━━━
 Un cliente puede traer el carro para más de un servicio. Agenda el servicio principal (el de mayor valor o duración). Menciona: "Cuando vengas le comentamos al equipo para incluir los dos." Si quiere agendar para otra persona (pareja, familiar), agenda normalmente como nuevo cliente en una conversación nueva o en el mismo chat.
@@ -374,7 +399,7 @@ export default async function handler(req, res) {
   if (!userMessage?.trim()) return res.status(400).json({ error: 'Missing userMessage' });
 
   try {
-    const systemPrompt = await buildPrompt(advisorName);
+    const systemPrompt = await buildPrompt(advisorName, sessionId);
 
     const apiMessages = history
       .slice(-18)
