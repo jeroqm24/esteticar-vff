@@ -112,7 +112,7 @@ export default function VIPSection() {
 
       {/* Oversized decorative number */}
       <div
-        className="absolute left-1/2 -translate-x-1/2 bottom-0 font-heading text-[22rem] leading-none text-white/[0.02] select-none pointer-events-none whitespace-nowrap"
+        className="absolute left-1/2 -translate-x-1/2 bottom-0 font-heading text-[38vw] leading-none text-white/[0.02] select-none pointer-events-none whitespace-nowrap"
         aria-hidden
       >
         VIP
