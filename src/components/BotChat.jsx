@@ -179,12 +179,12 @@ function TypingIndicator({ name }) {
 
 // ─── Quick chip replies ───────────────────────────────────────────
 const QUICK_REPLIES = [
-  { label: "Ver servicios 🚗" },
-  { label: "¿Cuánto cuesta? 💰" },
-  { label: "Quiero una cita 📅" },
-  { label: "¿Qué garantía dan? 🛡️" },
-  { label: "Salón VIP ☕" },
-  { label: "Servicios para motos 🏍️" },
+  { label: "Ver servicios \u{1F697}" },
+  { label: "¿Cuánto cuesta? \u{1F4B0}" },
+  { label: "Quiero una cita \u{1F4C5}" },
+  { label: "¿Qué garantía dan? \u{1F6E1}" },
+  { label: "Salón VIP \u{2615}" },
+  { label: "Servicios para motos \u{1F3CD}" },
 ];
 
 // ─── Connection error state ───────────────────────────────────────
@@ -537,7 +537,7 @@ export default function BotChat({ isOpen, onClose }) {
               ? "left-0 right-0 w-full rounded-none sm:top-auto sm:left-auto sm:bottom-6 sm:right-6 sm:w-[370px] sm:rounded-[10px]"
               : "bottom-20 right-4 w-[calc(100vw-2rem)] h-[72vh] max-h-[620px] rounded-[10px] sm:bottom-6 sm:right-6 sm:w-[370px]"
               }`}
-            style={{ fontFamily: "'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif" }}
+            style={{ fontFamily: "'Apple Color Emoji', 'Noto Color Emoji', 'Segoe UI Emoji', 'Segoe UI', 'Helvetica Neue', Helvetica, sans-serif" }}
           >
             {/* Header — siempre visible, ancla la foto de la asesora */}
             <div className="flex items-center gap-3 px-4 py-2.5 flex-shrink-0" style={{ background: "#128C7E" }}>
