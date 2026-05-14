@@ -159,25 +159,20 @@ export const db = {
   conversations: {
     list: async () => {
       try {
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('conversations')
           .select('phone, session_id, history, client_name, updated_at, created_at, lead_type, bot_paused, vehicle_type, vehicle_plate, client_email, last_service, direccion, objection, remarketing_status, admin_notes')
-          .not('history', 'eq', '[]')
-          .not('history', 'is', null)
           .order('updated_at', { ascending: false })
           .limit(300);
-        return data || [];
-      } catch (e) {
-        // Fallback without newer columns
+        if (error) throw error;
+        return (data || []).filter(r => Array.isArray(r.history) && r.history.length > 0);
+      } catch {
         try {
           const { data } = await supabase
             .from('conversations')
-            .select('phone, session_id, history, client_name, updated_at, created_at, lead_type, bot_paused')
-            .not('history', 'eq', '[]')
-            .not('history', 'is', null)
-            .order('updated_at', { ascending: false })
+            .select('phone, session_id, history, client_name, lead_type, bot_paused')
             .limit(300);
-          return data || [];
+          return (data || []).filter(r => Array.isArray(r.history) && r.history.length > 0);
         } catch { return []; }
       }
     },

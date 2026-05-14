@@ -548,14 +548,12 @@ export default async function handler(req, res) {
       if (message.type === 'audio') {
         try {
           const mediaId = message.audio.id;
-          console.log('[Whisper] mediaId:', mediaId);
 
           // 1. Obtener URL del audio desde WhatsApp
           const mediaRes = await fetch(`https://graph.facebook.com/v20.0/${mediaId}`, {
             headers: { Authorization: `Bearer ${WA_TOKEN}` },
           });
           const mediaData = await mediaRes.json();
-          console.log('[Whisper] mediaData:', JSON.stringify(mediaData));
 
           if (!mediaData.url) throw new Error('No URL in mediaData: ' + JSON.stringify(mediaData));
 
@@ -565,7 +563,6 @@ export default async function handler(req, res) {
           });
           if (!audioRes.ok) throw new Error('Audio download failed: ' + audioRes.status);
           const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
-          console.log('[Whisper] audioBuffer bytes:', audioBuffer.length);
 
           // 3. Transcribir con SDK oficial de OpenAI
           const transcription = await openai.audio.transcriptions.create({
@@ -574,7 +571,6 @@ export default async function handler(req, res) {
             language: 'es',
           });
           text = transcription.text?.trim() || '';
-          console.log('[Whisper] transcription:', text);
 
           // Log costo Whisper — en su propio bloque para no cortar el flujo
           try {
@@ -677,7 +673,6 @@ export default async function handler(req, res) {
         const historyWithReply = [...history, { role: 'assistant', content: rawReply }];
         booking = await extractBookingWithHaiku(historyWithReply);
         if (booking) booking.clientPhone = from;
-        console.log('HAIKU EXTRACTED:', booking ? JSON.stringify({ service: booking.service, date: booking.date, client: booking.clientName }) : 'null');
       }
 
       // Construir meta para Supabase
@@ -714,8 +709,6 @@ export default async function handler(req, res) {
       history.push({ role: 'assistant', content: rawReply });
       await saveHistory(from, history, meta);
 
-      // Guardar cita en appointments
-      console.log('BOOKING PARSED:', booking ? JSON.stringify({ service: booking.service, date: booking.date, client: booking.clientName }) : 'null');
       if (booking) {
         // Extraer hora del campo FECHA (ej: "miércoles, 7 de mayo de 2026 a las 9:00")
         const timeMatch = booking.date?.match(/(\d{1,2}):(\d{2})/);
