@@ -204,7 +204,7 @@ export default function CinematicProcess() {
           </div>
 
           {/* Headline + CTA — misma posición que los pasos */}
-          <div className="absolute top-[63vh] inset-x-0 flex flex-col items-center text-center px-6 gap-3 sm:gap-4">
+          <div className="absolute top-[63vh] inset-x-0 flex flex-col items-center text-center px-6 gap-2">
             <h1 className="font-heading font-light leading-[0.92] tracking-[-0.03em] text-white"
               style={{ fontSize: "clamp(2rem, 7vw, 4.5rem)", textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
               {BRAND.heroLines[0]}<br />{BRAND.heroLines[1]}
@@ -213,7 +213,6 @@ export default function CinematicProcess() {
               style={{ color: "rgba(212,160,23,0.9)" }}>
               {BRAND.heroSub}
             </p>
-            <div className="h-2" />
             <a href="#servicios"
               className="pointer-events-auto inline-flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 rounded-full font-ui text-[10px] sm:text-[11px] tracking-[0.3em] uppercase font-bold text-white"
               style={{ background: "linear-gradient(135deg, #B8860B 0%, #D4A017 100%)", boxShadow: "0 4px 28px rgba(184,134,11,0.45), inset 0 1px 0 rgba(255,255,255,0.15)" }}>
@@ -250,15 +249,28 @@ export default function CinematicProcess() {
           ))}
         </div>
 
-        {/* ── Scroll hint ── */}
+        {/* ── Scroll hint: flechas centro ── */}
         <motion.div style={{ opacity: hintOpacity }}
-          className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-2">
-          <span className="font-ui text-[8px] tracking-[0.5em] uppercase" style={{ color: "rgba(255,255,255,0.35)" }}>
-            Desliza
-          </span>
-          <motion.div animate={{ y: [0, 7, 0] }} transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-            style={{ width: 1, height: 24, background: "linear-gradient(to bottom, rgba(184,134,11,0.7), transparent)" }}
-          />
+          className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-0">
+          {[0, 1, 2].map((i) => (
+            <motion.svg key={i} width="20" height="12" viewBox="0 0 20 12" fill="none"
+              animate={{ opacity: [0.15, 0.9, 0.15] }}
+              transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.18, ease: "easeInOut" }}>
+              <path d="M1 1L10 10L19 1" stroke="rgba(184,134,11,0.85)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </motion.svg>
+          ))}
+        </motion.div>
+
+        {/* ── Scroll hint: flechas derecha ── */}
+        <motion.div style={{ opacity: hintOpacity }}
+          className="absolute right-4 bottom-1/2 translate-y-1/2 z-20 flex flex-col items-center gap-0">
+          {[0, 1, 2].map((i) => (
+            <motion.svg key={i} width="20" height="12" viewBox="0 0 20 12" fill="none"
+              animate={{ opacity: [0.15, 0.9, 0.15] }}
+              transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.18, ease: "easeInOut" }}>
+              <path d="M1 1L10 10L19 1" stroke="rgba(184,134,11,0.85)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
+            </motion.svg>
+          ))}
         </motion.div>
 
       </div>
