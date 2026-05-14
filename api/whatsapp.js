@@ -535,11 +535,56 @@ export default async function handler(req, res) {
       if (body.object !== 'whatsapp_business_account') return res.status(200).send('OK');
 
       const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-      if (!message || message.type !== 'text') return res.status(200).send('OK');
+      if (!message) return res.status(200).send('OK');
+      if (message.type !== 'text' && message.type !== 'audio') return res.status(200).send('OK');
 
       const from  = message.from;
-      const text  = message.text.body?.trim();
       const msgId = message.id;
+
+      // ── Transcripción de audio con Whisper ──
+      let text = '';
+      if (message.type === 'audio') {
+        try {
+          const mediaId = message.audio.id;
+          // 1. Obtener URL del audio desde WhatsApp
+          const mediaRes = await fetch(`https://graph.facebook.com/v20.0/${mediaId}`, {
+            headers: { Authorization: `Bearer ${WA_TOKEN}` },
+          });
+          const mediaData = await mediaRes.json();
+          // 2. Descargar el archivo OGG
+          const audioRes = await fetch(mediaData.url, {
+            headers: { Authorization: `Bearer ${WA_TOKEN}` },
+          });
+          const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
+          // 3. Enviar a Whisper vía multipart/form-data
+          const formData = new FormData();
+          formData.append('file', new Blob([audioBuffer], { type: 'audio/ogg' }), 'audio.ogg');
+          formData.append('model', 'whisper-1');
+          formData.append('language', 'es');
+          const whisperRes = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+            method: 'POST',
+            headers: { Authorization: `Bearer ${process.env.OPENAI_API_KEY}` },
+            body: formData,
+          });
+          const whisperData = await whisperRes.json();
+          text = whisperData.text?.trim() || '';
+
+          // Log costo Whisper (~$0.006/min)
+          const durationSec = audioBuffer.length / 4000; // estimado
+          const costUsd = (durationSec / 60) * 0.006;
+          supabaseAdmin.from('api_costs').insert({
+            provider: 'openai', model: 'whisper-1', channel: 'whatsapp',
+            audio_seconds: Math.round(durationSec), cost_usd: costUsd,
+          }).catch(() => {});
+        } catch (e) {
+          console.error('[Whisper]', e.message);
+          await sendMessage(from, 'No pude escuchar bien el audio. Puedes escribirme tu mensaje?');
+          return res.status(200).send('OK');
+        }
+      } else {
+        text = message.text.body?.trim();
+      }
+
       if (!text) return res.status(200).send('OK');
 
       // ── Deduplicación: ignorar si este message.id ya fue procesado ──
