@@ -141,43 +141,35 @@ export default function CinematicProcess() {
           style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }}
         />
 
-        {/* ── VIDEO: ratio 16:9 preservado, carro completo en todos los dispositivos ── */}
-        <div className="absolute inset-0 flex items-center justify-center">
-          <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
-            <video ref={videoDesktopRef}
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ filter: "brightness(1.05) saturate(1.1)" }}
-              src="/process-hero.mp4" muted playsInline preload="auto"
-              onLoadedData={() => setVideoReady(true)}
-            />
-            <img src="/process-dirty.webp" alt="" fetchPriority="high"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-              style={{ opacity: videoReady ? 0 : 1 }}
-            />
-          </div>
-        </div>
+        {/* ── VIDEO: contain = carro completo siempre, sin recorte ── */}
+        <video ref={videoDesktopRef}
+          className="absolute inset-0 w-full h-full"
+          style={{ objectFit: "contain", objectPosition: "center center", background: "#040404" }}
+          src="/process-hero.mp4" muted playsInline preload="auto"
+          onLoadedData={() => setVideoReady(true)}
+        />
+        <img src="/process-dirty.webp" alt="" fetchPriority="high"
+          className="absolute inset-0 w-full h-full transition-opacity duration-700"
+          style={{ objectFit: "contain", objectPosition: "center center", opacity: videoReady ? 0 : 1 }}
+        />
 
-        {/* Fades arriba/abajo del strip — ocultan el fondo negro en móvil portrait */}
-        <div className="absolute top-0 inset-x-0 z-[2] pointer-events-none"
-          style={{ height: "max(0px, calc(50dvh - 50vw * 9 / 16))", background: "linear-gradient(to bottom, #040404 60%, transparent)" }} />
-        <div className="absolute bottom-0 inset-x-0 z-[2] pointer-events-none"
-          style={{ height: "max(0px, calc(50dvh - 50vw * 9 / 16))", background: "linear-gradient(to top, #040404 60%, transparent)" }} />
-
-        {/* Dark base */}
-        <div className="absolute inset-0 z-[1] pointer-events-none" style={{ background: "rgba(0,0,0,0.28)" }} />
+        {/* Dark base suave — no tapa el carro */}
+        <div className="absolute inset-0 z-[1] pointer-events-none" style={{ background: "rgba(0,0,0,0.22)" }} />
 
         {/* Gold glow */}
         <motion.div className="absolute inset-0 pointer-events-none z-[2]"
           style={{ opacity: glowOpacity, background: "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(212,160,23,0.14) 0%, transparent 65%)" }}
         />
 
-        {/* Vignette lateral + top suave */}
+        {/* Vignette lateral suave */}
         <div className="absolute inset-0 z-[2] pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.55) 100%)" }} />
-        <div className="absolute top-0 inset-x-0 h-[22%] z-[2] pointer-events-none"
-          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.75), transparent)" }} />
-        <div className="absolute bottom-0 inset-x-0 h-[30%] z-[2] pointer-events-none"
-          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.85), transparent)" }} />
+          style={{ background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)" }} />
+        {/* Gradiente superior para texto */}
+        <div className="absolute top-0 inset-x-0 h-[20%] z-[2] pointer-events-none"
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)" }} />
+        {/* Gradiente inferior — solo el 15% más bajo donde va el texto */}
+        <div className="absolute bottom-0 inset-x-0 h-[20%] z-[2] pointer-events-none"
+          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)" }} />
 
         {/* ── HERO ── */}
         <motion.div style={{ opacity: heroOpacity }}
