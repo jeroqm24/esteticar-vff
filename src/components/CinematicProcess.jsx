@@ -142,16 +142,20 @@ export default function CinematicProcess() {
         />
 
         {/* ── VIDEO: contain = carro completo siempre, sin recorte ── */}
-        <video ref={videoDesktopRef}
-          className="absolute inset-0 w-full h-full"
-          style={{ objectFit: "contain", objectPosition: "center center", background: "#040404" }}
-          src="/process-hero.mp4" muted playsInline preload="auto"
-          onLoadedData={() => setVideoReady(true)}
-        />
-        <img src="/process-dirty.webp" alt="" fetchPriority="high"
-          className="absolute inset-0 w-full h-full transition-opacity duration-700"
-          style={{ objectFit: "contain", objectPosition: "center center", opacity: videoReady ? 0 : 1 }}
-        />
+        <div className="absolute inset-0 flex items-center justify-center" style={{ padding: "4% 6%" }}>
+          <div className="relative w-full h-full">
+            <video ref={videoDesktopRef}
+              className="absolute inset-0 w-full h-full"
+              style={{ objectFit: "contain", objectPosition: "center center" }}
+              src="/process-hero.mp4" muted playsInline preload="auto"
+              onLoadedData={() => setVideoReady(true)}
+            />
+            <img src="/process-dirty.webp" alt="" fetchPriority="high"
+              className="absolute inset-0 w-full h-full transition-opacity duration-700"
+              style={{ objectFit: "contain", objectPosition: "center center", opacity: videoReady ? 0 : 1 }}
+            />
+          </div>
+        </div>
 
         {/* Dark base suave — no tapa el carro */}
         <div className="absolute inset-0 z-[1] pointer-events-none" style={{ background: "rgba(0,0,0,0.22)" }} />
