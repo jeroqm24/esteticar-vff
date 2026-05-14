@@ -85,9 +85,9 @@ export default function FinalCTA({ onOpenChat }) {
               href="https://www.instagram.com/jeroquinteromora?igsh=MXViOXdiZDdqaTcxZQ%3D%3D&utm_source=qr"
               target="_blank"
               rel="noopener noreferrer"
-              className="font-ui text-[9px] tracking-[0.2em] text-white/20 hover:text-white/50 transition-colors duration-300 font-bold underline underline-offset-2"
+              className="font-ui text-[9px] tracking-[0.2em] text-white/20 hover:text-white/50 transition-colors duration-300 font-bold"
             >
-              Página creada por: @jeroquinteromora
+              Página creada por: <span className="underline underline-offset-2">@jeroquinteromora</span>
             </a>
           </div>
         </motion.div>
