@@ -66,7 +66,6 @@ function ProcessStep({ step, index, scrollYProgress }) {
 export default function CinematicProcess() {
   const containerRef      = useRef(null);
   const videoDesktopRef   = useRef(null);
-  const videoMobileRef    = useRef(null);
   const rafRef            = useRef(null);
   const targetTime        = useRef(0);
   const unlockedRef       = useRef(false);
@@ -81,7 +80,7 @@ export default function CinematicProcess() {
   });
 
   const allVideos = () =>
-    [videoDesktopRef.current, videoMobileRef.current].filter(Boolean);
+    [videoDesktopRef.current].filter(Boolean);
 
   useEffect(() => {
     const unlock = () => {
@@ -142,54 +141,43 @@ export default function CinematicProcess() {
           style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }}
         />
 
-        {/* ── DESKTOP: video scrubbed por scroll ── */}
-        <video ref={videoDesktopRef}
-          className="hidden md:block absolute inset-0 w-full h-full object-cover object-center"
-          src="/process-hero.mp4" muted playsInline preload="auto"
-          onLoadedData={() => setVideoReady(true)}
-        />
-        <img src="/process-dirty.webp" alt="" fetchPriority="high"
-          className="hidden md:block absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-700"
-          style={{ opacity: videoReady ? 0 : 1, filter: "saturate(0.5) brightness(0.6)" }}
-        />
-
-        {/* ── MÓVIL: video en ratio 16/9 centrado ── */}
-        <div className="md:hidden absolute inset-0 flex items-center justify-center">
-          <div className="w-full" style={{ aspectRatio: "16/9", position: "relative" }}>
-            <video ref={videoMobileRef}
+        {/* ── VIDEO: ratio 16:9 preservado, carro completo en todos los dispositivos ── */}
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="relative w-full" style={{ aspectRatio: "16/9" }}>
+            <video ref={videoDesktopRef}
               className="absolute inset-0 w-full h-full object-cover"
-              style={{ filter: "brightness(1.15) saturate(1.2)" }}
+              style={{ filter: "brightness(1.05) saturate(1.1)" }}
               src="/process-hero.mp4" muted playsInline preload="auto"
               onLoadedData={() => setVideoReady(true)}
             />
             <img src="/process-dirty.webp" alt="" fetchPriority="high"
               className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-              style={{ opacity: videoReady ? 0 : 1, filter: "brightness(1.15) saturate(1.2)" }}
+              style={{ opacity: videoReady ? 0 : 1 }}
             />
           </div>
         </div>
 
+        {/* Fades arriba/abajo del strip — ocultan el fondo negro en móvil portrait */}
+        <div className="absolute top-0 inset-x-0 z-[2] pointer-events-none"
+          style={{ height: "max(0px, calc(50dvh - 50vw * 9 / 16))", background: "linear-gradient(to bottom, #040404 60%, transparent)" }} />
+        <div className="absolute bottom-0 inset-x-0 z-[2] pointer-events-none"
+          style={{ height: "max(0px, calc(50dvh - 50vw * 9 / 16))", background: "linear-gradient(to top, #040404 60%, transparent)" }} />
+
         {/* Dark base */}
-        <div className="absolute inset-0 z-[1] pointer-events-none" style={{ background: "rgba(0,0,0,0.35)" }} />
+        <div className="absolute inset-0 z-[1] pointer-events-none" style={{ background: "rgba(0,0,0,0.28)" }} />
 
         {/* Gold glow */}
         <motion.div className="absolute inset-0 pointer-events-none z-[2]"
           style={{ opacity: glowOpacity, background: "radial-gradient(ellipse 80% 60% at 50% 50%, rgba(212,160,23,0.14) 0%, transparent 65%)" }}
         />
 
-        {/* Vignette desktop */}
-        <div className="hidden md:block absolute inset-0 z-[2] pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at center, transparent 28%, rgba(0,0,0,0.7) 100%)" }} />
-        <div className="hidden md:block absolute top-0 inset-x-0 h-[30%] z-[2] pointer-events-none"
-          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.80), transparent)" }} />
-        <div className="hidden md:block absolute bottom-0 inset-x-0 h-[45%] z-[2] pointer-events-none"
-          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.90), transparent)" }} />
-
-        {/* Fades móvil (arriba y abajo del strip del carro) */}
-        <div className="md:hidden absolute top-0 inset-x-0 z-[2] pointer-events-none"
-          style={{ height: "calc(50% - (100vw * 9/16 / 2))", background: "linear-gradient(to bottom, rgba(0,0,0,1) 60%, rgba(0,0,0,0))" }} />
-        <div className="md:hidden absolute bottom-0 inset-x-0 z-[2] pointer-events-none"
-          style={{ height: "calc(50% - (100vw * 9/16 / 2))", background: "linear-gradient(to top, rgba(0,0,0,1) 60%, rgba(0,0,0,0))" }} />
+        {/* Vignette lateral + top suave */}
+        <div className="absolute inset-0 z-[2] pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at center, transparent 35%, rgba(0,0,0,0.55) 100%)" }} />
+        <div className="absolute top-0 inset-x-0 h-[22%] z-[2] pointer-events-none"
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.75), transparent)" }} />
+        <div className="absolute bottom-0 inset-x-0 h-[30%] z-[2] pointer-events-none"
+          style={{ background: "linear-gradient(to top, rgba(0,0,0,0.85), transparent)" }} />
 
         {/* ── HERO ── */}
         <motion.div style={{ opacity: heroOpacity }}
