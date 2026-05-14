@@ -146,7 +146,7 @@ export default function CinematicProcess() {
           <div className="relative w-full h-full">
             <video ref={videoDesktopRef}
               className="absolute inset-0 w-full h-full"
-              style={{ objectFit: "contain", objectPosition: "center center" }}
+              style={{ objectFit: "contain", objectPosition: "center center", filter: "brightness(1.25) contrast(1.05)" }}
               src="/process-hero.mp4" muted playsInline preload="auto"
               onLoadedData={() => setVideoReady(true)}
             />
@@ -158,7 +158,7 @@ export default function CinematicProcess() {
         </div>
 
         {/* Dark base suave — no tapa el carro */}
-        <div className="absolute inset-0 z-[1] pointer-events-none" style={{ background: "rgba(0,0,0,0.22)" }} />
+        <div className="absolute inset-0 z-[1] pointer-events-none" style={{ background: "rgba(0,0,0,0.08)" }} />
 
         {/* Gold glow */}
         <motion.div className="absolute inset-0 pointer-events-none z-[2]"
@@ -167,10 +167,10 @@ export default function CinematicProcess() {
 
         {/* Vignette lateral suave */}
         <div className="absolute inset-0 z-[2] pointer-events-none"
-          style={{ background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.5) 100%)" }} />
+          style={{ background: "radial-gradient(ellipse at center, transparent 40%, rgba(0,0,0,0.28) 100%)" }} />
         {/* Gradiente superior para texto */}
         <div className="absolute top-0 inset-x-0 h-[20%] z-[2] pointer-events-none"
-          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.7), transparent)" }} />
+          style={{ background: "linear-gradient(to bottom, rgba(0,0,0,0.5), transparent)" }} />
         {/* Gradiente inferior — solo el 15% más bajo donde va el texto */}
         <div className="absolute bottom-0 inset-x-0 h-[20%] z-[2] pointer-events-none"
           style={{ background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)" }} />
