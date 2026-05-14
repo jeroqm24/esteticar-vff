@@ -637,6 +637,22 @@ export default function BotChat({ isOpen, onClose }) {
               </div>
             </div>
 
+            {/* Quick reply chips */}
+            {chatStarted && showQuick && (
+              <div className="flex flex-wrap gap-2 px-3 py-2 flex-shrink-0" style={{ background: "#F0F2F5" }}>
+                {QUICK_REPLIES.map((r) => (
+                  <button
+                    key={r.label}
+                    onClick={() => sendMessage(r.label)}
+                    disabled={loading}
+                    className="text-[12px] px-3 py-1.5 rounded-full border border-[#128C7E] text-[#128C7E] bg-white hover:bg-[#128C7E] hover:text-white transition-colors duration-200 disabled:opacity-40"
+                  >
+                    {r.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
             {/* Input bar */}
             {chatStarted && (
               <div
