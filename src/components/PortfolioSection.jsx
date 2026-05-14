@@ -67,87 +67,82 @@ export default function PortfolioSection() {
   };
 
   return (
-    <section ref={sectionRef} id="portafolio" className="relative bg-[#0A0A0A] py-24 sm:py-32 overflow-hidden">
+    <section ref={sectionRef} id="portafolio" className="overflow-hidden">
 
-      {/* Ambient glow */}
-      <div className="absolute inset-0 pointer-events-none">
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-10"
-          style={{ background: "radial-gradient(ellipse, #B8860B 0%, transparent 70%)" }} />
+      {/* Parte oscura: header + flipbook */}
+      <div className="relative bg-[#0A0A0A] pt-24 sm:pt-32 pb-16">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[600px] h-[400px] rounded-full opacity-10"
+            style={{ background: "radial-gradient(ellipse, #B8860B 0%, transparent 70%)" }} />
+        </div>
+
+        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
+            className="text-center mb-12"
+          >
+            <span className="inline-block font-ui text-[10px] tracking-[0.4em] text-ec-gold uppercase mb-4 px-4 py-1.5 rounded-full border border-ec-gold/20 bg-ec-gold/5">
+              Portafolio
+            </span>
+            <h2 className="font-heading text-4xl sm:text-5xl font-light text-white leading-tight">
+              Cada vehículo,<br />
+              <span className="text-ec-gold">una transformación.</span>
+            </h2>
+            <p className="font-body text-white/40 text-sm mt-4 max-w-md mx-auto">
+              Hojea nuestros trabajos. Cuando veas algo que quieras para tu vehículo, cuéntanos.
+            </p>
+          </motion.div>
+
+          {/* Flipbook — double bezel */}
+          <motion.div
+            initial={{ opacity: 0, y: 32 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.1, ease: [0.32, 0.72, 0, 1] }}
+          >
+            <div className="p-1.5 rounded-[1.25rem] bg-white/[0.04] ring-1 ring-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.6)]">
+              <div className="rounded-[calc(1.25rem-0.375rem)] overflow-hidden bg-[#111] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
+                <iframe
+                  src={portfolioUrl}
+                  title="Portafolio Esteticar"
+                  className="w-full"
+                  style={{ height: "clamp(400px, 65vw, 720px)", border: "none" }}
+                  allow="fullscreen"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </motion.div>
+        </div>
       </div>
 
-      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6">
-
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: 24 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
-          className="text-center mb-12"
-        >
-          <span className="inline-block font-ui text-[10px] tracking-[0.4em] text-ec-gold uppercase mb-4 px-4 py-1.5 rounded-full border border-ec-gold/20 bg-ec-gold/5">
-            Portafolio
-          </span>
-          <h2 className="font-heading text-4xl sm:text-5xl font-light text-white leading-tight">
-            Cada vehículo,<br />
-            <span className="text-ec-gold">una transformación.</span>
-          </h2>
-          <p className="font-body text-white/40 text-sm mt-4 max-w-md mx-auto">
-            Hojea nuestros trabajos. Cuando veas algo que quieras para tu vehículo, cuéntanos.
-          </p>
-        </motion.div>
-
-        {/* Flipbook — double bezel */}
-        <motion.div
-          initial={{ opacity: 0, y: 32 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.8, delay: 0.1, ease: [0.32, 0.72, 0, 1] }}
-          className="relative"
-        >
-          {/* Outer shell */}
-          <div className="p-1.5 rounded-[1.25rem] bg-white/[0.04] ring-1 ring-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.6)]">
-            {/* Inner core */}
-            <div className="rounded-[calc(1.25rem-0.375rem)] overflow-hidden bg-[#111] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
-              <iframe
-                src={portfolioUrl}
-                title="Portafolio Esteticar"
-                className="w-full"
-                style={{ height: "clamp(400px, 65vw, 720px)", border: "none" }}
-                allow="fullscreen"
-                loading="lazy"
-              />
-            </div>
-          </div>
-
-        </motion.div>
-
-        {/* CTA debajo del flipbook */}
+      {/* Franja blanca con el CTA */}
+      <div className="bg-white py-12 flex flex-col items-center gap-3">
+        <p className="font-body text-sm text-ec-text-muted">¿Ves algo que quieres para tu vehículo?</p>
         <AnimatePresence>
           {visible && (
-            <motion.div
-              initial={{ opacity: 0, y: 16, scale: 0.95 }}
+            <motion.button
+              initial={{ opacity: 0, y: 12, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: 8, scale: 0.95 }}
               transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
-              className="flex justify-center mt-8"
+              onClick={() => setOpen(true)}
+              className="group flex items-center gap-3 px-7 py-4 rounded-full bg-ec-gold text-white font-ui text-[11px] tracking-[0.2em] uppercase shadow-[0_8px_32px_rgba(184,134,11,0.35)] hover:shadow-[0_12px_40px_rgba(184,134,11,0.5)]"
+              style={{ transition: "all 0.5s cubic-bezier(0.32,0.72,0,1)" }}
             >
-              <button
-                onClick={() => setOpen(true)}
-                className="group flex items-center gap-3 px-7 py-4 rounded-full bg-ec-gold text-white font-ui text-[11px] tracking-[0.2em] uppercase shadow-[0_8px_32px_rgba(184,134,11,0.4)] hover:shadow-[0_12px_40px_rgba(184,134,11,0.5)]"
-                style={{ transition: "all 0.5s cubic-bezier(0.32,0.72,0,1)" }}
-              >
-                <span>Me interesa este servicio</span>
-                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300">
-                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                    <path d="M7 17L17 7M17 7H7M17 7v10" />
-                  </svg>
-                </div>
-              </button>
-            </motion.div>
+              <span>Me interesa este servicio</span>
+              <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300">
+                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                  <path d="M7 17L17 7M17 7H7M17 7v10" />
+                </svg>
+              </div>
+            </motion.button>
           )}
         </AnimatePresence>
-
       </div>
 
       {/* Modal selector de servicio */}
