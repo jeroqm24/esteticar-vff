@@ -101,16 +101,8 @@ export default function CinematicProcess() {
     if (!video) return;
     const tick = () => {
       if (video.readyState >= 2) {
-        const target = targetTime.current;
-        const diff = target - video.currentTime;
-        if (Math.abs(diff) > 0.001) {
-          // fastSeek salta directo al keyframe más cercano — mucho más rápido en Android
-          if (typeof video.fastSeek === "function") {
-            video.fastSeek(target);
-          } else {
-            video.currentTime = target;
-          }
-        }
+        const diff = targetTime.current - video.currentTime;
+        if (Math.abs(diff) > 0.001) video.currentTime += diff * 0.8;
       }
       rafRef.current = requestAnimationFrame(tick);
     };
