@@ -101,8 +101,16 @@ export default function CinematicProcess() {
     if (!video) return;
     const tick = () => {
       if (video.readyState >= 2) {
-        const diff = targetTime.current - video.currentTime;
-        if (Math.abs(diff) > 0.001) video.currentTime += diff * 0.6;
+        const target = targetTime.current;
+        const diff = target - video.currentTime;
+        if (Math.abs(diff) > 0.001) {
+          // fastSeek salta directo al keyframe más cercano — mucho más rápido en Android
+          if (typeof video.fastSeek === "function") {
+            video.fastSeek(target);
+          } else {
+            video.currentTime = target;
+          }
+        }
       }
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -121,10 +129,6 @@ export default function CinematicProcess() {
   const badgeOpacity   = useTransform(scrollYProgress, [0.85, 0.94], [0, 1]);
   const hintOpacity    = useTransform(scrollYProgress, [0, 0.06], [1, 0]);
 
-  // Móvil: crossfade entre 3 imágenes — GPU puro, sin decodificación de video
-  const dirtyOp = useTransform(scrollYProgress, [0,    0.30, 0.38], [1, 1, 0]);
-  const foamOp  = useTransform(scrollYProgress, [0.28, 0.36, 0.60, 0.68], [0, 1, 1, 0]);
-  const cleanOp = useTransform(scrollYProgress, [0.60, 0.68, 1.0], [0, 1, 1]);
   const [activeStep, setActiveStep] = useState(-1);
   useMotionValueEvent(scrollYProgress, "change", (p) => {
     if      (p < RANGES[0][0]) setActiveStep(-1);
@@ -154,20 +158,18 @@ export default function CinematicProcess() {
           style={{ opacity: videoReady ? 0 : 1, filter: "saturate(0.5) brightness(0.6)" }}
         />
 
-        {/* ── MÓVIL: crossfade de imágenes (GPU, sin video) ── */}
+        {/* ── MÓVIL: video en ratio natural centrado ── */}
         <div className="md:hidden absolute inset-0 flex items-center justify-center">
-          <div className="w-full relative" style={{ aspectRatio: "16/9" }}>
-            <motion.img src="/process-dirty.webp" alt="" fetchpriority="high"
+          <div className="w-full" style={{ aspectRatio: "16/9", position: "relative" }}>
+            <video ref={videoRef}
               className="absolute inset-0 w-full h-full object-cover"
-              style={{ opacity: dirtyOp, filter: "brightness(1.15) saturate(1.2)", willChange: "opacity" }}
+              style={{ filter: "brightness(1.15) saturate(1.2)" }}
+              src="/process-hero.mp4" muted playsInline preload="auto"
+              onLoadedData={() => setVideoReady(true)}
             />
-            <motion.img src="/process-foam.webp" alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ opacity: foamOp, filter: "brightness(1.15) saturate(1.2)", willChange: "opacity" }}
-            />
-            <motion.img src="/process-clean.webp" alt=""
-              className="absolute inset-0 w-full h-full object-cover"
-              style={{ opacity: cleanOp, filter: "brightness(1.15) saturate(1.2)", willChange: "opacity" }}
+            <img src="/process-dirty.webp" alt="" fetchpriority="high"
+              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
+              style={{ opacity: videoReady ? 0 : 1, filter: "brightness(1.15) saturate(1.2)" }}
             />
           </div>
         </div>
