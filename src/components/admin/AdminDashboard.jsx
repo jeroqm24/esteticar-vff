@@ -156,7 +156,7 @@ export default function AdminDashboard({ onClose }) {
           </div>
         </div>
 
-        <div className="flex-1 space-y-1.5">
+        <div className="flex-1 space-y-1.5 overflow-y-auto">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -260,8 +260,8 @@ export default function AdminDashboard({ onClose }) {
                     </span>
                   )}
                 </div>
-                <span className={`font-ui text-[8px] tracking-[0.1em] uppercase ${isActive ? "text-ec-gold font-bold" : "text-ec-text-muted"}`}>
-                  {tab.label === "Cancelaciones" ? "Cancel." : tab.label}
+                <span className={`font-ui text-[7px] tracking-[0.05em] uppercase ${isActive ? "text-ec-gold font-bold" : "text-ec-text-muted"}`}>
+                  {tab.label === "Cancelaciones" ? "Cancel." : tab.label === "Configuración" ? "Config." : tab.label === "Costos API" ? "Costos" : tab.label}
                 </span>
                 {isActive && (
                   <motion.div
