@@ -103,6 +103,7 @@ export default function PortfolioSection() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ duration: 0.8, delay: 0.1, ease: [0.32, 0.72, 0, 1] }}
+            className="relative"
           >
             <div className="p-1.5 rounded-[1.25rem] bg-white/[0.04] ring-1 ring-white/[0.08] shadow-[0_32px_80px_rgba(0,0,0,0.6)]">
               <div className="rounded-[calc(1.25rem-0.375rem)] overflow-hidden bg-[#111] shadow-[inset_0_1px_1px_rgba(255,255,255,0.06)]">
@@ -116,32 +117,30 @@ export default function PortfolioSection() {
                 />
               </div>
             </div>
+
+            {/* CTA absoluto dentro del área blanca de Heyzine */}
+            <AnimatePresence>
+              {visible && (
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+                  onClick={() => setOpen(true)}
+                  className="group absolute bottom-[2.6rem] left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-ec-gold text-white font-ui text-[10px] tracking-[0.2em] uppercase shadow-[0_6px_24px_rgba(184,134,11,0.5)] hover:shadow-[0_10px_32px_rgba(184,134,11,0.6)] whitespace-nowrap"
+                  style={{ transition: "all 0.45s cubic-bezier(0.32,0.72,0,1)" }}
+                >
+                  <span>Me interesa este servicio</span>
+                  <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300">
+                    <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                      <path d="M7 17L17 7M17 7H7M17 7v10" />
+                    </svg>
+                  </div>
+                </motion.button>
+              )}
+            </AnimatePresence>
           </motion.div>
         </div>
-      </div>
-
-      {/* CTA flotando sobre la barra blanca de Heyzine */}
-      <div className="relative z-10 flex justify-center -mt-[6rem] sm:-mt-[6.5rem]">
-        <AnimatePresence>
-          {visible && (
-            <motion.button
-              initial={{ opacity: 0, y: 12, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 8, scale: 0.95 }}
-              transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
-              onClick={() => setOpen(true)}
-              className="group flex items-center gap-2.5 px-5 py-2.5 rounded-full bg-ec-gold text-white font-ui text-[10px] tracking-[0.2em] uppercase shadow-[0_6px_24px_rgba(184,134,11,0.4)] hover:shadow-[0_10px_32px_rgba(184,134,11,0.5)]"
-              style={{ transition: "all 0.45s cubic-bezier(0.32,0.72,0,1)" }}
-            >
-              <span>Me interesa este servicio</span>
-              <div className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300">
-                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path d="M7 17L17 7M17 7H7M17 7v10" />
-                </svg>
-              </div>
-            </motion.button>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* Modal selector de servicio */}

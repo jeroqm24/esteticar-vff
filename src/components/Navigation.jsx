@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { NAV_ITEMS, BRAND } from "../lib/constants";
 
-export default function Navigation({ onBookingClick, cartCount }) {
+export default function Navigation({ onBookingClick, cartCount, logoHref = "#" }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -26,7 +26,7 @@ export default function Navigation({ onBookingClick, cartCount }) {
       >
         <div className="relative max-w-7xl mx-auto px-6 flex items-center justify-between h-20">
           {/* Logo */}
-          <a href="#" className="relative z-10 flex items-center">
+          <a href={logoHref} className="relative z-10 flex items-center">
             <img
               src={BRAND.logo}
               alt="Esteticar"
