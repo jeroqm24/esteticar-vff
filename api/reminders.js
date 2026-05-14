@@ -15,7 +15,8 @@ const supabaseAdmin = createClient(
 
 const WA_TOKEN  = process.env.WHATSAPP_TOKEN;
 const PHONE_ID  = process.env.WHATSAPP_PHONE_NUMBER_ID;
-const TEMPLATE  = 'recordatorio_cita_esteticar';
+const TEMPLATE_TRASLADO = 'recordatorio_cita_esteticar'; // con empleados — para quien pidió recogida
+const TEMPLATE_SIMPLE   = 'recordatorio_cita_simple';    // sin empleados — para quien trae el carro
 
 // Lee los empleados activos desde bot_config
 const getActiveTeam = async () => {
@@ -32,13 +33,22 @@ const getActiveTeam = async () => {
   } catch { return null; }
 };
 
-const sendTemplate = async (to, clientName, service, hora, teamNames) => {
-  const parameters = [
-    { type: 'text', text: clientName || 'cliente' },
-    { type: 'text', text: service || 'servicio agendado' },
-    { type: 'text', text: hora || 'la hora acordada' },
-    { type: 'text', text: teamNames },
-  ];
+const sendTemplate = async (to, clientName, service, hora, teamNames = null) => {
+  const hasTraslado = !!teamNames;
+  const templateName = hasTraslado ? TEMPLATE_TRASLADO : TEMPLATE_SIMPLE;
+
+  const parameters = hasTraslado
+    ? [
+        { type: 'text', text: clientName || 'cliente' },
+        { type: 'text', text: service || 'servicio agendado' },
+        { type: 'text', text: hora || 'la hora acordada' },
+        { type: 'text', text: teamNames },
+      ]
+    : [
+        { type: 'text', text: clientName || 'cliente' },
+        { type: 'text', text: service || 'servicio agendado' },
+        { type: 'text', text: hora || 'la hora acordada' },
+      ];
 
   const res = await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
     method: 'POST',
@@ -51,12 +61,9 @@ const sendTemplate = async (to, clientName, service, hora, teamNames) => {
       to,
       type: 'template',
       template: {
-        name: TEMPLATE,
+        name: templateName,
         language: { code: 'es' },
-        components: [{
-          type: 'body',
-          parameters,
-        }],
+        components: [{ type: 'body', parameters }],
       },
     }),
   });
@@ -117,13 +124,18 @@ export default async function handler(req, res) {
     const horaMatch = appt.date?.match(/(\d{1,2}:\d{2})/);
     const hora = horaMatch ? horaMatch[1] : (appt.time || 'la hora acordada');
 
+    // Detectar si la cita tiene traslado (recogida o recogida+entrega)
+    const tieneTraslado = appt.traslado &&
+      appt.traslado !== 'sin traslado' &&
+      appt.traslado !== 'no_proporcionado';
+
     let ok = false;
-    if (teamNames) {
-      // Usar plantilla aprobada con equipo de traslados
+    if (tieneTraslado && teamNames) {
+      // Cliente con recogida + empleados activos → plantilla con nombres
       ok = await sendTemplate(phone, appt.client_name, appt.service, hora, teamNames);
     } else {
-      // Fallback: texto libre (solo funciona dentro de ventana 24h)
-      ok = await sendTextReminder(phone, appt.client_name, appt.service, hora);
+      // Cliente trae el carro / no hay equipo activo → plantilla simple
+      ok = await sendTemplate(phone, appt.client_name, appt.service, hora, null);
     }
 
     if (ok) {
