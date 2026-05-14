@@ -114,8 +114,8 @@ function ServicePod({ service, index }) {
             {/* CTA — pill with button-in-button trailing icon */}
             <a
               href={`https://wa.me/573181983601?text=${encodeURIComponent(service.cotizacion
-                ? `Hola 👋 estuve revisando la página de Esteticar y me interesa el servicio de *${service.name}*.\n\nMe gustaría recibir una cotización personalizada según mi vehículo. ¿Cuándo podemos hablar?`
-                : `Hola 👋 estuve en la página de Esteticar y quiero reservar el servicio:\n\n✨ *${service.name}*\n💰 Inversión: ${service.priceDisplay}\n\n¿Tienen disponibilidad esta semana? ¿Cómo es el proceso?`)}`}
+                ? `Hola Esteticar, estuve revisando la página y me interesa el servicio de *${service.name}*. Me gustaría recibir una cotización personalizada según mi vehículo. Cuándo podemos hablar?`
+                : `Hola Esteticar, estuve en la página y quiero reservar el servicio:\n\n*${service.name}*\nInversión: ${service.priceDisplay}\n\nTienen disponibilidad esta semana?`)}`}
               target="_blank"
               rel="noopener noreferrer"
               className="group/btn w-full py-4 px-5 font-ui text-[11px] tracking-[0.25em] uppercase font-semibold rounded-full flex items-center justify-between transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] active:scale-[0.98]"

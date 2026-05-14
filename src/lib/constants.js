@@ -464,7 +464,7 @@ export const TRANSFORMATIONS = [
 export const generateWhatsAppMessage = (services, vehicleType, pickup) => {
   const servicesList = services.map(s => `• ${s.name} — ${s.priceDisplay}`).join('%0A');
   const total = services.reduce((sum, s) => sum + s.price, 0) + (pickup?.price || 0);
-  return `Hola Esteticar! 👋%0A%0AQuiero reservar una cita para mi ${vehicleType === 'car' ? 'Carro' : 'Moto'}.%0A%0A*Servicios:*%0A${servicesList}%0A%0A*Entrega:* ${pickup?.label || 'No especificada'}%0A*Total estimado:* $${total.toLocaleString('es-CO')} COP%0A%0A¿Qué fechas tienen disponibles?`;
+  return `Hola Esteticar, quiero reservar una cita para mi ${vehicleType === 'car' ? 'Carro' : 'Moto'}.%0A%0A*Servicios:*%0A${servicesList}%0A%0A*Entrega:* ${pickup?.label || 'No especificada'}%0A*Total estimado:* $${total.toLocaleString('es-CO')} COP%0A%0AQué fechas tienen disponibles?`;
 };
 
 // ─── VERIFICATION CODE GENERATOR ────────────────────
