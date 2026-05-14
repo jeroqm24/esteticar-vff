@@ -79,7 +79,17 @@ export default function FinalCTA({ onOpenChat }) {
         <motion.div initial={{ opacity: 0 }} animate={inView ? { opacity: 1 } : {}} transition={{ delay: 2.2 }}
           className="mt-20 pt-8 border-t border-white/[0.06] flex items-center justify-center"
         >
-          <p className="font-ui text-[9px] tracking-[0.3em] text-white/20 uppercase w-full text-center">© 2026 {BRAND.name.toUpperCase()} · CUSTODIA VEHICULAR PREMIUM</p>
+          <div className="flex flex-col items-center gap-3 w-full">
+            <p className="font-ui text-[9px] tracking-[0.3em] text-white/20 uppercase text-center">© 2026 {BRAND.name.toUpperCase()} · CUSTODIA VEHICULAR PREMIUM</p>
+            <a
+              href="https://www.instagram.com/jeroquinteromora?igsh=MXViOXdiZDdqaTcxZQ%3D%3D&utm_source=qr"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-ui text-[9px] tracking-[0.2em] text-white/20 hover:text-white/50 transition-colors duration-300"
+            >
+              Página creada por: @jeroquinteromora
+            </a>
+          </div>
         </motion.div>
       </div>
     </section>
