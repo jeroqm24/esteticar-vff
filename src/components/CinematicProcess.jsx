@@ -204,7 +204,7 @@ export default function CinematicProcess() {
           </div>
 
           {/* Headline + CTA — misma posición que los pasos */}
-          <div className="absolute top-[63vh] inset-x-0 flex flex-col items-center text-center px-6 gap-2">
+          <div className="absolute top-[63vh] inset-x-0 flex flex-col items-center text-center px-6 gap-3 sm:gap-4">
             <h1 className="font-heading font-light leading-[0.92] tracking-[-0.03em] text-white"
               style={{ fontSize: "clamp(2rem, 7vw, 4.5rem)", textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
               {BRAND.heroLines[0]}<br />{BRAND.heroLines[1]}
@@ -213,6 +213,7 @@ export default function CinematicProcess() {
               style={{ color: "rgba(212,160,23,0.9)" }}>
               {BRAND.heroSub}
             </p>
+            <div className="h-2" />
             <a href="#servicios"
               className="pointer-events-auto inline-flex items-center gap-3 px-7 sm:px-8 py-3.5 sm:py-4 rounded-full font-ui text-[10px] sm:text-[11px] tracking-[0.3em] uppercase font-bold text-white"
               style={{ background: "linear-gradient(135deg, #B8860B 0%, #D4A017 100%)", boxShadow: "0 4px 28px rgba(184,134,11,0.45), inset 0 1px 0 rgba(255,255,255,0.15)" }}>
