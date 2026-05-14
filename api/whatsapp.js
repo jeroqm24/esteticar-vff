@@ -2,8 +2,7 @@
 // Webhook de WhatsApp Cloud API — Sara Valencia con clasificación de leads
 
 import Anthropic from '@anthropic-ai/sdk';
-import OpenAI from 'openai';
-import { toFile } from 'openai';
+import OpenAI, { toFile } from 'openai';
 import { createClient } from '@supabase/supabase-js';
 
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
@@ -549,16 +548,25 @@ export default async function handler(req, res) {
       if (message.type === 'audio') {
         try {
           const mediaId = message.audio.id;
+          console.log('[Whisper] mediaId:', mediaId);
+
           // 1. Obtener URL del audio desde WhatsApp
           const mediaRes = await fetch(`https://graph.facebook.com/v20.0/${mediaId}`, {
             headers: { Authorization: `Bearer ${WA_TOKEN}` },
           });
           const mediaData = await mediaRes.json();
+          console.log('[Whisper] mediaData:', JSON.stringify(mediaData));
+
+          if (!mediaData.url) throw new Error('No URL in mediaData: ' + JSON.stringify(mediaData));
+
           // 2. Descargar el archivo OGG
           const audioRes = await fetch(mediaData.url, {
             headers: { Authorization: `Bearer ${WA_TOKEN}` },
           });
+          if (!audioRes.ok) throw new Error('Audio download failed: ' + audioRes.status);
           const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
+          console.log('[Whisper] audioBuffer bytes:', audioBuffer.length);
+
           // 3. Transcribir con SDK oficial de OpenAI
           const transcription = await openai.audio.transcriptions.create({
             file: await toFile(audioBuffer, 'audio.ogg', { type: 'audio/ogg' }),
@@ -566,6 +574,7 @@ export default async function handler(req, res) {
             language: 'es',
           });
           text = transcription.text?.trim() || '';
+          console.log('[Whisper] transcription:', text);
 
           // Log costo Whisper (~$0.006/min)
           const durationSec = audioBuffer.length / 4000;
@@ -575,7 +584,7 @@ export default async function handler(req, res) {
             audio_seconds: Math.round(durationSec), cost_usd: costUsd,
           }).catch(() => {});
         } catch (e) {
-          console.error('[Whisper]', e.message);
+          console.error('[Whisper] ERROR:', e.message, e.stack);
           await sendMessage(from, 'No pude escuchar bien el audio. Puedes escribirme tu mensaje?');
           return res.status(200).send('OK');
         }
