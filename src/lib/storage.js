@@ -11,6 +11,17 @@ const MSG_KEY = 'esteticar_messages_v1';
 const getMessages = () => { try { return JSON.parse(localStorage.getItem(MSG_KEY) || '[]'); } catch { return []; } };
 const saveMessages = (msgs) => { try { localStorage.setItem(MSG_KEY, JSON.stringify(msgs)); } catch { } };
 
+// Session ID único por pestaña/visita
+const SESSION_KEY = 'esteticar_session_id';
+const getSessionId = () => {
+  let id = sessionStorage.getItem(SESSION_KEY);
+  if (!id) {
+    id = `web_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+    sessionStorage.setItem(SESSION_KEY, id);
+  }
+  return id;
+};
+
 // ─── Mappers entre Supabase (snake_case) y app (camelCase) ────────
 const mapAppt = (r) => ({
   id: r.id, service: r.service, vehicleType: r.vehicle_type,
@@ -122,11 +133,45 @@ export const db = {
         msgs.push(msg);
         if (msgs.length > 40) msgs.splice(0, msgs.length - 40);
         saveMessages(msgs);
+
+        // Guardar en Supabase para que el dashboard lo vea
+        const sessionId = getSessionId();
+        supabase.from('conversations').upsert({
+          phone: sessionId,
+          session_id: sessionId,
+          history: msgs,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'phone' }).catch(() => {});
+
         return msg;
       } catch { return null; }
     },
     getMessages: async () => { return getMessages(); },
-    clearMessages: async () => { try { saveMessages([]); } catch { } },
+    clearMessages: async () => {
+      try {
+        saveMessages([]);
+        const sessionId = getSessionId();
+        supabase.from('conversations').delete().eq('phone', sessionId).catch(() => {});
+      } catch { }
+    },
+  },
+
+  conversations: {
+    list: async () => {
+      try {
+        const { data } = await supabase
+          .from('conversations')
+          .select('phone, session_id, history, client_name, updated_at, created_at, lead_type')
+          .not('history', 'eq', '[]')
+          .not('history', 'is', null)
+          .order('updated_at', { ascending: false })
+          .limit(200);
+        return data || [];
+      } catch { return []; }
+    },
+    delete: async (phone) => {
+      try { await supabase.from('conversations').delete().eq('phone', phone); } catch { }
+    },
   },
 };
 

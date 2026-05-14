@@ -4,6 +4,7 @@ import AdminStats from "./AdminStats";
 import AdminAppointments from "./AdminAppointments";
 import AdminClients from "./AdminClients";
 import AdminFinanzas from "./AdminFinanzas";
+import AdminConversations from "./AdminConversations";
 import CalendarSection from "../CalendarSection";
 import { BRAND } from "../../lib/constants";
 
@@ -62,6 +63,7 @@ const TABS = [
   { id: "clients", label: "Clientes", icon: "clients" },
   { id: "calendar", label: "Calendario", icon: "calendar" },
   { id: "finanzas", label: "Finanzas", icon: "finanzas" },
+  { id: "conversations", label: "Chats", icon: "chat" },
 ];
 
 const TabIcon = ({ type, size = 20 }) => {
@@ -90,6 +92,11 @@ const TabIcon = ({ type, size = 20 }) => {
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
         <line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/>
+      </svg>
+    ),
+    chat: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
     ),
   };
@@ -190,12 +197,13 @@ export default function AdminDashboard({ onClose }) {
               exit={{ opacity: 0, y: -16 }}
               transition={{ duration: 0.35, ease: "easeOut" }}
             >
-              <div className="max-w-6xl mx-auto">
+              <div className={activeTab === "conversations" ? "w-full" : "max-w-6xl mx-auto"}>
                 {activeTab === "stats" && <AdminStats onNavigate={(tab) => navigateTo(tab, tab === "calendar")} onNewAppointment={() => navigateTo("calendar", true)} />}
                 {activeTab === "appointments" && <AdminAppointments />}
                 {activeTab === "clients" && <AdminClients />}
                 {activeTab === "calendar" && <CalendarSection isAdmin={true} openNewOnMount={openNewAppt} />}
                 {activeTab === "finanzas" && <AdminFinanzas />}
+                {activeTab === "conversations" && <AdminConversations />}
               </div>
             </motion.div>
           </AnimatePresence>
@@ -204,7 +212,7 @@ export default function AdminDashboard({ onClose }) {
 
       {/* ── BOTTOM NAV (mobile only) ── */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-black/[0.06] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        <div className="grid grid-cols-5 h-16">
+        <div className="grid grid-cols-6 h-16">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
