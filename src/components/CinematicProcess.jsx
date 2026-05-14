@@ -102,7 +102,7 @@ export default function CinematicProcess() {
     const tick = () => {
       if (video.readyState >= 2) {
         const diff = targetTime.current - video.currentTime;
-        if (Math.abs(diff) > 0.001) video.currentTime += diff * 0.3;
+        if (Math.abs(diff) > 0.001) video.currentTime += diff * 0.6;
       }
       rafRef.current = requestAnimationFrame(tick);
     };
@@ -120,6 +120,11 @@ export default function CinematicProcess() {
   const glowOpacity    = useTransform(scrollYProgress, [0.70, 0.94], [0, 0.7]);
   const badgeOpacity   = useTransform(scrollYProgress, [0.85, 0.94], [0, 1]);
   const hintOpacity    = useTransform(scrollYProgress, [0, 0.06], [1, 0]);
+
+  // Móvil: crossfade entre 3 imágenes — GPU puro, sin decodificación de video
+  const dirtyOp = useTransform(scrollYProgress, [0,    0.30, 0.38], [1, 1, 0]);
+  const foamOp  = useTransform(scrollYProgress, [0.28, 0.36, 0.60, 0.68], [0, 1, 1, 0]);
+  const cleanOp = useTransform(scrollYProgress, [0.60, 0.68, 1.0], [0, 1, 1]);
   const [activeStep, setActiveStep] = useState(-1);
   useMotionValueEvent(scrollYProgress, "change", (p) => {
     if      (p < RANGES[0][0]) setActiveStep(-1);
@@ -138,7 +143,7 @@ export default function CinematicProcess() {
           style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }}
         />
 
-        {/* ── DESKTOP: video full-bleed ── */}
+        {/* ── DESKTOP: video scrubbed ── */}
         <video ref={videoRef}
           className="hidden md:block absolute inset-0 w-full h-full object-cover object-center"
           src="/process-hero.mp4" muted playsInline preload="auto"
@@ -149,18 +154,20 @@ export default function CinematicProcess() {
           style={{ opacity: videoReady ? 0 : 1, filter: "saturate(0.5) brightness(0.6)" }}
         />
 
-        {/* ── MÓVIL: video en ratio natural centrado ── */}
+        {/* ── MÓVIL: crossfade de imágenes (GPU, sin video) ── */}
         <div className="md:hidden absolute inset-0 flex items-center justify-center">
-          <div className="w-full" style={{ aspectRatio: "16/9", position: "relative" }}>
-            <video ref={videoRef}
+          <div className="w-full relative" style={{ aspectRatio: "16/9" }}>
+            <motion.img src="/process-dirty.webp" alt="" fetchpriority="high"
               className="absolute inset-0 w-full h-full object-cover"
-              style={{ filter: "brightness(1.15) saturate(1.2)" }}
-              src="/process-hero.mp4" muted playsInline preload="auto"
-              onLoadedData={() => setVideoReady(true)}
+              style={{ opacity: dirtyOp, filter: "brightness(1.15) saturate(1.2)", willChange: "opacity" }}
             />
-            <img src="/process-dirty.webp" alt="" fetchpriority="high"
-              className="absolute inset-0 w-full h-full object-cover transition-opacity duration-700"
-              style={{ opacity: videoReady ? 0 : 1, filter: "brightness(1.15) saturate(1.2)" }}
+            <motion.img src="/process-foam.webp" alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ opacity: foamOp, filter: "brightness(1.15) saturate(1.2)", willChange: "opacity" }}
+            />
+            <motion.img src="/process-clean.webp" alt=""
+              className="absolute inset-0 w-full h-full object-cover"
+              style={{ opacity: cleanOp, filter: "brightness(1.15) saturate(1.2)", willChange: "opacity" }}
             />
           </div>
         </div>
