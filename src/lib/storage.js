@@ -161,16 +161,54 @@ export const db = {
       try {
         const { data } = await supabase
           .from('conversations')
-          .select('phone, session_id, history, client_name, updated_at, created_at, lead_type')
+          .select('phone, session_id, history, client_name, updated_at, created_at, lead_type, bot_paused, vehicle_type, vehicle_plate, client_email, last_service, direccion, objection, remarketing_status, admin_notes')
           .not('history', 'eq', '[]')
           .not('history', 'is', null)
           .order('updated_at', { ascending: false })
-          .limit(200);
+          .limit(300);
         return data || [];
-      } catch { return []; }
+      } catch (e) {
+        // Fallback without newer columns
+        try {
+          const { data } = await supabase
+            .from('conversations')
+            .select('phone, session_id, history, client_name, updated_at, created_at, lead_type, bot_paused')
+            .not('history', 'eq', '[]')
+            .not('history', 'is', null)
+            .order('updated_at', { ascending: false })
+            .limit(300);
+          return data || [];
+        } catch { return []; }
+      }
+    },
+    update: async (phone, updates) => {
+      try {
+        await fetch('/api/conversations', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'esteticar2026' },
+          body: JSON.stringify({ phone, updates }),
+        });
+        return true;
+      } catch { return false; }
+    },
+    sendMessage: async (phone, text) => {
+      try {
+        const res = await fetch('/api/conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'esteticar2026' },
+          body: JSON.stringify({ phone, text }),
+        });
+        return await res.json();
+      } catch { return { ok: false }; }
     },
     delete: async (phone) => {
-      try { await supabase.from('conversations').delete().eq('phone', phone); } catch { }
+      try {
+        await fetch('/api/conversations', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'esteticar2026' },
+          body: JSON.stringify({ phone }),
+        });
+      } catch { }
     },
   },
 };
