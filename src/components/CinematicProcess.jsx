@@ -142,16 +142,16 @@ export default function CinematicProcess() {
         />
 
         {/* ── VIDEO ── */}
-        <div className="absolute inset-0 flex items-center justify-center md:p-[4%_6%]">
+        <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative w-full h-full">
             <video ref={videoDesktopRef}
-              className="absolute inset-0 w-full h-full object-cover md:object-contain"
+              className="absolute inset-0 w-full h-full object-contain"
               style={{ objectPosition: "center center", filter: "brightness(1.25) contrast(1.05)" }}
               src="/process-hero.mp4" muted playsInline preload="auto"
               onLoadedData={() => setVideoReady(true)}
             />
             <img src="/process-dirty.webp" alt="" fetchPriority="high"
-              className="absolute inset-0 w-full h-full object-cover md:object-contain transition-opacity duration-700"
+              className="absolute inset-0 w-full h-full object-contain transition-opacity duration-700"
               style={{ objectPosition: "center center", opacity: videoReady ? 0 : 1 }}
             />
           </div>
