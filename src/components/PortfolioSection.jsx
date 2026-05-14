@@ -120,32 +120,33 @@ export default function PortfolioSection() {
             </div>
           </div>
 
-          {/* Floating CTA — aparece al hacer scroll a la sección */}
-          <AnimatePresence>
-            {visible && (
-              <motion.div
-                initial={{ opacity: 0, y: 16, scale: 0.95 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
-                className="absolute bottom-4 right-4 sm:bottom-6 sm:right-6 z-20"
-              >
-                <button
-                  onClick={() => setOpen(true)}
-                  className="group flex items-center gap-3 px-5 py-3 rounded-full bg-ec-gold text-white font-ui text-[11px] tracking-[0.2em] uppercase shadow-[0_8px_32px_rgba(184,134,11,0.4)] hover:shadow-[0_12px_40px_rgba(184,134,11,0.5)] transition-all duration-500"
-                  style={{ transition: "all 0.5s cubic-bezier(0.32,0.72,0,1)" }}
-                >
-                  <span>Me interesa este servicio</span>
-                  <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300">
-                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                      <path d="M7 17L17 7M17 7H7M17 7v10" />
-                    </svg>
-                  </div>
-                </button>
-              </motion.div>
-            )}
-          </AnimatePresence>
         </motion.div>
+
+        {/* CTA debajo del flipbook */}
+        <AnimatePresence>
+          {visible && (
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 8, scale: 0.95 }}
+              transition={{ duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+              className="flex justify-center mt-8"
+            >
+              <button
+                onClick={() => setOpen(true)}
+                className="group flex items-center gap-3 px-7 py-4 rounded-full bg-ec-gold text-white font-ui text-[11px] tracking-[0.2em] uppercase shadow-[0_8px_32px_rgba(184,134,11,0.4)] hover:shadow-[0_12px_40px_rgba(184,134,11,0.5)]"
+                style={{ transition: "all 0.5s cubic-bezier(0.32,0.72,0,1)" }}
+              >
+                <span>Me interesa este servicio</span>
+                <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform duration-300">
+                  <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <path d="M7 17L17 7M17 7H7M17 7v10" />
+                  </svg>
+                </div>
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
       </div>
 
