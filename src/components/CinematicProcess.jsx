@@ -141,18 +141,18 @@ export default function CinematicProcess() {
           style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E\")" }}
         />
 
-        {/* ── VIDEO: contain = carro completo siempre, sin recorte ── */}
-        <div className="absolute inset-0 flex items-center justify-center" style={{ padding: "4% 6%" }}>
+        {/* ── VIDEO ── */}
+        <div className="absolute inset-0 flex items-center justify-center md:p-[4%_6%]">
           <div className="relative w-full h-full">
             <video ref={videoDesktopRef}
-              className="absolute inset-0 w-full h-full"
-              style={{ objectFit: "contain", objectPosition: "center center", filter: "brightness(1.25) contrast(1.05)" }}
+              className="absolute inset-0 w-full h-full object-cover md:object-contain"
+              style={{ objectPosition: "center center", filter: "brightness(1.25) contrast(1.05)" }}
               src="/process-hero.mp4" muted playsInline preload="auto"
               onLoadedData={() => setVideoReady(true)}
             />
             <img src="/process-dirty.webp" alt="" fetchPriority="high"
-              className="absolute inset-0 w-full h-full transition-opacity duration-700"
-              style={{ objectFit: "contain", objectPosition: "center center", opacity: videoReady ? 0 : 1 }}
+              className="absolute inset-0 w-full h-full object-cover md:object-contain transition-opacity duration-700"
+              style={{ objectPosition: "center center", opacity: videoReady ? 0 : 1 }}
             />
           </div>
         </div>
