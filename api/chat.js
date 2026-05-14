@@ -434,6 +434,24 @@ export default async function handler(req, res) {
 
     const rawReply = aiResponse.content[0]?.text || 'Disculpa, algo salió mal. Intenta de nuevo.';
 
+    // ── Log de costos ──
+    const u = aiResponse.usage || {};
+    const inputTokens    = u.input_tokens || 0;
+    const outputTokens   = u.output_tokens || 0;
+    const cacheRead      = u.cache_read_input_tokens || 0;
+    const cacheCreation  = u.cache_creation_input_tokens || 0;
+    const costUsd =
+      ((inputTokens - cacheRead - cacheCreation) * 3 / 1_000_000) +
+      (cacheCreation * 3.75 / 1_000_000) +
+      (cacheRead * 0.30 / 1_000_000) +
+      (outputTokens * 15 / 1_000_000);
+    supabaseAdmin.from('api_costs').insert({
+      provider: 'anthropic', model: 'claude-sonnet-4-6', channel: 'web',
+      input_tokens: inputTokens, output_tokens: outputTokens,
+      cache_read_tokens: cacheRead, cache_creation_tokens: cacheCreation,
+      cost_usd: costUsd,
+    }).catch(() => {});
+
     const nameMatch  = rawReply.match(/__NAME__:([^\n]+)/);
     const leadMatch  = rawReply.match(/__LEAD_TYPE__:([^\n]+)/);
     const escalMatch = rawReply.match(/__ESCALATE__:([^\n]*)/);

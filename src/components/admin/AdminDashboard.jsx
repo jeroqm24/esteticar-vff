@@ -6,6 +6,7 @@ import AdminClients from "./AdminClients";
 import AdminFinanzas from "./AdminFinanzas";
 import AdminConversations from "./AdminConversations";
 import AdminCancellations from "./AdminCancellations";
+import AdminCosts from "./AdminCosts";
 import CalendarSection from "../CalendarSection";
 import { BRAND } from "../../lib/constants";
 
@@ -66,6 +67,7 @@ const TABS = [
   { id: "finanzas", label: "Finanzas", icon: "finanzas" },
   { id: "conversations", label: "Chats", icon: "chat" },
   { id: "cancellations", label: "Cancelaciones", icon: "cancel" },
+  { id: "costs", label: "Costos API", icon: "costs" },
 ];
 
 const TabIcon = ({ type, size = 20 }) => {
@@ -104,6 +106,11 @@ const TabIcon = ({ type, size = 20 }) => {
     cancel: (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+      </svg>
+    ),
+    costs: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
       </svg>
     ),
   };
@@ -218,6 +225,7 @@ export default function AdminDashboard({ onClose }) {
                 {activeTab === "finanzas" && <AdminFinanzas />}
                 {activeTab === "conversations" && <AdminConversations />}
                 {activeTab === "cancellations" && <AdminCancellations onCountChange={setCancellationCount} />}
+                {activeTab === "costs" && <AdminCosts />}
               </div>
             </motion.div>
           </AnimatePresence>
@@ -226,7 +234,7 @@ export default function AdminDashboard({ onClose }) {
 
       {/* ── BOTTOM NAV (mobile only) ── */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-black/[0.06] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        <div className="grid grid-cols-7 h-16">
+        <div className="grid grid-cols-8 h-16">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
