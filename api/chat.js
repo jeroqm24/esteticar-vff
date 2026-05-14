@@ -450,7 +450,7 @@ export default async function handler(req, res) {
       input_tokens: inputTokens, output_tokens: outputTokens,
       cache_read_tokens: cacheRead, cache_creation_tokens: cacheCreation,
       cost_usd: costUsd,
-    }).catch(() => {});
+    }).then(null, () => {});
 
     const nameMatch  = rawReply.match(/__NAME__:([^\n]+)/);
     const leadMatch  = rawReply.match(/__LEAD_TYPE__:([^\n]+)/);

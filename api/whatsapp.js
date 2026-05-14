@@ -576,13 +576,15 @@ export default async function handler(req, res) {
           text = transcription.text?.trim() || '';
           console.log('[Whisper] transcription:', text);
 
-          // Log costo Whisper (~$0.006/min)
-          const durationSec = audioBuffer.length / 4000;
-          const costUsd = (durationSec / 60) * 0.006;
-          supabaseAdmin.from('api_costs').insert({
-            provider: 'openai', model: 'whisper-1', channel: 'whatsapp',
-            audio_seconds: Math.round(durationSec), cost_usd: costUsd,
-          }).catch(() => {});
+          // Log costo Whisper — en su propio bloque para no cortar el flujo
+          try {
+            const durationSec = audioBuffer.length / 4000;
+            const costUsd = (durationSec / 60) * 0.006;
+            await supabaseAdmin.from('api_costs').insert({
+              provider: 'openai', model: 'whisper-1', channel: 'whatsapp',
+              audio_seconds: Math.round(durationSec), cost_usd: costUsd,
+            });
+          } catch (_) {}
         } catch (e) {
           console.error('[Whisper] ERROR:', e.message, e.stack);
           await sendMessage(from, 'No pude escuchar bien el audio. Puedes escribirme tu mensaje?');
@@ -661,7 +663,7 @@ export default async function handler(req, res) {
         input_tokens: inputTokens, output_tokens: outputTokens,
         cache_read_tokens: cacheRead, cache_creation_tokens: cacheCreation,
         cost_usd: costUsd,
-      }).catch(() => {});
+      }).then(null, () => {});
 
       // Extraer marcadores
       const nameMatch     = rawReply.match(/__NAME__:([^\n]+)/);
