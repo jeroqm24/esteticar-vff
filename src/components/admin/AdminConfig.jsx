@@ -9,6 +9,19 @@ const supabase = createClient(
 
 const CONFIG_KEY = "default";
 
+const DEFAULT_SERVICES = [
+  "Recubrimiento Cerámico",
+  "Porcelanizado",
+  "Tratamiento 3 en 1 a Máquina",
+  "Tratamiento 3 en 1 Manual",
+  "Mantenimiento Interior",
+  "Lavado de Cojinería",
+  "Restauración de Farolas",
+  "Brillado a Máquina",
+  "Descontaminación de Vidrios",
+  "Lavada Esencial",
+];
+
 async function loadConfig() {
   try {
     const { data } = await supabase
@@ -51,9 +64,18 @@ export default function AdminConfig() {
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Portfolio state
+  const [portfolioUrl, setPortfolioUrl] = useState("");
+  const [portfolioServices, setPortfolioServices] = useState([]);
+  const [newService, setNewService] = useState("");
+  const [savingPortfolio, setSavingPortfolio] = useState(false);
+  const [savedPortfolio, setSavedPortfolio] = useState(false);
+
   useEffect(() => {
     loadConfig().then(cfg => {
       setTeam(cfg.pickup_team || []);
+      setPortfolioUrl(cfg.portfolio_url || "");
+      setPortfolioServices(cfg.portfolio_services?.length > 0 ? cfg.portfolio_services : DEFAULT_SERVICES);
       setLoading(false);
     });
   }, []);
@@ -89,6 +111,26 @@ export default function AdminConfig() {
   };
 
   const activeNames = team.filter(m => m.active).map(m => m.name);
+
+  const handleAddService = () => {
+    const s = newService.trim();
+    if (!s) return;
+    if (portfolioServices.includes(s)) return;
+    setPortfolioServices(prev => [...prev, s]);
+    setNewService("");
+  };
+
+  const handleDeleteService = (idx) => {
+    setPortfolioServices(prev => prev.filter((_, i) => i !== idx));
+  };
+
+  const handleSavePortfolio = async () => {
+    setSavingPortfolio(true);
+    await saveConfig({ portfolio_url: portfolioUrl, portfolio_services: portfolioServices });
+    setSavingPortfolio(false);
+    setSavedPortfolio(true);
+    setTimeout(() => setSavedPortfolio(false), 2000);
+  };
 
   return (
     <div className="space-y-8 max-w-2xl">
@@ -220,6 +262,96 @@ export default function AdminConfig() {
               Activa solo los empleados disponibles esa semana. El recordatorio automático los incluirá al cliente el día antes de su cita.
             </p>
           </div>
+        </div>
+      </div>
+
+      {/* Portafolio */}
+      <div className="bg-white border border-black/[0.06] rounded-sm overflow-hidden">
+        <div className="px-6 py-4 border-b border-black/[0.06] flex items-center justify-between">
+          <div>
+            <h3 className="font-ui text-[11px] tracking-[0.3em] uppercase text-ec-dark font-semibold">Portafolio</h3>
+            <p className="font-body text-xs text-ec-text-muted mt-0.5">
+              URL del flipbook y servicios que aparecen en el selector de WhatsApp
+            </p>
+          </div>
+          <AnimatePresence>
+            {savingPortfolio && (
+              <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                className="w-4 h-4 border-2 border-ec-gold border-t-transparent rounded-full animate-spin" />
+            )}
+            {savedPortfolio && !savingPortfolio && (
+              <motion.span initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+                className="font-ui text-[10px] text-emerald-600 tracking-widest uppercase">
+                Guardado
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="p-6 space-y-5">
+          {/* URL del portafolio */}
+          <div>
+            <label className="font-ui text-[10px] tracking-[0.2em] uppercase text-ec-text-muted block mb-2">URL del flipbook (Heyzine)</label>
+            <input
+              value={portfolioUrl}
+              onChange={e => setPortfolioUrl(e.target.value)}
+              placeholder="https://heyzine.com/flip-book/..."
+              className="w-full px-4 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm bg-ec-cream focus:border-ec-gold focus:outline-none"
+            />
+          </div>
+
+          {/* Lista de servicios */}
+          <div>
+            <label className="font-ui text-[10px] tracking-[0.2em] uppercase text-ec-text-muted block mb-2">Servicios en el selector</label>
+            <div className="space-y-1.5 max-h-52 overflow-y-auto pr-1 mb-3">
+              {portfolioServices.map((s, idx) => (
+                <motion.div
+                  key={s}
+                  layout
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex items-center gap-3 px-4 py-2.5 rounded-sm border border-black/[0.06] bg-black/[0.02]"
+                >
+                  <span className="flex-1 font-body text-sm text-ec-dark truncate">{s}</span>
+                  <button
+                    onClick={() => handleDeleteService(idx)}
+                    className="w-6 h-6 flex items-center justify-center text-red-300 hover:text-red-500 transition-colors rounded-sm hover:bg-red-50"
+                    title="Eliminar"
+                  >
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/>
+                    </svg>
+                  </button>
+                </motion.div>
+              ))}
+            </div>
+
+            <div className="flex gap-2">
+              <input
+                value={newService}
+                onChange={e => setNewService(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && handleAddService()}
+                placeholder="Nuevo servicio"
+                className="flex-1 px-4 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm bg-ec-cream focus:border-ec-gold focus:outline-none"
+              />
+              <button
+                onClick={handleAddService}
+                disabled={!newService.trim()}
+                className="px-5 py-2.5 rounded-sm font-ui text-[11px] tracking-widest uppercase text-white transition-all disabled:opacity-40"
+                style={{ background: newService.trim() ? "#B8860B" : "#ccc" }}
+              >
+                Agregar
+              </button>
+            </div>
+          </div>
+
+          <button
+            onClick={handleSavePortfolio}
+            className="w-full py-3 rounded-sm font-ui text-[11px] tracking-widest uppercase text-white transition-all"
+            style={{ background: "#B8860B" }}
+          >
+            Guardar cambios del portafolio
+          </button>
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@ import ReviewsSection from "./ReviewsSection";
 import VIPSection from "./VIPSection";
 import CalendarSection from "./CalendarSection";
 import CinematicProcess from "./CinematicProcess";
+import PortfolioSection from "./PortfolioSection";
 import FinalCTA from "./FinalCTA";
 import BookingPanel from "./BookingPanel";
 import BookingFAB from "./BookingFAB";
@@ -109,6 +110,7 @@ export default function LandingPage() {
         <ProtocoloSection />
         <TeamSection />
         <VIPSection />
+        <PortfolioSection />
         <FinalCTA />
       </main>
 
