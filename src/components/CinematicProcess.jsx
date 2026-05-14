@@ -193,7 +193,7 @@ export default function CinematicProcess() {
           className="absolute inset-0 z-20 pointer-events-none flex flex-col items-center">
 
           {/* Logo — arriba */}
-          <div className="flex justify-center mt-[15vh] sm:mt-[18vh]">
+          <div className="flex flex-col items-center mt-[15vh] sm:mt-[18vh] gap-4">
             <motion.img src={BRAND.logo} alt="Esteticar"
               initial={{ opacity: 0, scale: 0.9, filter: "blur(12px)" }}
               animate={{ opacity: 1, scale: 1, filter: "blur(0px)" }}
@@ -201,6 +201,29 @@ export default function CinematicProcess() {
               className="h-12 sm:h-16 md:h-20 object-contain"
               style={{ filter: "drop-shadow(0 0 40px rgba(248,200,64,0.4))" }}
             />
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 1.4, delay: 1.2, ease: [0.16, 1, 0.3, 1] }}
+              className="flex flex-col items-center gap-2"
+            >
+              <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full"
+                style={{
+                  background: "rgba(0,0,0,0.55)",
+                  border: "1px solid rgba(184,134,11,0.4)",
+                  backdropFilter: "blur(10px)",
+                }}>
+                <motion.span
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                  style={{ width: 6, height: 6, borderRadius: "50%", background: "#D4A017", flexShrink: 0, display: "block" }}
+                />
+                <span className="font-ui text-[10px] sm:text-[11px] tracking-[0.25em] uppercase font-semibold"
+                  style={{ color: "rgba(255,255,255,0.85)" }}>
+                  Desliza y descubre el protocolo
+                </span>
+              </div>
+            </motion.div>
           </div>
 
           {/* Headline + CTA — misma posición que los pasos */}
@@ -249,18 +272,6 @@ export default function CinematicProcess() {
               style={{ width: activeStep === i ? 20 : 6, height: 6, background: activeStep === i ? "rgba(212,160,23,0.9)" : "rgba(255,255,255,0.2)" }} />
           ))}
         </div>
-
-        {/* ── Scroll hint: flechas centro ── */}
-        <motion.div style={{ opacity: hintOpacity }}
-          className="absolute bottom-16 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-0">
-          {[0, 1, 2].map((i) => (
-            <motion.svg key={i} width="20" height="12" viewBox="0 0 20 12" fill="none"
-              animate={{ opacity: [0.15, 0.9, 0.15] }}
-              transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.18, ease: "easeInOut" }}>
-              <path d="M1 1L10 10L19 1" stroke="rgba(184,134,11,0.85)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"/>
-            </motion.svg>
-          ))}
-        </motion.div>
 
         {/* ── Scroll hint: flechas derecha ── */}
         <motion.div style={{ opacity: hintOpacity }}
