@@ -121,8 +121,7 @@ export default function PortfolioSection() {
       </div>
 
       {/* Franja blanca con el CTA */}
-      <div className="bg-white py-12 flex flex-col items-center gap-3">
-        <p className="font-body text-sm text-ec-text-muted">¿Ves algo que quieres para tu vehículo?</p>
+      <div className="bg-white py-5 flex justify-center">
         <AnimatePresence>
           {visible && (
             <motion.button
