@@ -42,12 +42,12 @@ export default function Navigation({ onBookingClick, cartCount }) {
           </a>
 
           {/* Desktop links — rounded-full pills */}
-          <div className="hidden lg:flex items-center gap-1.5 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
+          <div className="hidden lg:flex items-center gap-1 absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2">
             {NAV_ITEMS.map((item) => (
               <a
                 key={item.label}
                 href={item.href}
-                className={`font-ui text-[11px] tracking-[0.2em] uppercase transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] px-5 py-2.5 rounded-full ${
+                className={`font-ui text-[10px] tracking-[0.15em] uppercase transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] px-4 py-2 rounded-full ${
                   scrolled
                     ? "text-ec-text-secondary bg-transparent hover:bg-ec-gold hover:text-white"
                     : "text-white/75 bg-white/[0.07] backdrop-blur-sm border border-white/[0.1] hover:bg-ec-gold hover:text-white hover:border-transparent"
