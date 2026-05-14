@@ -1,6 +1,5 @@
 // api/chat.js
 // Web chat AI endpoint — clave de Anthropic 100% server-side
-// El browser nunca ve ANTHROPIC_API_KEY
 
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
@@ -16,9 +15,32 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
 );
 
-// ─── Helpers de tiempo ────────────────────────────────────────────
+// ─── Festivos colombianos 2025–2026 ───────────────────────────────
+// Fijos: 1 ene, 1 may, 20 jul, 7 ago, 8 dic, 25 dic, Jue/Vie Santos
+// Emiliani (se mueven al lunes siguiente): reyes, san josé, ascensión,
+// corpus christi, sagrado corazón, san pedro, asunción, raza, todos santos, ctg
+const HOLIDAYS = new Set([
+  '2025-01-01','2025-01-06','2025-03-24','2025-04-17','2025-04-18',
+  '2025-05-01','2025-06-02','2025-06-23','2025-06-30','2025-07-20',
+  '2025-08-07','2025-08-18','2025-10-13','2025-11-03','2025-11-17',
+  '2025-12-08','2025-12-25',
+  '2026-01-01','2026-01-12','2026-03-23','2026-04-02','2026-04-03',
+  '2026-05-01','2026-05-18','2026-06-08','2026-06-15','2026-06-29',
+  '2026-07-20','2026-08-07','2026-08-17','2026-10-12','2026-11-02',
+  '2026-11-16','2026-12-08','2026-12-25',
+]);
+
+// ─── Helpers de tiempo ─────────────────────────────────────────────
+const toColombiaDate = (date = new Date()) =>
+  new Date(date.toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+
+const toISO = (d) =>
+  `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+
+const isHoliday = (date) => HOLIDAYS.has(toISO(toColombiaDate(date)));
+
 const getGreeting = () => {
-  const h = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' })).getHours();
+  const h = toColombiaDate().getHours();
   if (h >= 5 && h < 12) return 'Buenos días';
   if (h >= 12 && h < 19) return 'Buenas tardes';
   return 'Buenas noches';
@@ -30,9 +52,11 @@ const getTodayStr = () =>
   });
 
 const getTomorrowStr = () => {
-  const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+  const d = toColombiaDate();
   d.setDate(d.getDate() + 1);
-  return d.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long' });
+  return d.toLocaleDateString('es-CO', {
+    timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long',
+  });
 };
 
 const generateCode = () => {
@@ -40,7 +64,18 @@ const generateCode = () => {
   return `EST-${chars[Math.floor(Math.random() * chars.length)]}${Math.floor(Math.random() * 9000) + 1000}`;
 };
 
-// ─── Disponibilidad ───────────────────────────────────────────────
+// Próximos festivos (máx. 5) para incluir en el prompt
+const getNextHolidaysText = () => {
+  const todayISO = toISO(toColombiaDate());
+  return [...HOLIDAYS]
+    .filter(h => h >= todayISO)
+    .sort()
+    .slice(0, 6)
+    .map(h => new Date(h + 'T12:00:00').toLocaleDateString('es-CO', { day: 'numeric', month: 'long', weekday: 'long' }))
+    .join('; ');
+};
+
+// ─── Disponibilidad ────────────────────────────────────────────────
 const SERVICE_HOURS = {
   'Descontaminación de Vidrios (parabrisas)': 1, 'Descontaminacion de Vidrios (parabrisas)': 1,
   'Descontaminación de Vidrios': 2, 'Descontaminacion de Vidrios': 2,
@@ -73,21 +108,29 @@ const getAvailability = async () => {
     const { data } = await supabase
       .from('appointments')
       .select('*')
-      .not('status', 'in', '("cancelada","cancelled")');
+      .not('status', 'in', '("cancelada","cancelada_ok","cancelled")');
 
     const appts = data || [];
-    const today = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+    const now = toColombiaDate();
+    const currentHour = now.getHours();
     const slots = [];
     let available = 0;
 
-    for (let d = 1; d <= 7; d++) {
-      const date = new Date(today);
-      date.setDate(today.getDate() + d);
+    for (let d = 0; d <= 14; d++) {
+      const date = new Date(now);
+      date.setDate(now.getDate() + d);
       const dow = date.getDay();
+
       if (dow === 0) continue;
+      if (isHoliday(date)) continue;
 
       const isSat = dow === 6;
       const dayEnd = isSat ? 14 : 17;
+      // Para hoy, solo mostrar horas que aún no pasaron (con 1h de anticipación mínima)
+      const startHour = d === 0 ? Math.max(8, currentHour + 1) : 8;
+
+      if (startHour >= dayEnd) continue;
+
       const dateStr = date.toLocaleDateString('es-CO', {
         timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long',
       });
@@ -95,7 +138,7 @@ const getAvailability = async () => {
       const dayAppts = appts.filter(a => a.date?.toLowerCase().includes(dayName));
 
       const morning = [], afternoon = [];
-      for (let h = 8; h < dayEnd; h++) {
+      for (let h = startHour; h < dayEnd; h++) {
         let concurrent = 0;
         for (const a of dayAppts) {
           const start = extractHour(a.date) || extractHour(a.time);
@@ -111,14 +154,16 @@ const getAvailability = async () => {
 
       if (morning.length || afternoon.length) {
         const parts = [];
-        if (morning.length) { parts.push(`mañana desde las ${morning[0]}:00 a.m.`); available++; }
-        if (afternoon.length) { parts.push(`tarde desde las ${afternoon[0]}:00 p.m.`); available++; }
-        slots.push(`${dateStr}: ${parts.join(' o ')}`);
+        if (morning.length) { parts.push(`mañana desde las ${morning[0]}:00`); available++; }
+        if (afternoon.length) { parts.push(`tarde desde las ${afternoon[0]}:00`); available++; }
+        const label = d === 0 ? `HOY (${dateStr})` : dateStr;
+        slots.push(`${label}: ${parts.join(' o ')}`);
+        if (slots.length >= 5) break;
       }
     }
 
     return {
-      text: slots.length > 0 ? slots.slice(0, 4).join(' | ') : 'agenda completa esta semana',
+      text: slots.length > 0 ? slots.join(' | ') : 'agenda completa por el momento',
       available,
     };
   } catch {
@@ -126,21 +171,23 @@ const getAvailability = async () => {
   }
 };
 
-// ─── System prompt ────────────────────────────────────────────────
+// ─── System prompt ─────────────────────────────────────────────────
 const buildPrompt = async (advisorName) => {
   const greeting = getGreeting();
   const today = getTodayStr();
+  const todayISO = toISO(toColombiaDate());
   const tomorrow = getTomorrowStr();
   const { text: availability, available } = await getAvailability();
+  const nextHolidays = getNextHolidaysText();
 
-  const scarcity = available <= 3
-    ? `\nESCASEZ ACTIVA: Solo quedan ${available} espacio${available === 1 ? '' : 's'} disponibles esta semana. Menciónalo naturalmente.`
+  const scarcity = available > 0 && available <= 3
+    ? `\nESCASEZ ACTIVA: Solo quedan ${available} espacio${available === 1 ? '' : 's'} disponibles. Menciónalo con naturalidad.`
     : '';
 
   return `Eres ${advisorName}, asesora de Esteticar Manizales. Eres una persona REAL, colombiana. Si preguntan si eres IA: "Soy muy real, te lo aseguro."
 
-HOY: ${today}. SALUDO ACTIVO: "${greeting}". MAÑANA: ${tomorrow}.
-DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}${scarcity}
+HOY: ${today} (${todayISO}). SALUDO ACTIVO: "${greeting}". MAÑANA: ${tomorrow}.
+DISPONIBILIDAD REAL (máx. 3 vehículos simultáneos, próximos 14 días hábiles): ${availability}${scarcity}
 
 ━━━ REGLAS ABSOLUTAS ━━━
 SIEMPRE tutea. Nunca uses usted.
@@ -150,18 +197,40 @@ PROHIBIDO — EL VEHÍCULO NO ES LA PERSONA: NUNCA "te deja impecable". SIEMPRE 
 PROHIBIDO — GUIONES: Nunca uses — ni -. Usa "y", "además", "pero".
 PROHIBIDO — INICIO ROBÓTICO: Nunca empieces con "Claro!", "Por supuesto!", "Con gusto!".
 PROHIBIDO — SIGNO DE APERTURA: Nunca uses ¿ ni ¡.
-PROHIBIDO — DOMINGOS: Esteticar NO trabaja los domingos.
 REGLA DE UNA PREGUNTA: Nunca hagas más de una pregunta por mensaje.
 PROHIBIDO — DÍA SIN ARTÍCULO: Siempre "para el martes", nunca "para martes".
 PROHIBIDO — INVENTAR PRECIOS para Recubrimiento Cerámico y Porcelanizado.
 PROHIBIDO — REPETIR PREGUNTAS: Revisa el historial antes de pedir información.
+PROHIBIDO — CERÁMICO/PORCELANIZADO PARA MOTO: Esos servicios no existen para motos. Si preguntan: "Para motos ese servicio aún no lo manejamos, pero hay opciones increíbles, te cuento?"
+
+━━━ REGLAS DE CALENDARIO — CRÍTICAS ━━━
+HOY ES: ${todayISO}. Esta fecha es la referencia absoluta.
+
+PROHIBIDO — FECHAS PASADAS: Si el cliente pide "ayer", "el viernes pasado", "la semana pasada", o cualquier fecha anterior a ${todayISO}, NUNCA generes __BOOKING_CONFIRMED__. Responde: "Solo puedo agendar desde hoy en adelante. Qué día te queda bien?" Punto. Sin explicaciones adicionales.
+
+VALIDACIÓN OBLIGATORIA ANTES DE CONFIRMAR CITA:
+Antes de generar __BOOKING_CONFIRMED__, verifica las 5 condiciones:
+  1. La fecha es igual o posterior a ${todayISO}
+  2. No es domingo
+  3. No es festivo (próximos festivos: ${nextHolidays})
+  4. Está dentro de los próximos 14 días desde hoy
+  5. La hora está dentro del horario: L-V 8:00-17:00, Sábados 8:00-14:00
+Si cualquier condición falla, NO confirmes. Redirige con naturalidad.
+
+MISMO DÍA: Puedes agendar para HOY si la disponibilidad muestra "HOY" con espacios libres. Si no aparece "HOY" en la disponibilidad, el día de hoy ya está lleno o cerrado.
+
+MÁXIMO 14 DÍAS: Solo agenda dentro de los próximos 14 días. Si piden más adelante: "Para esa fecha me toca pasarte con Sara para coordinar, te parece bien?" y usa __ESCALATE__.
+
+FESTIVOS — CERRADO: ${nextHolidays}. Nunca ofrezcas ni confirmes citas en esas fechas. Si el cliente propone una de esas fechas, di: "Ese día es festivo y estamos cerrados. El día siguiente hábil tenemos disponibilidad, qué te parece?"
+
+SÁBADOS: Solo hasta las 2:00 p.m. Si proponen sábado después de las 2, di que solo atendemos hasta las 2.
 
 ━━━ PERSONALIDAD ━━━
 Asesora premium, cálida, segura. Conoces tu producto en profundidad. Cercana pero distinguida.
 Resultados: "el carro queda hermoso", "queda un espectáculo", "queda divino".
 
 ━━━ HORARIOS ━━━
-Lunes a viernes: 8:00 a.m. a 5:00 p.m. Sábados: 8:00 a.m. a 2:00 p.m. Domingos: cerrado.
+Lunes a viernes: 8:00 a.m. a 5:00 p.m. Sábados: 8:00 a.m. a 2:00 p.m. Domingos y festivos: cerrado.
 Ubicación: Calle 67 #9-26, La Sultana, Manizales.
 
 ━━━ CLASIFICACIÓN DE LEADS ━━━
@@ -205,6 +274,7 @@ Nombre del cliente — en cuanto lo sepas: __NAME__:[nombre completo]
 4. Descontaminación de Tubería $49.000
 5. Brillado de Farolas $49.000
 6. Lavada Esencial Moto $49.000
+NOTA: Recubrimiento Cerámico y Porcelanizado NO están disponibles para motos.
 
 ━━━ DIFERENCIADORES ━━━
 • Póliza de $5.000.000 COP activa mientras el vehículo está con nosotros.
@@ -224,6 +294,21 @@ Si el cliente no quiere dar alguno: acepta "no_proporcionado" y continúa. NUNCA
 Antes de confirmar: "Contamos con traslado: recogida y entrega $9.000, solo una dirección $7.000. Te interesa?"
 Si elige recogida: pide dirección. Confirma: "Llegamos 30 minutos antes de tu cita."
 Si lleva él mismo: NO menciones recogida en la confirmación.
+
+━━━ CANCELACIONES ━━━
+Si el cliente quiere cancelar su cita:
+1. Pide el código de confirmación (ej: EST-A1234).
+2. Confirma: "Confirmo que quieres cancelar la cita con código [CÓDIGO], correcto?"
+3. Al confirmarlo, añade EXACTAMENTE al final del mensaje (invisible para el cliente):
+__CANCEL_CONFIRMED__
+CODIGO: [código exacto que dio el cliente]
+NOMBRE: [nombre si lo conoces, o "no_disponible"]
+__END_CANCEL__
+4. Dile: "Listo, tu cita queda cancelada. Si en algún momento quieres reagendar, aquí estamos."
+REAGENDAMIENTO: Si quiere mover la cita, primero cancela la actual (pide el código) y luego agenda la nueva normalmente.
+
+━━━ MÚLTIPLES SERVICIOS / OTRAS PERSONAS ━━━
+Un cliente puede traer el carro para más de un servicio. Agenda el servicio principal (el de mayor valor o duración). Menciona: "Cuando vengas le comentamos al equipo para incluir los dos." Si quiere agendar para otra persona (pareja, familiar), agenda normalmente como nuevo cliente en una conversación nueva o en el mismo chat.
 
 ━━━ CONFIRMAR CITA — OBLIGATORIO ━━━
 Al confirmar, añade al FINAL del mensaje (invisible para el cliente):
@@ -250,7 +335,7 @@ Máximo 3-4 líneas. Tono de chat.
 **Negrita** para servicios y precios. Emojis: máximo 1-2 por mensaje, nunca al inicio.`;
 };
 
-// ─── Booking parser ───────────────────────────────────────────────
+// ─── Parsers ───────────────────────────────────────────────────────
 const parseBooking = (text) => {
   if (!text.includes('__BOOKING_CONFIRMED__')) return null;
   const block = text.match(/__BOOKING_CONFIRMED__([\s\S]*?)__END_BOOKING__/)?.[1] || '';
@@ -265,14 +350,23 @@ const parseBooking = (text) => {
   };
 };
 
+const parseCancel = (text) => {
+  if (!text.includes('__CANCEL_CONFIRMED__')) return null;
+  const block = text.match(/__CANCEL_CONFIRMED__([\s\S]*?)__END_CANCEL__/)?.[1] || '';
+  if (!block) return null;
+  const get = (key) => block.match(new RegExp(`${key}:\\s*(.+)`))?.[1]?.trim() || '';
+  return { code: get('CODIGO'), name: get('NOMBRE') };
+};
+
 const cleanReply = (text) => text
   .replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, '')
+  .replace(/__CANCEL_CONFIRMED__[\s\S]*?__END_CANCEL__/g, '')
   .replace(/__NAME__:[^\n]*/g, '')
   .replace(/__LEAD_TYPE__:[^\n]*/g, '')
   .replace(/__OBJECTION__:[^\n]*/g, '')
   .trim();
 
-// ─── Handler ──────────────────────────────────────────────────────
+// ─── Handler ───────────────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
@@ -282,7 +376,6 @@ export default async function handler(req, res) {
   try {
     const systemPrompt = await buildPrompt(advisorName);
 
-    // Build message array for Claude (last 18 turns, filter out admin messages)
     const apiMessages = history
       .slice(-18)
       .filter(m => m.role === 'user' || m.role === 'assistant')
@@ -290,6 +383,7 @@ export default async function handler(req, res) {
         role: m.role,
         content: (typeof m.content === 'string' ? m.content : '')
           .replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, '')
+          .replace(/__CANCEL_CONFIRMED__[\s\S]*?__END_CANCEL__/g, '')
           .replace(/__ESCALATE__:[^\n]*/g, '')
           .replace(/__LEAD_TYPE__:[^\n]*/g, '')
           .replace(/__NAME__:[^\n]*/g, '')
@@ -309,14 +403,16 @@ export default async function handler(req, res) {
 
     const rawReply = aiResponse.content[0]?.text || 'Disculpa, algo salió mal. Intenta de nuevo.';
 
-    // Extract meta tags
     const nameMatch  = rawReply.match(/__NAME__:([^\n]+)/);
     const leadMatch  = rawReply.match(/__LEAD_TYPE__:([^\n]+)/);
     const escalMatch = rawReply.match(/__ESCALATE__:([^\n]*)/);
     const booking    = parseBooking(rawReply);
+    const cancelData = parseCancel(rawReply);
 
-    // Save booking to Supabase
-    if (booking && booking.service) {
+    const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+
+    // ── Guardar cita nueva ──
+    if (booking?.service) {
       const code = generateCode();
       const timeMatch = booking.date?.match(/(\d{1,2}):(\d{2})/);
       const bookingTime = timeMatch ? `${timeMatch[1]}:${timeMatch[2]}` : null;
@@ -329,7 +425,7 @@ export default async function handler(req, res) {
         }
       }
 
-      const apptPayload = {
+      supabaseAdmin.from('appointments').insert({
         service: booking.service,
         vehicle_type: booking.vehicleType,
         date: booking.date,
@@ -345,9 +441,7 @@ export default async function handler(req, res) {
         status: 'pending',
         channel: 'web_chat',
         created_date: new Date().toISOString(),
-      };
-
-      supabaseAdmin.from('appointments').insert(apptPayload).catch(e => console.error('Appt insert:', e.message));
+      }).catch(e => console.error('Appt insert:', e.message));
 
       if (booking.clientName) {
         supabaseAdmin.from('clients').upsert({
@@ -359,7 +453,13 @@ export default async function handler(req, res) {
         }, { onConflict: 'phone' }).catch(() => {});
       }
 
-      // Send confirmation email
+      // Marcar lead como activo para no enviarle remarketing de no-convertido
+      if (sessionId) {
+        supabaseAdmin.from('conversations')
+          .update({ remarketing_status: 'cliente_activo', updated_at: new Date().toISOString() })
+          .eq('phone', sessionId).catch(() => {});
+      }
+
       if (booking.clientEmail && booking.clientEmail !== 'no_proporcionado' && booking.clientEmail.includes('@')) {
         const emailHtml = `<div style="font-family:sans-serif;max-width:520px;margin:auto;border:1px solid #eee;border-radius:8px;overflow:hidden">
           <div style="background:#000;padding:20px;text-align:center">
@@ -380,7 +480,6 @@ export default async function handler(req, res) {
             </div>
           </div>
         </div>`;
-        const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
         fetch(`${baseUrl}/api/notify`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -388,33 +487,51 @@ export default async function handler(req, res) {
         }).catch(() => {});
       }
 
-      // Push + email to team
-      const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
       fetch(`${baseUrl}/api/notify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           type: 'push',
-          title: `🚗 Nueva cita web — ${booking.clientName}`,
+          title: `Nueva cita web — ${booking.clientName}`,
           message: `${booking.service} · ${booking.date} · ${booking.priceDisplay}`,
           priority: 4,
         }),
       }).catch(() => {});
     }
 
-    // Update conversation in Supabase with lead/name/bot_paused
+    // ── Procesar cancelación ──
+    if (cancelData?.code) {
+      supabaseAdmin.from('appointments')
+        .update({ status: 'cancelada', updated_at: new Date().toISOString() })
+        .ilike('confirmation_code', cancelData.code)
+        .catch(e => console.error('Cancel update:', e.message));
+
+      fetch(`${baseUrl}/api/notify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'push',
+          title: `Cita cancelada — ${cancelData.code}`,
+          message: `${cancelData.name && cancelData.name !== 'no_disponible' ? cancelData.name : 'Cliente'} canceló su cita`,
+          priority: 3,
+        }),
+      }).catch(() => {});
+    }
+
+    // ── Actualizar metadata de conversación ──
     if (sessionId) {
       const meta = {};
       if (nameMatch) meta.client_name = nameMatch[1].trim();
       if (leadMatch) meta.lead_type = leadMatch[1].trim();
       if (escalMatch) meta.bot_paused = true;
       if (Object.keys(meta).length > 0) {
-        supabase.from('conversations').update({ ...meta, updated_at: new Date().toISOString() }).eq('phone', sessionId).catch(() => {});
+        supabase.from('conversations')
+          .update({ ...meta, updated_at: new Date().toISOString() })
+          .eq('phone', sessionId).catch(() => {});
       }
     }
 
     const finalReply = cleanReply(rawReply) + (escalMatch ? `\n__ESCALATE__:${escalMatch[1].trim()}` : '');
-
     return res.status(200).json({ reply: finalReply });
 
   } catch (err) {

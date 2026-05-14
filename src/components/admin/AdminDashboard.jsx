@@ -5,6 +5,7 @@ import AdminAppointments from "./AdminAppointments";
 import AdminClients from "./AdminClients";
 import AdminFinanzas from "./AdminFinanzas";
 import AdminConversations from "./AdminConversations";
+import AdminCancellations from "./AdminCancellations";
 import CalendarSection from "../CalendarSection";
 import { BRAND } from "../../lib/constants";
 
@@ -64,6 +65,7 @@ const TABS = [
   { id: "calendar", label: "Calendario", icon: "calendar" },
   { id: "finanzas", label: "Finanzas", icon: "finanzas" },
   { id: "conversations", label: "Chats", icon: "chat" },
+  { id: "cancellations", label: "Cancelaciones", icon: "cancel" },
 ];
 
 const TabIcon = ({ type, size = 20 }) => {
@@ -99,6 +101,11 @@ const TabIcon = ({ type, size = 20 }) => {
         <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
       </svg>
     ),
+    cancel: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
+      </svg>
+    ),
   };
   return icons[type] || null;
 };
@@ -107,6 +114,7 @@ export default function AdminDashboard({ onClose }) {
   const [activeTab, setActiveTab] = useState("stats");
   const [authed, setAuthed] = useState(() => sessionStorage.getItem("admin_auth") === "1");
   const [openNewAppt, setOpenNewAppt] = useState(false);
+  const [cancellationCount, setCancellationCount] = useState(0);
 
   const navigateTo = (tab, newAppt = false) => {
     setActiveTab(tab);
@@ -155,6 +163,11 @@ export default function AdminDashboard({ onClose }) {
                 )}
                 <span className="relative z-10"><TabIcon type={tab.icon} size={18} /></span>
                 <span className="relative z-10 font-ui text-[11px] tracking-[0.2em] uppercase">{tab.label}</span>
+                {tab.id === "cancellations" && cancellationCount > 0 && (
+                  <span className={`relative z-10 ml-auto flex-shrink-0 min-w-[18px] h-[18px] px-1 rounded-full text-[10px] font-bold flex items-center justify-center ${isActive ? "bg-white text-ec-gold" : "bg-red-500 text-white"}`}>
+                    {cancellationCount}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -204,6 +217,7 @@ export default function AdminDashboard({ onClose }) {
                 {activeTab === "calendar" && <CalendarSection isAdmin={true} openNewOnMount={openNewAppt} />}
                 {activeTab === "finanzas" && <AdminFinanzas />}
                 {activeTab === "conversations" && <AdminConversations />}
+                {activeTab === "cancellations" && <AdminCancellations onCountChange={setCancellationCount} />}
               </div>
             </motion.div>
           </AnimatePresence>
@@ -212,7 +226,7 @@ export default function AdminDashboard({ onClose }) {
 
       {/* ── BOTTOM NAV (mobile only) ── */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-black/[0.06] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        <div className="grid grid-cols-6 h-16">
+        <div className="grid grid-cols-7 h-16">
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
@@ -222,9 +236,16 @@ export default function AdminDashboard({ onClose }) {
                 className={`relative flex flex-col items-center justify-center gap-1 transition-all duration-200 ${isActive ? "text-ec-gold" : "text-ec-text-muted"
                   }`}
               >
-                <TabIcon type={tab.icon} size={isActive ? 22 : 20} />
+                <div className="relative">
+                  <TabIcon type={tab.icon} size={isActive ? 22 : 20} />
+                  {tab.id === "cancellations" && cancellationCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full text-[8px] text-white font-bold flex items-center justify-center">
+                      {cancellationCount > 9 ? "9+" : cancellationCount}
+                    </span>
+                  )}
+                </div>
                 <span className={`font-ui text-[8px] tracking-[0.1em] uppercase ${isActive ? "text-ec-gold font-bold" : "text-ec-text-muted"}`}>
-                  {tab.label}
+                  {tab.label === "Cancelaciones" ? "Cancel." : tab.label}
                 </span>
                 {isActive && (
                   <motion.div
