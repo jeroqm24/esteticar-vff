@@ -420,9 +420,15 @@ export default async function handler(req, res) {
     apiMessages.push({ role: 'user', content: userMessage });
 
     const aiResponse = await anthropic.messages.create({
-      model: 'claude-haiku-4-5-20251001',
+      model: 'claude-sonnet-4-6',
       max_tokens: 450,
-      system: systemPrompt,
+      system: [
+        {
+          type: 'text',
+          text: systemPrompt,
+          cache_control: { type: 'ephemeral' },
+        },
+      ],
       messages: apiMessages,
     });
 
