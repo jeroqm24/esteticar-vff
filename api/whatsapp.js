@@ -347,6 +347,10 @@ REGLA ABSOLUTA DE CAPTURA DE NOMBRE: En el MISMO mensaje en que aprendas el nomb
 __NAME__:[nombre completo]
 Esta regla NO tiene ninguna excepción. Si el cliente dice su nombre y tú no incluyes __NAME__:[nombre] en ESE mensaje, estás rompiendo una instrucción crítica del sistema. El nombre se pierde y el cliente quedará anónimo en la base de datos para siempre.
 
+REGLA ABSOLUTA DE CAPTURA DE CORREO: El correo es OBLIGATORIO para toda cita. Antes de confirmar cualquier cita, SIEMPRE pregunta: "Para mandarte la confirmación y el recordatorio, cuál es tu correo?" Si el cliente lo da, DEBES incluir al final del mensaje:
+__EMAIL__:[correo@dominio.com]
+Esta regla NO tiene excepciones. Si el cliente confirma una cita y no tienes su correo, NO confirmes todavía — primero pídelo. Si dice que no tiene o no quiere darlo, escribe __EMAIL__:no_proporcionado y confirma.
+
 PASO 2 — DIAGNÓSTICO (cuando muestre interés):
 Haz las preguntas UNA A UNA, con naturalidad. No las dispares todas juntas.
 • Primero: "Cuéntame, tienes carro o moto?" (nunca "es para carro o moto?" sin contexto)
@@ -411,10 +415,11 @@ Pide estos datos UNO A UNO de forma natural ANTES de confirmar. Si el cliente no
 
 1. Nombre completo → al saberlo: __NAME__:[nombre completo]
 2. Placa del vehículo → "Para el registro de entrada necesito la placa de tu moto/carro, me la das?"
-3. Correo electrónico → "Te mando la confirmación al correo, cuál es?"
+3. Correo electrónico → OBLIGATORIO. "Para mandarte la confirmación y el recordatorio el día antes, cuál es tu correo?" → al saberlo: __EMAIL__:[correo]
 4. Si hay traslado: dirección de recogida/entrega → "Me das la dirección para el traslado?"
 
-REGLA: Si el cliente dice que no tiene o no quiere dar un dato, escribe "no_proporcionado" y confirma igual. Nunca bloquees la cita.
+REGLA CORREO: Es el único dato que no puedes omitir. Si el cliente dice que no tiene correo o no quiere darlo, escribe __EMAIL__:no_proporcionado y confirma. Pero SIEMPRE debes haberlo preguntado.
+REGLA GENERAL: Si el cliente dice que no tiene o no quiere dar otro dato, escribe "no_proporcionado" y confirma igual. Nunca bloquees la cita.
 
 ━━━ TRASLADO ━━━
 Antes de confirmar: "Contamos con traslado: recogida y entrega $9.000, o solo recogida o entrega $7.000. Te interesa?"
@@ -552,9 +557,29 @@ const cleanReply = (text) => text
   .replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, '')
   .replace(/__ESCALATE__:[^\n]*/g, '')
   .replace(/__NAME__:[^\n]*/g, '')
+  .replace(/__EMAIL__:[^\n]*/g, '')
   .replace(/__LEAD_TYPE__:[^\n]*/g, '')
   .replace(/__OBJECTION__:[^\n]*/g, '')
   .trim();
+
+const buildCalendarUrl = (booking) => {
+  try {
+    const monthMap = { enero:1,febrero:2,marzo:3,abril:4,mayo:5,junio:6,julio:7,agosto:8,septiembre:9,octubre:10,noviembre:11,diciembre:12 };
+    const dateStr = booking.date || '';
+    const dayM = dateStr.match(/(\d{1,2}) de (\w+) de (\d{4})/);
+    const hourM = dateStr.match(/(\d{1,2}):(\d{2})/);
+    if (!dayM || !hourM) return null;
+    const month = monthMap[dayM[2].toLowerCase()];
+    if (!month) return null;
+    const year = parseInt(dayM[3]), day = parseInt(dayM[1]);
+    const hour = parseInt(hourM[1]), min = parseInt(hourM[2]);
+    const dur = SERVICE_HOURS[booking.service] || 2;
+    const pad = n => String(n).padStart(2, '0');
+    const start = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(min)}00`;
+    const end   = `${year}${pad(month)}${pad(day)}T${pad(hour + dur)}${pad(min)}00`;
+    return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Cita en Esteticar — ' + booking.service)}&dates=${start}/${end}&details=${encodeURIComponent('Servicio: ' + booking.service + '\nCódigo: ' + booking.confirmationCode + '\nPrecio: ' + booking.priceDisplay)}&location=${encodeURIComponent('Cll 67 #9-26, La Sultana, Manizales')}`;
+  } catch { return null; }
+};
 
 const META_PIXEL_ID  = process.env.META_PIXEL_ID;
 const META_CAPI_TOKEN = process.env.META_CAPI_TOKEN;
@@ -756,9 +781,16 @@ export default async function handler(req, res) {
 
       // Extraer marcadores
       const nameMatch     = rawReply.match(/__NAME__:([^\n]+)/);
+      const emailMatch    = rawReply.match(/__EMAIL__:([^\n]+)/);
       const leadMatch     = rawReply.match(/__LEAD_TYPE__:([^\n]+)/);
       const objMatch      = rawReply.match(/__OBJECTION__:([^\n]+)/);
       const escalateMatch = rawReply.match(/__ESCALATE__:([^\n]*)/);
+      if (emailMatch) {
+        const capturedEmail = emailMatch[1].trim();
+        if (capturedEmail && capturedEmail !== 'no_proporcionado' && capturedEmail.includes('@')) {
+          meta.client_email = capturedEmail;
+        }
+      }
 
       // Procesar cita confirmada — primero intenta el bloque, si no hay usa extracción con Haiku
       let booking = parseBooking(rawReply);
@@ -861,23 +893,136 @@ export default async function handler(req, res) {
         }, { onConflict: 'phone' });
         if (clientUpsertError) console.error('Client upsert error:', clientUpsertError);
 
-        const emailHtml = `<div style="font-family:sans-serif;max-width:520px;margin:auto">
-          <h2 style="color:#B8860B">Tu cita en Esteticar está confirmada!</h2>
-          <p>Hola <strong>${booking.clientName || 'cliente'}</strong>, aquí están los detalles:</p>
-          <table style="width:100%;border-collapse:collapse">
-            <tr><td style="padding:8px;color:#555">Servicio</td><td style="padding:8px"><strong>${booking.service}</strong></td></tr>
-            <tr style="background:#f9f9f9"><td style="padding:8px;color:#555">Fecha</td><td style="padding:8px"><strong>${booking.date}</strong></td></tr>
-            <tr><td style="padding:8px;color:#555">Precio</td><td style="padding:8px"><strong>${booking.priceDisplay}</strong></td></tr>
-            <tr style="background:#f9f9f9"><td style="padding:8px;color:#555">Código</td><td style="padding:8px"><strong>${booking.confirmationCode}</strong></td></tr>
-          </table>
-        </div>`;
+        const waPhone = '573181983601';
+        const waMsg = encodeURIComponent(`Hola ${booking.clientName || 'cliente'}, te confirmo tu cita para el ${booking.date}. Servicios: ${booking.service}. Código: ${booking.confirmationCode}.`);
+        const waUrl = `https://wa.me/${waPhone}?text=${waMsg}`;
+        const calUrl = buildCalendarUrl(booking);
 
-        await fetch(`${process.env.VERCEL_URL ? 'https://' + process.env.VERCEL_URL : 'http://localhost:3000'}/api/notify`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'email', subject: `Cita confirmada — ${booking.confirmationCode}`, html: emailHtml,
-            to: booking.clientEmail && booking.clientEmail !== 'no_proporcionado' ? booking.clientEmail : undefined }),
+        // Email al CLIENTE — confirmación de cita
+        const clientEmailHtml = `
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#F4F1EC;font-family:Georgia,serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F1EC;padding:40px 16px">
+<tr><td align="center">
+<table width="100%" style="max-width:560px;background:#ffffff;border-radius:2px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.10)">
+  <tr><td style="background:#0A0A0A;padding:36px 40px;text-align:center;border-bottom:3px solid #C9A84C">
+    <img src="https://esteticar-vff.vercel.app/logo.png" alt="Esteticar" width="120" style="display:block;margin:0 auto 12px;height:auto" />
+    <div style="color:#C9A84C;font-size:9px;letter-spacing:4px;font-family:Arial,sans-serif;font-weight:600;text-transform:uppercase">Custodia Vehicular Premium · Manizales</div>
+  </td></tr>
+  <tr><td style="background:#0A0A0A;padding:0 40px 28px;text-align:center">
+    <div style="display:inline-block;background:#C9A84C;color:#0A0A0A;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:7px 20px;border-radius:2px">Cita confirmada</div>
+  </td></tr>
+  <tr><td style="padding:36px 40px 0">
+    <p style="margin:0;font-size:22px;color:#0A0A0A;font-weight:400;line-height:1.3">Hola, ${booking.clientName || 'cliente'}.</p>
+    <p style="margin:10px 0 0;font-size:14px;color:#888;font-family:Arial,sans-serif;line-height:1.6">Tu cita en Esteticar está confirmada. Aquí están todos los detalles.</p>
+    <div style="margin:24px 0 0;height:1px;background:linear-gradient(90deg,#C9A84C 0%,#f4f1ec 100%)"></div>
+  </td></tr>
+  <tr><td style="padding:28px 40px">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td width="44%" style="padding:14px 16px;background:#FAF8F4;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Servicio</td>
+        <td style="padding:14px 16px;background:#FAF8F4;border-radius:0 2px 2px 0;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${booking.service}</td>
+      </tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Fecha y hora</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${booking.date}</td>
+      </tr>
+      ${booking.traslado && booking.traslado !== 'sin traslado' && booking.traslado !== 'no_proporcionado' ? `
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Traslado</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-size:14px;color:#555;vertical-align:middle">${booking.traslado}</td>
+      </tr>` : ''}
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 40px 36px">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td width="50%" style="padding:20px 24px;background:#0A0A0A;border-radius:2px 0 0 2px;text-align:center">
+          <div style="font-family:Arial,sans-serif;font-size:9px;color:#A0916E;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Valor</div>
+          <div style="font-size:22px;font-weight:700;color:#C9A84C;font-family:Arial,sans-serif">${booking.priceDisplay}</div>
+        </td>
+        <td width="4px" style="background:#1a1a1a"></td>
+        <td width="50%" style="padding:20px 24px;background:#0A0A0A;border-radius:0 2px 2px 0;text-align:center">
+          <div style="font-family:Arial,sans-serif;font-size:9px;color:#A0916E;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Código</div>
+          <div style="font-size:20px;font-weight:700;color:#ffffff;font-family:'Courier New',monospace;letter-spacing:2px">${booking.confirmationCode}</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 40px 36px">
+    <div style="padding:20px 24px;background:#0A0A0A;border-radius:2px;text-align:center">
+      <p style="margin:0;font-size:14px;color:#C9A84C;font-style:italic;line-height:1.7">"Cuidamos tu vehículo como si fuera nuestro."</p>
+    </div>
+  </td></tr>
+  <tr><td style="padding:0 40px 16px;text-align:center">
+    <a href="${waUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:14px 32px;border-radius:2px">Escríbenos por WhatsApp →</a>
+  </td></tr>
+  ${calUrl ? `<tr><td style="padding:0 40px 40px;text-align:center">
+    <a href="${calUrl}" style="display:inline-block;background:#1a1a1a;color:#C9A84C;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:14px 32px;border-radius:2px;border:1px solid #333">Agregar a Google Calendar →</a>
+  </td></tr>` : '<tr><td style="height:24px"></td></tr>'}
+  <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cll 67 #9-26, La Sultana · Manizales, Colombia</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#444">www.esteticarmanizales.com</div>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+
+        // Email al ADMIN — notificación interna
+        const clientWaUrl = `https://wa.me/57${(from || '').replace(/\D/g,'')}?text=${encodeURIComponent(`Hola ${booking.clientName || 'cliente'}, te confirmamos tu cita en Esteticar para el ${booking.date}. Código: ${booking.confirmationCode}. Nos alegra tenerte. Cualquier duda aquí estamos.`)}`;
+        const adminEmailHtml = `
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#F4F1EC;font-family:Georgia,serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F1EC;padding:40px 16px">
+<tr><td align="center">
+<table width="100%" style="max-width:560px;background:#ffffff;border-radius:2px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.10)">
+  <tr><td style="background:#0A0A0A;padding:36px 40px;text-align:center;border-bottom:3px solid #C9A84C">
+    <img src="https://esteticar-vff.vercel.app/logo.png" alt="Esteticar" width="120" style="display:block;margin:0 auto 12px;height:auto" />
+    <div style="color:#C9A84C;font-size:9px;letter-spacing:4px;font-family:Arial,sans-serif;font-weight:600;text-transform:uppercase">Custodia Vehicular Premium · Manizales</div>
+  </td></tr>
+  <tr><td style="background:#0A0A0A;padding:0 40px 28px;text-align:center">
+    <div style="display:inline-block;background:#C9A84C;color:#0A0A0A;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:7px 20px;border-radius:2px">Nueva cita · Bot</div>
+  </td></tr>
+  <tr><td style="padding:36px 40px 28px">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr><td width="44%" style="padding:14px 16px;background:#FAF8F4;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Cliente</td><td style="padding:14px 16px;background:#FAF8F4;border-radius:0 2px 2px 0;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${booking.clientName || 'No capturado'}</td></tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr><td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Teléfono</td><td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${platform === 'whatsapp' ? from : (booking.clientPhone || 'N/A')}</td></tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr><td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Servicio</td><td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${booking.service}</td></tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr><td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Fecha</td><td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${booking.date}</td></tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr><td style="padding:20px 24px;background:#0A0A0A;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Valor</td><td style="padding:20px 24px;background:#0A0A0A;font-size:20px;color:#C9A84C;font-weight:700;font-family:Arial,sans-serif;vertical-align:middle">${booking.priceDisplay} &nbsp;<span style="font-family:'Courier New',monospace;font-size:15px;color:#666">${booking.confirmationCode}</span></td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 40px 40px;text-align:center">
+    <a href="${clientWaUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:14px 32px;border-radius:2px">Contactar cliente por WhatsApp →</a>
+  </td></tr>
+  <tr><td style="background:#0A0A0A;padding:20px 40px;text-align:center">
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555">Esteticar · Cll 67 #9-26, La Sultana · Manizales</div>
+  </td></tr>
+</table>
+</td></tr></table>
+</body></html>`;
+
+        const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
+        // Enviar al admin
+        fetch(`${baseUrl}/api/notify`, {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'email', subject: `Nueva cita — ${booking.clientName || 'cliente'} · ${booking.service}`, html: adminEmailHtml }),
         }).catch(() => {});
+        // Enviar al cliente (si tiene correo)
+        const clientEmail = booking.clientEmail && booking.clientEmail !== 'no_proporcionado' ? booking.clientEmail : (meta.client_email || null);
+        if (clientEmail) {
+          fetch(`${baseUrl}/api/notify`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ type: 'email', subject: `Tu cita en Esteticar — ${booking.confirmationCode}`, html: clientEmailHtml, to: clientEmail }),
+          }).catch(() => {});
+        }
       }
 
       // Escalación al equipo

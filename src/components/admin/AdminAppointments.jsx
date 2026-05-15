@@ -234,7 +234,10 @@ export default function AdminAppointments() {
     </div>
   </td></tr>
 
-  <!-- CTA UBICACIÓN -->
+  <!-- CTAs -->
+  <tr><td style="padding:0 40px 16px;text-align:center">
+    <a href="https://wa.me/573181983601?text=${encodeURIComponent('Hola Esteticar, necesito información sobre mi cita.')}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:14px 32px;border-radius:2px">Escríbenos por WhatsApp →</a>
+  </td></tr>
   <tr><td style="padding:0 40px 40px;text-align:center">
     <a href="https://maps.google.com/?q=Cll+67+9-26+La+Sultana+Manizales" style="display:inline-block;background:#1a1a1a;color:#C9A84C;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:14px 32px;border-radius:2px;border:1px solid #333">Ver ubicación →</a>
   </td></tr>

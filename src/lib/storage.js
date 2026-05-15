@@ -267,7 +267,7 @@ export const notifyPush = async ({ title, message, priority = 3 }) => {
 };
 
 export const notifyNewBooking = async ({ clientName, clientPhone, service, date, price, code, advisorName, traslado }) => {
-  const subject = `Nueva cita confirmada — ${clientName} · ${service}`;
+  const subject = `Nueva cita — ${clientName} · ${service}`;
   const html = `
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nueva cita · Esteticar</title></head>
 <body style="margin:0;padding:0;background:#F4F1EC;font-family:Georgia,serif">
@@ -341,12 +341,17 @@ export const notifyNewBooking = async ({ clientName, clientPhone, service, date,
   </td></tr>
 
   <!-- ASESORA -->
-  <tr><td style="padding:0 40px 36px">
+  <tr><td style="padding:0 40px 28px">
     <div style="padding:16px 20px;border:1px solid #E8E0D0;border-left:3px solid #C9A84C;border-radius:2px;background:#FFFDF9">
       <span style="font-family:Arial,sans-serif;font-size:11px;color:#A0916E;letter-spacing:1px;text-transform:uppercase">Agendado por</span>
       <span style="font-family:Arial,sans-serif;font-size:14px;color:#0A0A0A;font-weight:700;margin-left:10px">${advisorName}</span>
     </div>
   </td></tr>
+
+  <!-- CTA WHATSAPP CLIENTE -->
+  ${clientPhone ? `<tr><td style="padding:0 40px 40px;text-align:center">
+    <a href="https://wa.me/57${(clientPhone || '').replace(/\D/g,'')}?text=${encodeURIComponent(`Hola ${clientName}, te confirmamos tu cita en Esteticar para el ${date}. Código: ${code}. Cualquier duda aquí estamos.`)}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:14px 32px;border-radius:2px">Contactar cliente por WhatsApp →</a>
+  </td></tr>` : ''}
 
   <!-- FOOTER -->
   <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
@@ -381,7 +386,7 @@ export const check20DayReminders = async () => {
       if (!client.lastDate) continue;
       const lastDate = new Date(client.lastDate);
       const diffDays = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
-      if (diffDays >= 20) {
+      if (diffDays >= 30) {
         const subject = `⏰ Recordatorio 20 días — ${client.name} (${diffDays}d)`;
         const whatsappMsg = encodeURIComponent(
           `${getGreeting()}, ${client.name} 👋 Te saluda el equipo de *Esteticar*.\n\nHan pasado ${diffDays} días desde el último tratamiento de tu vehículo — el momento ideal para renovar la protección y mantener ese acabado impecable.\n\n¿Te agendamos esta semana? ✨`
