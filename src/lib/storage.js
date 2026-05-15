@@ -350,7 +350,7 @@ export const notifyNewBooking = async ({ clientName, clientPhone, service, date,
 
   <!-- CTA WHATSAPP CLIENTE -->
   ${clientPhone ? `<tr><td style="padding:0 40px 40px;text-align:center">
-    <a href="https://wa.me/57${(clientPhone || '').replace(/\D/g,'')}?text=${encodeURIComponent(`Hola ${clientName}, te confirmamos tu cita en Esteticar para el ${date}. Código: ${code}. Cualquier duda aquí estamos.`)}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:14px 32px;border-radius:2px">Contactar cliente por WhatsApp →</a>
+    <a href="https://api.whatsapp.com/send/?phone=57${(clientPhone || '').replace(/\D/g,'')}&text=${encodeURIComponent(`Hola ${clientName}, te confirmamos tu cita en Esteticar para el ${date}. Código: ${code}. Cualquier duda aquí estamos.`)}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:17px 40px;border-radius:50px">Contactar cliente por WhatsApp →</a>
   </td></tr>` : ''}
 
   <!-- FOOTER -->
@@ -391,7 +391,7 @@ export const check20DayReminders = async () => {
         const whatsappMsg = encodeURIComponent(
           `${getGreeting()}, ${client.name} 👋 Te saluda el equipo de *Esteticar*.\n\nHan pasado ${diffDays} días desde el último tratamiento de tu vehículo — el momento ideal para renovar la protección y mantener ese acabado impecable.\n\n¿Te agendamos esta semana? ✨`
         );
-        const whatsappUrl = `https://wa.me/57${(client.phone || '').replace(/\D/g, '')}?text=${whatsappMsg}`;
+        const whatsappUrl = `https://api.whatsapp.com/send/?phone=57${(client.phone || '').replace(/\D/g, '')}&text=${whatsappMsg}`;
         const html = `
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Seguimiento cliente · Esteticar</title></head>
 <body style="margin:0;padding:0;background:#F4F1EC;font-family:Georgia,serif">
@@ -444,7 +444,7 @@ export const check20DayReminders = async () => {
 
   <!-- CTA WHATSAPP -->
   <tr><td style="padding:0 40px 40px;text-align:center">
-    <a href="${whatsappUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:16px 36px;border-radius:2px">Escribirle por WhatsApp →</a>
+    <a href="${whatsappUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:17px 40px;border-radius:50px">Escribirle por WhatsApp →</a>
   </td></tr>
 
   <!-- FOOTER -->

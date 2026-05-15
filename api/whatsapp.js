@@ -932,7 +932,7 @@ export default async function handler(req, res) {
 
         const waPhone = '573181983601';
         const waMsg = encodeURIComponent(`Hola ${booking.clientName || 'cliente'}, te confirmo tu cita para el ${booking.date}. Servicios: ${booking.service}. Código: ${booking.confirmationCode}.`);
-        const waUrl = `https://wa.me/${waPhone}?text=${waMsg}`;
+        const waUrl = `https://api.whatsapp.com/send/?phone=${waPhone}&text=${waMsg}`;
         const calUrl = buildCalendarUrl(booking);
 
         // Email al CLIENTE — confirmación de cita
@@ -994,10 +994,10 @@ export default async function handler(req, res) {
     </div>
   </td></tr>
   <tr><td style="padding:0 40px 16px;text-align:center">
-    <a href="${waUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:14px 32px;border-radius:2px">Escríbenos por WhatsApp →</a>
+    <a href="${waUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:17px 40px;border-radius:50px">Escríbenos por WhatsApp →</a>
   </td></tr>
   ${calUrl ? `<tr><td style="padding:0 40px 40px;text-align:center">
-    <a href="${calUrl}" style="display:inline-block;background:#1a1a1a;color:#C9A84C;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:14px 32px;border-radius:2px;border:1px solid #333">Agregar a Google Calendar →</a>
+    <a href="${calUrl}" style="display:inline-block;background:#0A0A0A;color:#C9A84C;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:15px 36px;border-radius:50px;border:1.5px solid #C9A84C">Agregar a Google Calendar →</a>
   </td></tr>` : '<tr><td style="height:24px"></td></tr>'}
   <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
@@ -1009,7 +1009,7 @@ export default async function handler(req, res) {
 </body></html>`;
 
         // Email al ADMIN — notificación interna
-        const clientWaUrl = `https://wa.me/57${(from || '').replace(/\D/g,'')}?text=${encodeURIComponent(`Hola ${booking.clientName || 'cliente'}, te confirmamos tu cita en Esteticar para el ${booking.date}. Código: ${booking.confirmationCode}. Nos alegra tenerte. Cualquier duda aquí estamos.`)}`;
+        const clientWaUrl = `https://api.whatsapp.com/send/?phone=57${(from || '').replace(/\D/g,'')}&text=${encodeURIComponent(`Hola ${booking.clientName || 'cliente'}, te confirmamos tu cita en Esteticar para el ${booking.date}. Código: ${booking.confirmationCode}. Nos alegra tenerte. Cualquier duda aquí estamos.`)}`;
         const adminEmailHtml = `
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#F4F1EC;font-family:Georgia,serif">
@@ -1037,7 +1037,7 @@ export default async function handler(req, res) {
     </table>
   </td></tr>
   <tr><td style="padding:0 40px 40px;text-align:center">
-    <a href="${clientWaUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:14px 32px;border-radius:2px">Contactar cliente por WhatsApp →</a>
+    <a href="${clientWaUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:17px 40px;border-radius:50px">Contactar cliente por WhatsApp →</a>
   </td></tr>
   <tr><td style="background:#0A0A0A;padding:20px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#555">Esteticar · Cll 67 #9-26, La Sultana · Manizales</div>

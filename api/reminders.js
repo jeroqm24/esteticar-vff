@@ -149,7 +149,7 @@ export default async function handler(req, res) {
     // Email de recordatorio al cliente (si tiene correo)
     if (appt.client_email && appt.client_email !== 'no_proporcionado') {
       const waPhone = '573181983601';
-      const waUrl = `https://wa.me/${waPhone}?text=${encodeURIComponent(`Hola Esteticar, soy ${appt.client_name || 'cliente'} y tengo cita mañana. Código: ${appt.confirmation_code || ''}.`)}`;
+      const waUrl = `https://api.whatsapp.com/send/?phone=${waPhone}&text=${encodeURIComponent(`Hola Esteticar, soy ${appt.client_name || 'cliente'} y tengo cita mañana. Código: ${appt.confirmation_code || ''}.`)}`;
       const reminderHtml = `
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#F4F1EC;font-family:Georgia,serif">
@@ -161,7 +161,7 @@ export default async function handler(req, res) {
     <div style="color:#C9A84C;font-size:9px;letter-spacing:4px;font-family:Arial,sans-serif;font-weight:600;text-transform:uppercase">Custodia Vehicular Premium · Manizales</div>
   </td></tr>
   <tr><td style="background:#0A0A0A;padding:0 40px 28px;text-align:center">
-    <div style="display:inline-block;background:#C9A84C;color:#0A0A0A;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:7px 20px;border-radius:2px">Tu cita es mañana</div>
+    <div style="display:inline-block;background:#C9A84C;color:#0A0A0A;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:7px 20px;border-radius:50px">Tu cita es mañana</div>
   </td></tr>
   <tr><td style="padding:36px 40px 0">
     <p style="margin:0;font-size:22px;color:#0A0A0A;font-weight:400;line-height:1.3">Hola, ${appt.client_name || 'cliente'}.</p>
@@ -181,14 +181,13 @@ export default async function handler(req, res) {
       <p style="margin:0;font-size:14px;color:#C9A84C;font-style:italic;line-height:1.7">"Cuidamos tu vehículo como si fuera nuestro."</p>
     </div>
   </td></tr>
-  <tr><td style="padding:0 40px 16px;text-align:center">
-    <a href="${waUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:14px 32px;border-radius:2px">Escríbenos por WhatsApp →</a>
+  <tr><td style="padding:0 40px 20px;text-align:center">
+    <a href="${waUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:17px 40px;border-radius:50px">Escríbenos por WhatsApp →</a>
   </td></tr>
-  <tr><td style="padding:0 40px 16px;text-align:center">
-    <a href="https://maps.google.com/?q=Cll+67+9-26+La+Sultana+Manizales" style="display:inline-block;background:#1a1a1a;color:#C9A84C;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:14px 20px;border-radius:2px;border:1px solid #333;margin-right:8px">Google Maps →</a>
-    <a href="https://waze.com/ul?q=Cll+67+%239-26+La+Sultana+Manizales&navigate=yes" style="display:inline-block;background:#1a1a1a;color:#C9A84C;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:14px 20px;border-radius:2px;border:1px solid #333">Waze →</a>
+  <tr><td style="padding:0 40px 36px;text-align:center">
+    <a href="https://maps.google.com/?q=Cll+67+9-26+La+Sultana+Manizales" style="display:inline-block;background:#0A0A0A;color:#C9A84C;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:15px 26px;border-radius:50px;border:1.5px solid #C9A84C;margin-right:10px">Google Maps →</a>
+    <a href="https://waze.com/ul?q=Cll+67+%239-26+La+Sultana+Manizales&navigate=yes" style="display:inline-block;background:#0A0A0A;color:#C9A84C;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:15px 26px;border-radius:50px;border:1.5px solid #C9A84C">Waze →</a>
   </td></tr>
-  <tr><td style="height:24px"></td></tr>
   <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cll 67 #9-26, La Sultana · Manizales, Colombia</div>
@@ -202,6 +201,7 @@ export default async function handler(req, res) {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ type: 'email', subject: `Tu cita es mañana — Esteticar`, html: reminderHtml, to: appt.client_email }),
       }).catch(() => {});
+
     }
   }
 
