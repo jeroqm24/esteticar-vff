@@ -1,6 +1,5 @@
-// api/notify.js
-// Vercel Serverless Function — proxy para ntfy + Resend
-// Soporta email al admin Y al cliente en la misma llamada
+// api/notify.js — ntfy push + Gmail SMTP (nodemailer)
+import nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
     res.setHeader('Access-Control-Allow-Origin', '*');
@@ -10,7 +9,6 @@ export default async function handler(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     const { type, title, message, priority, subject, html, to } = req.body;
-
     const results = {};
 
     // ── ntfy push ──────────────────────────────────────────────────
@@ -33,36 +31,36 @@ export default async function handler(req, res) {
         }
     }
 
-    // ── Resend email ───────────────────────────────────────────────
+    // ── Gmail SMTP ─────────────────────────────────────────────────
     if (type === 'email' || type === 'both') {
-        try {
-            const resendKey = process.env.VITE_RESEND_API_KEY;
-            const adminEmail = process.env.VITE_ADMIN_EMAIL || 'esteticar.manizales@gmail.com';
+        const gmailUser = process.env.GMAIL_USER;
+        const gmailPass = process.env.GMAIL_APP_PASSWORD;
+        const adminEmail = process.env.VITE_ADMIN_EMAIL || 'esteticar.manizales@gmail.com';
 
-            // Destinatarios: siempre el admin, y si hay `to` también el cliente
-            const recipients = [adminEmail];
-            if (to && to.includes('@') && to !== adminEmail) {
-                recipients.push(to);
-            }
+        if (!gmailUser || !gmailPass) {
+            results.email = 'error: GMAIL_USER o GMAIL_APP_PASSWORD no configurados en Vercel';
+        } else {
+            try {
+                const transporter = nodemailer.createTransport({
+                    service: 'gmail',
+                    auth: { user: gmailUser, pass: gmailPass },
+                });
 
-            const resendRes = await fetch('https://api.resend.com/emails', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${resendKey}`,
-                },
-                body: JSON.stringify({
-                    from: process.env.RESEND_FROM_EMAIL || 'Esteticar <onboarding@resend.dev>',
-                    to: recipients,
+                // Destinatarios: siempre admin + cliente si tiene correo
+                const toList = [adminEmail];
+                if (to && to.includes('@') && to !== adminEmail) toList.push(to);
+
+                await transporter.sendMail({
+                    from: `Esteticar Manizales <${gmailUser}>`,
+                    to: toList.join(', '),
                     subject: subject || 'Notificación Esteticar',
-                    html: html || message || '',
-                }),
-            });
+                    html: html || `<p>${message || ''}</p>`,
+                });
 
-            const resendBody = await resendRes.json();
-            results.resend = resendRes.ok ? 'ok' : `error ${resendRes.status}: ${JSON.stringify(resendBody)}`;
-        } catch (e) {
-            results.resend = `error: ${e.message}`;
+                results.email = 'ok';
+            } catch (e) {
+                results.email = `error: ${e.message}`;
+            }
         }
     }
 
