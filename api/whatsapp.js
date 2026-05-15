@@ -797,12 +797,6 @@ export default async function handler(req, res) {
       const objMatch      = rawReply.match(/__OBJECTION__:([^\n]+)/);
       const escalateMatch = rawReply.match(/__ESCALATE__:([^\n]*)/);
       const cancelMatch   = rawReply.includes('__CANCEL_BOOKING__');
-      if (emailMatch) {
-        const capturedEmail = emailMatch[1].trim();
-        if (capturedEmail && capturedEmail !== 'no_proporcionado' && capturedEmail.includes('@')) {
-          meta.client_email = capturedEmail;
-        }
-      }
 
       // Procesar cita confirmada — primero intenta el bloque, si no hay usa extracción con Haiku
       let booking = parseBooking(rawReply);
@@ -813,6 +807,12 @@ export default async function handler(req, res) {
 
       // Construir meta para Supabase
       const meta = { last_visit_date: new Date().toISOString() };
+      if (emailMatch) {
+        const capturedEmail = emailMatch[1].trim();
+        if (capturedEmail && capturedEmail !== 'no_proporcionado' && capturedEmail.includes('@')) {
+          meta.client_email = capturedEmail;
+        }
+      }
 
       // Nombre: tomar del tag o, si falta y la conversación tiene suficiente contexto,
       // extraer con Haiku como respaldo
@@ -855,14 +855,27 @@ export default async function handler(req, res) {
 
       // Cancelar cita más reciente del cliente
       if (cancelMatch) {
-        supabaseAdmin
-          .from('appointments')
-          .update({ status: 'cancelada' })
-          .eq('client_phone', from)
-          .in('status', ['pending', 'confirmada', 'en_proceso'])
-          .order('created_date', { ascending: false })
-          .limit(1)
-          .then(null, (e) => console.error('CANCEL ERROR:', e));
+        (async () => {
+          try {
+            const { data: appts } = await supabaseAdmin
+              .from('appointments')
+              .select('id')
+              .eq('client_phone', from)
+              .in('status', ['pending', 'confirmada', 'en_proceso'])
+              .order('created_date', { ascending: false })
+              .limit(1);
+            if (appts?.[0]?.id) {
+              const { error } = await supabaseAdmin
+                .from('appointments')
+                .update({ status: 'cancelada' })
+                .eq('id', appts[0].id);
+              if (error) console.error('CANCEL ERROR:', error);
+              else console.log('CANCEL OK: cita', appts[0].id, 'marcada cancelada');
+            }
+          } catch (e) {
+            console.error('CANCEL ERROR:', e);
+          }
+        })();
       }
 
       history.push({ role: 'assistant', content: rawReply });
