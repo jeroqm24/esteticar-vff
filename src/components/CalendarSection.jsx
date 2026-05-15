@@ -311,6 +311,18 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
                 <div className="flex-1 border-t border-black/[0.04] pt-2 pb-2">
                   {hasAppts ? (
                     <div className="space-y-2">
+                      {isSlotFull && (
+                        <div className="flex items-center gap-2.5 px-3 py-2 rounded-lg mb-1"
+                          style={{ background: 'linear-gradient(90deg,rgba(239,68,68,0.06) 0%,transparent 100%)', border: '1px solid rgba(239,68,68,0.14)' }}>
+                          <div className="flex gap-1">
+                            {[0,1,2].map(i => <div key={i} className="w-2 h-2 rounded-full bg-red-400" />)}
+                          </div>
+                          <div className="w-px h-3.5 bg-red-200/50" />
+                          <span className="font-ui text-[8px] tracking-[0.25em] text-red-400 uppercase">
+                            3 / 3 bahías · hora sin cupo
+                          </span>
+                        </div>
+                      )}
                       {appts.map((appt, i) => {
                         const color = getServiceColor(appt.service);
                         const duration = getServiceDuration(appt.service);
@@ -432,8 +444,15 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
                           <span>+</span>
                         </button>
                       ) : isSlotFull ? (
-                        <div className="w-full h-8 flex items-center justify-center bg-red-50 rounded-sm">
-                          <span className="font-ui text-[9px] tracking-wider text-red-300 uppercase">3/3 bahías ocupadas</span>
+                        <div className="w-full flex items-center gap-3 px-3 py-2 rounded-lg"
+                          style={{ background: 'linear-gradient(90deg,rgba(239,68,68,0.05) 0%,transparent 80%)', border: '1px solid rgba(239,68,68,0.12)' }}>
+                          <div className="flex gap-1">
+                            {[0,1,2].map(i => <div key={i} className="w-2 h-2 rounded-full bg-red-400/80" />)}
+                          </div>
+                          <div className="w-px h-3.5 bg-red-200/40" />
+                          <span className="font-ui text-[8px] tracking-[0.25em] text-red-400/80 uppercase">
+                            3 / 3 bahías · sin disponibilidad
+                          </span>
                         </div>
                       ) : (
                         <div className="w-full h-px bg-black/[0.04]" />
