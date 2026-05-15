@@ -174,11 +174,86 @@ export default function AdminAppointments() {
 
   const sendReminderEmail = async (appt) => {
     setSending(true);
-    const services = (appt.services || []).map(s => s.name).join(", ");
+    const services = (appt.services || []).map(s => s.name).join(", ") || appt.service || "Servicio Esteticar";
+    const html = `
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tu cita en Esteticar</title></head>
+<body style="margin:0;padding:0;background:#F4F1EC;font-family:Georgia,serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F1EC;padding:40px 16px">
+<tr><td align="center">
+<table width="100%" style="max-width:560px;background:#ffffff;border-radius:2px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.10)">
+
+  <!-- HEADER -->
+  <tr><td style="background:#0A0A0A;padding:36px 40px;text-align:center;border-bottom:3px solid #C9A84C">
+    <img src="https://esteticar-vff.vercel.app/logo.png" alt="Esteticar" width="120" style="display:block;margin:0 auto 12px;height:auto" />
+    <div style="color:#C9A84C;font-size:9px;letter-spacing:4px;font-family:Arial,sans-serif;font-weight:600;text-transform:uppercase">Custodia Vehicular Premium · Manizales</div>
+  </td></tr>
+
+  <!-- BADGE -->
+  <tr><td style="background:#0A0A0A;padding:0 40px 28px;text-align:center">
+    <div style="display:inline-block;background:#C9A84C;color:#0A0A0A;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:7px 20px;border-radius:2px">Recordatorio de cita</div>
+  </td></tr>
+
+  <!-- SALUDO -->
+  <tr><td style="padding:36px 40px 0">
+    <p style="margin:0;font-size:22px;color:#0A0A0A;font-weight:400;line-height:1.3">Hola, ${appt.clientName}.</p>
+    <p style="margin:10px 0 0;font-size:14px;color:#888;font-family:Arial,sans-serif;line-height:1.6">Te recordamos que tienes una cita próxima con nosotros. Aquí están los detalles de tu servicio.</p>
+    <div style="margin:24px 0 0;height:1px;background:linear-gradient(90deg,#C9A84C 0%,#f4f1ec 100%)"></div>
+  </td></tr>
+
+  <!-- DATA GRID -->
+  <tr><td style="padding:28px 40px">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td width="44%" style="padding:14px 16px;background:#FAF8F4;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Servicio</td>
+        <td style="padding:14px 16px;background:#FAF8F4;border-radius:0 2px 2px 0;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${services}</td>
+      </tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Fecha</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${appt.date}</td>
+      </tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Hora</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${appt.time || "Por confirmar"}</td>
+      </tr>
+      ${appt.confirmationCode ? `
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Código</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-size:16px;color:#0A0A0A;font-weight:700;font-family:'Courier New',monospace;letter-spacing:2px;vertical-align:middle">${appt.confirmationCode}</td>
+      </tr>` : ''}
+    </table>
+  </td></tr>
+
+  <!-- MENSAJE PREMIUM -->
+  <tr><td style="padding:0 40px 36px">
+    <div style="padding:20px 24px;background:#0A0A0A;border-radius:2px;text-align:center">
+      <p style="margin:0;font-size:14px;color:#C9A84C;font-style:italic;line-height:1.7">"Cuidamos tu vehículo como si fuera nuestro."</p>
+      <p style="margin:10px 0 0;font-family:Arial,sans-serif;font-size:11px;color:#555;letter-spacing:1px">Si necesitas cambiar tu cita, escríbenos por WhatsApp.</p>
+    </div>
+  </td></tr>
+
+  <!-- CTA UBICACIÓN -->
+  <tr><td style="padding:0 40px 40px;text-align:center">
+    <a href="https://maps.google.com/?q=Cll+67+9-26+La+Sultana+Manizales" style="display:inline-block;background:#1a1a1a;color:#C9A84C;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:14px 32px;border-radius:2px;border:1px solid #333">Ver ubicación →</a>
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cll 67 #9-26, La Sultana · Manizales, Colombia</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#444">www.esteticarmanizales.com</div>
+  </td></tr>
+
+</table>
+</td></tr></table>
+</body></html>
+    `;
     await email.send({
       to: appt.clientEmail,
-      subject: `Recordatorio de tu cita — Esteticar ✨`,
-      body: `Hola ${appt.clientName}! Te recordamos tu cita el ${appt.date} a las ${appt.time || "Por confirmar"}. Servicios: ${services}.`,
+      subject: `Tu cita en Esteticar — ${appt.date}`,
+      html,
     });
     await db.appointments.update(appt.id, { reminderSent: true });
     setAppointments(prev => prev.map(a => a.id === appt.id ? { ...a, reminderSent: true } : a));

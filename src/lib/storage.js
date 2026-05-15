@@ -267,32 +267,97 @@ export const notifyPush = async ({ title, message, priority = 3 }) => {
 };
 
 export const notifyNewBooking = async ({ clientName, clientPhone, service, date, price, code, advisorName, traslado }) => {
-  const subject = `🚗 Nueva cita — ${clientName} · ${service}`;
+  const subject = `Nueva cita confirmada — ${clientName} · ${service}`;
   const html = `
-    <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden">
-      <div style="background:#000;padding:20px 24px;text-align:center">
-        <img src="https://esteticar-vff.vercel.app/logo.png" alt="Esteticar" style="height:60px;object-fit:contain;" />
-        <div style="color:#F8C840;opacity:0.6;font-size:11px;letter-spacing:2px;margin-top:8px">CUSTODIA VEHICULAR PREMIUM</div>
-      </div>
-      <div style="padding:28px 24px;background:#fafafa">
-        <h2 style="color:#111;margin:0 0 20px 0;font-size:18px">Nueva cita agendada ✅</h2>
-        <table style="width:100%;border-collapse:collapse;font-size:14px">
-          <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888;width:140px">Cliente</td><td style="padding:10px 0;font-weight:600">${clientName}</td></tr>
-          <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Teléfono</td><td style="padding:10px 0;font-weight:600">${clientPhone || "No capturado"}</td></tr>
-          <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Servicio</td><td style="padding:10px 0;font-weight:600">${service}</td></tr>
-          <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Fecha</td><td style="padding:10px 0;font-weight:600">${date}</td></tr>
-          <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Precio</td><td style="padding:10px 0;font-weight:700;color:#B4821E">${price}</td></tr>
-          <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Traslado</td><td style="padding:10px 0;font-weight:600">${traslado || "Cliente trae y recoge (gratis)"}</td></tr>
-          <tr><td style="padding:10px 0;color:#888">Código</td><td style="padding:10px 0;font-family:monospace;font-size:16px;font-weight:700;color:#000">${code}</td></tr>
-        </table>
-        <div style="margin-top:20px;padding:14px 16px;background:#FFF8E7;border-left:3px solid #F8C840;border-radius:4px;font-size:13px;color:#555">
-          Agendado por asesora: <strong>${advisorName}</strong>
-        </div>
-      </div>
-      <div style="padding:14px;background:#111;text-align:center">
-        <span style="color:#555;font-size:11px">Esteticar · Cll 67 #9-26, La Sultana, Manizales</span>
-      </div>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Nueva cita · Esteticar</title></head>
+<body style="margin:0;padding:0;background:#F4F1EC;font-family:Georgia,serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F1EC;padding:40px 16px">
+<tr><td align="center">
+<table width="100%" style="max-width:560px;background:#ffffff;border-radius:2px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.10)">
+
+  <!-- HEADER -->
+  <tr><td style="background:#0A0A0A;padding:36px 40px;text-align:center;border-bottom:3px solid #C9A84C">
+    <img src="https://esteticar-vff.vercel.app/logo.png" alt="Esteticar" width="120" style="display:block;margin:0 auto 12px;height:auto" />
+    <div style="color:#C9A84C;font-size:9px;letter-spacing:4px;font-family:Arial,sans-serif;font-weight:600;text-transform:uppercase">Custodia Vehicular Premium · Manizales</div>
+  </td></tr>
+
+  <!-- BADGE -->
+  <tr><td style="background:#0A0A0A;padding:0 40px 28px;text-align:center">
+    <div style="display:inline-block;background:#C9A84C;color:#0A0A0A;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:7px 20px;border-radius:2px">Nueva cita agendada</div>
+  </td></tr>
+
+  <!-- INTRO -->
+  <tr><td style="padding:36px 40px 0">
+    <p style="margin:0;font-size:22px;color:#0A0A0A;font-weight:400;line-height:1.3">Hola, tienes una nueva reserva.</p>
+    <p style="margin:10px 0 0;font-size:14px;color:#888;font-family:Arial,sans-serif;line-height:1.6">La siguiente cita fue agendada a través del sistema Esteticar.</p>
+    <div style="margin:24px 0 0;height:1px;background:linear-gradient(90deg,#C9A84C 0%,#f4f1ec 100%)"></div>
+  </td></tr>
+
+  <!-- DATA GRID -->
+  <tr><td style="padding:28px 40px">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td width="44%" style="padding:14px 16px;background:#FAF8F4;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Cliente</td>
+        <td style="padding:14px 16px;background:#FAF8F4;border-radius:0 2px 2px 0;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${clientName}</td>
+      </tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Teléfono</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${clientPhone || "No capturado"}</td>
+      </tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Servicio</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${service}</td>
+      </tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Fecha y hora</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${date}</td>
+      </tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Traslado</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-size:14px;color:#555;vertical-align:middle">${traslado || "Cliente trae y recoge (gratis)"}</td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- PRECIO + CÓDIGO -->
+  <tr><td style="padding:0 40px 36px">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td width="50%" style="padding:20px 24px;background:#0A0A0A;border-radius:2px 0 0 2px;text-align:center">
+          <div style="font-family:Arial,sans-serif;font-size:9px;color:#A0916E;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Valor del servicio</div>
+          <div style="font-size:22px;font-weight:700;color:#C9A84C;font-family:Arial,sans-serif">${price}</div>
+        </td>
+        <td width="4px" style="background:#1a1a1a"></td>
+        <td width="50%" style="padding:20px 24px;background:#0A0A0A;border-radius:0 2px 2px 0;text-align:center">
+          <div style="font-family:Arial,sans-serif;font-size:9px;color:#A0916E;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Código de reserva</div>
+          <div style="font-size:20px;font-weight:700;color:#ffffff;font-family:'Courier New',monospace;letter-spacing:2px">${code}</div>
+        </td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- ASESORA -->
+  <tr><td style="padding:0 40px 36px">
+    <div style="padding:16px 20px;border:1px solid #E8E0D0;border-left:3px solid #C9A84C;border-radius:2px;background:#FFFDF9">
+      <span style="font-family:Arial,sans-serif;font-size:11px;color:#A0916E;letter-spacing:1px;text-transform:uppercase">Agendado por</span>
+      <span style="font-family:Arial,sans-serif;font-size:14px;color:#0A0A0A;font-weight:700;margin-left:10px">${advisorName}</span>
     </div>
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cll 67 #9-26, La Sultana · Manizales, Colombia</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#444">www.esteticarmanizales.com</div>
+  </td></tr>
+
+</table>
+</td></tr></table>
+</body></html>
   `;
   await Promise.allSettled([
     notifyEmail({ subject, html }),
@@ -323,24 +388,70 @@ export const check20DayReminders = async () => {
         );
         const whatsappUrl = `https://wa.me/57${(client.phone || '').replace(/\D/g, '')}?text=${whatsappMsg}`;
         const html = `
-          <div style="font-family:Arial,sans-serif;max-width:520px;margin:0 auto;border:1px solid #e5e5e5;border-radius:8px;overflow:hidden">
-            <div style="background:#000;padding:20px 24px;text-align:center">
-              <span style="color:#F8C840;font-size:20px;font-weight:bold;letter-spacing:4px">ESTETICAR</span>
-            </div>
-            <div style="padding:28px 24px;background:#fafafa">
-              <h2 style="color:#111;margin:0 0 8px 0;font-size:18px">⏰ Recordatorio de seguimiento</h2>
-              <p style="color:#555;font-size:14px;margin:0 0 20px 0">Han pasado <strong style="color:#B4821E">${diffDays} días</strong> desde el último servicio.</p>
-              <table style="width:100%;border-collapse:collapse;font-size:14px">
-                <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888;width:160px">Cliente</td><td style="padding:10px 0;font-weight:600">${client.name}</td></tr>
-                <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Teléfono</td><td style="padding:10px 0;font-weight:600">${client.phone}</td></tr>
-                <tr style="border-bottom:1px solid #eee"><td style="padding:10px 0;color:#888">Último servicio</td><td style="padding:10px 0">${client.lastService}</td></tr>
-                <tr><td style="padding:10px 0;color:#888">Días sin visitar</td><td style="padding:10px 0;font-weight:700;color:#B4821E">${diffDays} días</td></tr>
-              </table>
-              <a href="${whatsappUrl}" style="display:inline-flex;align-items:center;gap:8px;margin-top:20px;background:#25D366;color:white;padding:12px 24px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:14px">
-                Escribirle por WhatsApp →
-              </a>
-            </div>
-          </div>
+<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Seguimiento cliente · Esteticar</title></head>
+<body style="margin:0;padding:0;background:#F4F1EC;font-family:Georgia,serif">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F1EC;padding:40px 16px">
+<tr><td align="center">
+<table width="100%" style="max-width:560px;background:#ffffff;border-radius:2px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.10)">
+
+  <!-- HEADER -->
+  <tr><td style="background:#0A0A0A;padding:36px 40px;text-align:center;border-bottom:3px solid #C9A84C">
+    <img src="https://esteticar-vff.vercel.app/logo.png" alt="Esteticar" width="120" style="display:block;margin:0 auto 12px;height:auto" />
+    <div style="color:#C9A84C;font-size:9px;letter-spacing:4px;font-family:Arial,sans-serif;font-weight:600;text-transform:uppercase">Custodia Vehicular Premium · Manizales</div>
+  </td></tr>
+
+  <!-- BADGE -->
+  <tr><td style="background:#0A0A0A;padding:0 40px 28px;text-align:center">
+    <div style="display:inline-block;background:#7C5C2E;color:#F8C840;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:7px 20px;border-radius:2px">${diffDays} días sin visita</div>
+  </td></tr>
+
+  <!-- INTRO -->
+  <tr><td style="padding:36px 40px 0">
+    <p style="margin:0;font-size:22px;color:#0A0A0A;font-weight:400;line-height:1.3">Momento de hacer seguimiento.</p>
+    <p style="margin:10px 0 0;font-size:14px;color:#888;font-family:Arial,sans-serif;line-height:1.6">Este cliente lleva <strong style="color:#7C5C2E">${diffDays} días</strong> sin agendar un nuevo servicio. Es el momento ideal para reactivar la relación.</p>
+    <div style="margin:24px 0 0;height:1px;background:linear-gradient(90deg,#C9A84C 0%,#f4f1ec 100%)"></div>
+  </td></tr>
+
+  <!-- DATA GRID -->
+  <tr><td style="padding:28px 40px">
+    <table width="100%" cellpadding="0" cellspacing="0">
+      <tr>
+        <td width="44%" style="padding:14px 16px;background:#FAF8F4;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Cliente</td>
+        <td style="padding:14px 16px;background:#FAF8F4;border-radius:0 2px 2px 0;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${client.name}</td>
+      </tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Teléfono</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${client.phone}</td>
+      </tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Último servicio</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-size:14px;color:#555;vertical-align:middle">${client.lastService}</td>
+      </tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Días sin visita</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#7C5C2E;font-weight:700;font-family:Arial,sans-serif;vertical-align:middle">${diffDays} días</td>
+      </tr>
+    </table>
+  </td></tr>
+
+  <!-- CTA WHATSAPP -->
+  <tr><td style="padding:0 40px 40px;text-align:center">
+    <a href="${whatsappUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;text-decoration:none;padding:16px 36px;border-radius:2px">Escribirle por WhatsApp →</a>
+  </td></tr>
+
+  <!-- FOOTER -->
+  <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cll 67 #9-26, La Sultana · Manizales, Colombia</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#444">www.esteticarmanizales.com</div>
+  </td></tr>
+
+</table>
+</td></tr></table>
+</body></html>
         `;
         await Promise.allSettled([
           notifyEmail({ subject, html }),
