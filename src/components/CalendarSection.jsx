@@ -479,7 +479,7 @@ function formatCOP(amount) {
   return "$" + amount.toLocaleString("es-CO");
 }
 
-function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
+function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onSave }) {
   const CAR_SERVICES = [
     "Lavada Esencial Carro",
     "Brillado a Máquina",
@@ -519,6 +519,23 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
   const selectedDay = form.selectedDate ? new Date(form.selectedDate + "T12:00:00") : (day || new Date());
   const rawPrice = SERVICE_PRICES[form.service];
   const isCotizacion = rawPrice === null;
+
+  // Capacity enforcement
+  const countAtHour = (hour) => {
+    const dayAppts = appointments.filter(a => {
+      const apptDate = parseAppointmentDate(a);
+      return isSameDay(apptDate, selectedDay) && a.status !== 'cancelada';
+    });
+    return dayAppts.filter(a => {
+      const start = parseAppointmentHour(a);
+      const dur = getServiceDuration(a.service);
+      return hour >= start && hour < start + dur;
+    }).length;
+  };
+  const newDuration = getServiceDuration(form.service);
+  const firstBlockedHour = Array.from({ length: newDuration }, (_, i) => form.hour + i)
+    .find(h => countAtHour(h) >= MAX_BAYS);
+  const isCapacityBlocked = firstBlockedHour !== undefined;
   const basePrice = isCotizacion ? (parseInt(form.manualPrice) || 0) : (rawPrice || 0);
   const finalPrice = Math.max(0, basePrice - (Number(form.discount) || 0));
   const hasDiscount = form.discount > 0;
@@ -538,7 +555,7 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
   const hours = Array.from({ length: hourEnd - HOUR_START }, (_, i) => HOUR_START + i);
 
   const handleSubmit = () => {
-    if (!form.clientName || !form.clientPhone) return;
+    if (!form.clientName || !form.clientPhone || isCapacityBlocked) return;
     const dateStr = format(selectedDay, "EEEE, d 'de' MMMM", { locale: es });
     const fullDate = `${dateStr} a las ${form.hour}:00`;
     onSave({
@@ -613,7 +630,15 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
                 onChange={e => setForm({ ...form, hour: parseInt(e.target.value) })}
                 className="font-body text-sm text-ec-dark bg-ec-cream hover:bg-[#F8C840]/10 px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer transition-colors"
               >
-                {hours.map(h => <option key={h} value={h}>{h}:00</option>)}
+                {hours.map(h => {
+                  const cnt = countAtHour(h);
+                  const full = cnt >= MAX_BAYS;
+                  return (
+                    <option key={h} value={h}>
+                      {h}:00{cnt > 0 ? ` · ${cnt}/${MAX_BAYS} bahías` : ''}{full ? ' — LLENO' : ''}
+                    </option>
+                  );
+                })}
               </select>
             </div>
           </div>
@@ -731,20 +756,27 @@ function AddAppointmentModal({ day, defaultHour, onClose, onSave }) {
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-5 flex justify-end gap-2">
-          <button
-            onClick={onClose}
-            className="px-5 py-2.5 font-ui text-[10px] tracking-[0.2em] uppercase text-ec-text-muted hover:bg-ec-cream rounded-lg transition-all"
-          >
-            Cancelar
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!form.clientName || !form.clientPhone}
-            className="px-6 py-2.5 bg-[#F8C840] text-white font-ui text-[10px] tracking-[0.2em] uppercase rounded-lg hover:bg-[#e6b800] disabled:opacity-30 transition-all shadow-sm"
-          >
-            Guardar
-          </button>
+        <div className="px-6 pb-5">
+          {isCapacityBlocked && (
+            <p className="font-ui text-[9px] tracking-[0.15em] uppercase text-red-500 text-right mb-2">
+              Bahías llenas a las {firstBlockedHour}:00 — elige otro horario
+            </p>
+          )}
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={onClose}
+              className="px-5 py-2.5 font-ui text-[10px] tracking-[0.2em] uppercase text-ec-text-muted hover:bg-ec-cream rounded-lg transition-all"
+            >
+              Cancelar
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={!form.clientName || !form.clientPhone || isCapacityBlocked}
+              className="px-6 py-2.5 bg-[#F8C840] text-white font-ui text-[10px] tracking-[0.2em] uppercase rounded-lg hover:bg-[#e6b800] disabled:opacity-30 transition-all shadow-sm"
+            >
+              Guardar
+            </button>
+          </div>
         </div>
       </motion.div>
     </motion.div>
@@ -1091,6 +1123,7 @@ export default function CalendarSection({ isAdmin = false, onOpenChat, openNewOn
           <AddAppointmentModal
             day={addModalDay}
             defaultHour={addModalHour}
+            appointments={appointments}
             onClose={() => setShowAddModal(false)}
             onSave={handleSaveAppointment}
           />
