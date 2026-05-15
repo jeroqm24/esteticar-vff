@@ -32,6 +32,7 @@ const mapAppt = (r) => ({
   services: r.services || [], totalAmount: r.total_amount || 0,
   pickupOption: r.pickup_option, reminderSent: r.reminder_sent || false,
   origin: r.origin || null,
+  leadType: r.lead_type || null,
 });
 
 const toApptRow = (d) => ({
@@ -42,6 +43,7 @@ const toApptRow = (d) => ({
   status: d.status || 'pending', channel: d.channel || 'manual',
   created_date: d.created_date || new Date().toISOString(),
   origin: d.origin || null,
+  lead_type: d.leadType || null,
 });
 
 // ═══════════════════════════════════════════════════════════════════

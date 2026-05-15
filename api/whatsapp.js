@@ -816,6 +816,7 @@ export default async function handler(req, res) {
           status: 'pending',
           channel: platform,
           origin: originMap[platform] || 'Bot',
+          lead_type: meta.lead_type || conv.lead_type || null,
           created_date: new Date().toISOString(),
         };
 
