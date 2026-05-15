@@ -397,8 +397,19 @@ export const ai = {
 
 // ─── EmailJS (legacy, no se usa activamente) ──────────────────────
 export const email = {
-  send: async ({ to, subject, body }) => {
-    console.log(`[Esteticar Email] To: ${to}`, { subject, body });
-    return true;
+  send: async ({ to, subject, body, html }) => {
+    try {
+      const res = await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          type: 'email',
+          subject: subject || 'Recordatorio Esteticar',
+          html: html || `<p>${body || ''}</p>`,
+          to: to || undefined,
+        }),
+      });
+      return res.ok;
+    } catch { return false; }
   },
 };

@@ -52,7 +52,7 @@ export default async function handler(req, res) {
                     'Authorization': `Bearer ${resendKey}`,
                 },
                 body: JSON.stringify({
-                    from: 'Esteticar <onboarding@resend.dev>',
+                    from: process.env.RESEND_FROM_EMAIL || 'Esteticar <onboarding@resend.dev>',
                     to: recipients,
                     subject: subject || 'Notificación Esteticar',
                     html: html || message || '',
