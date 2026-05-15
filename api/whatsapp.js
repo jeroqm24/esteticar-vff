@@ -4,6 +4,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI, { toFile } from 'openai';
 import { createClient } from '@supabase/supabase-js';
+import crypto from 'crypto';
 
 const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
 const WA_TOKEN     = process.env.WHATSAPP_TOKEN;
@@ -517,6 +518,62 @@ const cleanReply = (text) => text
   .replace(/__OBJECTION__:[^\n]*/g, '')
   .trim();
 
+const META_PIXEL_ID  = process.env.META_PIXEL_ID;
+const META_CAPI_TOKEN = process.env.META_CAPI_TOKEN;
+
+const sha256 = (val) => val ? crypto.createHash('sha256').update(val.toLowerCase().trim()).digest('hex') : undefined;
+const parsePrice = (display) => {
+  if (!display) return 0;
+  const n = parseInt(display.replace(/[^0-9]/g, ''), 10);
+  return isNaN(n) ? 0 : n;
+};
+
+const sendMetaCAPI = async (booking, phone) => {
+  if (!META_PIXEL_ID || !META_CAPI_TOKEN) return;
+  const priceValue = parsePrice(booking.priceDisplay);
+  if (!priceValue) return;
+
+  const nameParts = (booking.clientName || '').trim().split(/\s+/);
+  const userData = {
+    ph: [sha256(phone.replace(/\D/g, ''))],
+  };
+  if (nameParts[0]) userData.fn = [sha256(nameParts[0])];
+  if (nameParts[1]) userData.ln = [sha256(nameParts.slice(1).join(' '))];
+
+  const eventTime = Math.floor(Date.now() / 1000);
+  const events = [
+    {
+      event_name: 'Purchase',
+      event_time: eventTime,
+      action_source: 'system_generated',
+      event_id: booking.confirmationCode,
+      user_data: userData,
+      custom_data: { value: priceValue, currency: 'COP', content_name: booking.service, content_type: 'service' },
+    },
+    {
+      event_name: 'Schedule',
+      event_time: eventTime,
+      action_source: 'system_generated',
+      event_id: `SCH-${booking.confirmationCode}`,
+      user_data: userData,
+      custom_data: { value: priceValue, currency: 'COP', content_name: booking.service },
+    },
+  ];
+
+  try {
+    const res = await fetch(`https://graph.facebook.com/v20.0/${META_PIXEL_ID}/events?access_token=${META_CAPI_TOKEN}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: events }),
+    });
+    const json = await res.json();
+    if (json.error) console.error('META CAPI ERROR:', JSON.stringify(json.error));
+    else console.log('META CAPI OK:', json.events_received, 'eventos enviados — cita', booking.confirmationCode);
+  } catch (e) {
+    console.error('META CAPI FETCH ERROR:', e.message);
+  }
+};
+
 const TEAM_NUMBER = '573008400230';
 const notifyTeam = async (clientPhone, question) => {
   const msg = `⚠️ *ESCALACIÓN ESTETICAR*\nUn cliente necesita atención humana.\n\n*Consulta:* "${question}"\n\n👉 Abrir chat: https://wa.me/${clientPhone}`;
@@ -743,6 +800,7 @@ export default async function handler(req, res) {
 
         const { error: insertError } = await supabaseAdmin.from('appointments').insert(insertPayload);
         if (insertError) console.error('APPT INSERT ERROR:', JSON.stringify(insertError), 'PAYLOAD:', JSON.stringify(insertPayload));
+        else sendMetaCAPI({ ...booking, clientPhone: from }, from).catch(() => {});
 
         // Sincronizar cliente en tabla clients — siempre usar 'from' (número WhatsApp real)
         const { error: clientUpsertError } = await supabaseAdmin.from('clients').upsert({
