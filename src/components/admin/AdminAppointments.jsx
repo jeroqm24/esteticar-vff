@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { db, email } from "../../lib/storage";
 
 const STATUS_OPTIONS = ["pending", "confirmed", "in_progress", "completed", "cancelled"];
+const ORIGIN_OPTIONS = ["Bot", "Instagram", "Facebook", "Referido", "Calle", "Otro"];
 const STATUS_LABELS = {
   pending: "Pendiente", confirmed: "Confirmada", in_progress: "En proceso",
   completed: "Completada", cancelled: "Cancelada",
@@ -81,6 +82,8 @@ export default function AdminAppointments() {
   const [deleteTarget, setDeleteTarget] = useState(null);
   const [deleting, setDeleting] = useState(false);
   const [showDetail, setShowDetail] = useState(false);
+  const [registeringCAPI, setRegisteringCAPI] = useState(false);
+  const [capiDone, setCapiDone] = useState({});
 
   useEffect(() => { load(); }, []);
 
@@ -119,6 +122,28 @@ export default function AdminAppointments() {
     setAppointments(prev => prev.map(a => a.id === appt.id ? { ...a, reminderSent: true } : a));
     if (selected?.id === appt.id) setSelected(prev => ({ ...prev, reminderSent: true }));
     setSending(false);
+  };
+
+  const updateOrigin = async (id, origin) => {
+    const appt = appointments.find(a => a.id === id);
+    if (!appt) return;
+    await db.appointments.update(id, { ...appt, origin });
+    setAppointments(prev => prev.map(a => a.id === id ? { ...a, origin } : a));
+    if (selected?.id === id) setSelected(prev => ({ ...prev, origin }));
+  };
+
+  const registerConversion = async (appt) => {
+    setRegisteringCAPI(true);
+    try {
+      const res = await fetch('/api/capi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': 'esteticar2026' },
+        body: JSON.stringify({ appointment: appt }),
+      });
+      const json = await res.json();
+      if (json.ok) setCapiDone(prev => ({ ...prev, [appt.id]: true }));
+    } catch { }
+    setRegisteringCAPI(false);
   };
 
   const openDetail = (appt) => { setSelected(appt); setShowDetail(true); };
@@ -368,6 +393,26 @@ export default function AdminAppointments() {
                     </div>
                   )}
 
+                  {/* Origen del lead */}
+                  <div className="mb-6">
+                    <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase mb-3">Origen del lead</p>
+                    <div className="flex flex-wrap gap-2">
+                      {ORIGIN_OPTIONS.map(o => (
+                        <button
+                          key={o}
+                          onClick={() => updateOrigin(selected.id, o)}
+                          className="px-3 py-1.5 font-ui text-[9px] tracking-[0.1em] uppercase rounded-full border transition-all"
+                          style={selected.origin === o
+                            ? { background: "#B8860B", color: "#fff", borderColor: "#B8860B" }
+                            : { background: "#FAFAF8", color: "#888", borderColor: "rgba(0,0,0,0.1)" }
+                          }
+                        >
+                          {o}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Change status */}
                   <div className="mb-6">
                     <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase mb-3">Cambiar Estado</p>
@@ -394,6 +439,17 @@ export default function AdminAppointments() {
 
                   {/* Actions */}
                   <div className="flex flex-col gap-2">
+                    <button
+                      onClick={() => registerConversion(selected)}
+                      disabled={registeringCAPI || capiDone[selected.id]}
+                      className="w-full py-3.5 font-ui text-[10px] tracking-[0.2em] border uppercase flex items-center justify-center gap-2 transition-all rounded-xl"
+                      style={capiDone[selected.id]
+                        ? { background: "#F0FDF4", color: "#16A34A", borderColor: "#86EFAC", cursor: "default" }
+                        : { background: "#0F0F0F", color: "#fff", borderColor: "#0F0F0F", opacity: registeringCAPI ? 0.5 : 1 }
+                      }
+                    >
+                      {capiDone[selected.id] ? "Conversión Registrada ✓" : registeringCAPI ? "Registrando..." : "Registrar como Conversión"}
+                    </button>
                     <button
                       onClick={() => sendReminderEmail(selected)}
                       disabled={sending || selected.reminderSent}

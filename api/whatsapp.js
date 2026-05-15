@@ -6,9 +6,12 @@ import OpenAI, { toFile } from 'openai';
 import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
 
-const VERIFY_TOKEN = process.env.WHATSAPP_VERIFY_TOKEN;
-const WA_TOKEN     = process.env.WHATSAPP_TOKEN;
-const PHONE_ID     = process.env.WHATSAPP_PHONE_NUMBER_ID;
+const VERIFY_TOKEN  = process.env.WHATSAPP_VERIFY_TOKEN;
+const WA_TOKEN      = process.env.WHATSAPP_TOKEN;
+const PHONE_ID      = process.env.WHATSAPP_PHONE_NUMBER_ID;
+const IG_TOKEN      = process.env.INSTAGRAM_TOKEN;
+const IG_USER_ID    = process.env.INSTAGRAM_USER_ID;
+const FB_PAGE_TOKEN = process.env.FB_PAGE_TOKEN;
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY || process.env.VITE_ANTHROPIC_API_KEY });
 const openai    = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
@@ -454,6 +457,24 @@ const sendMessage = async (to, text) => {
   });
 };
 
+const sendInstagramMessage = async (recipientId, text) => {
+  if (!IG_TOKEN || !IG_USER_ID) return;
+  await fetch(`https://graph.facebook.com/v20.0/${IG_USER_ID}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${IG_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
+  });
+};
+
+const sendFBMessage = async (recipientId, text) => {
+  if (!FB_PAGE_TOKEN) return;
+  await fetch(`https://graph.facebook.com/v20.0/me/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${FB_PAGE_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
+  });
+};
+
 const parseBooking = (text) => {
   if (!text.includes('__BOOKING_CONFIRMED__')) return null;
   const block = text.match(/__BOOKING_CONFIRMED__([\s\S]*?)__END_BOOKING__/)?.[1] || '';
@@ -591,74 +612,78 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     try {
       const body = req.body;
-      if (body.object !== 'whatsapp_business_account') return res.status(200).send('OK');
 
-      const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
-      if (!message) return res.status(200).send('OK');
-      if (message.type !== 'text' && message.type !== 'audio') return res.status(200).send('OK');
-
-      const from  = message.from;
-      const msgId = message.id;
-
-      // ── Transcripción de audio con Whisper ──
+      // ── Detectar plataforma y extraer mensaje ─────────────────
+      let from, msgId, platform, sendFn, rawSenderId;
       let text = '';
-      if (message.type === 'audio') {
-        try {
-          const mediaId = message.audio.id;
 
-          // 1. Obtener URL del audio desde WhatsApp
-          const mediaRes = await fetch(`https://graph.facebook.com/v20.0/${mediaId}`, {
-            headers: { Authorization: `Bearer ${WA_TOKEN}` },
-          });
-          const mediaData = await mediaRes.json();
+      if (body.object === 'whatsapp_business_account') {
+        const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+        if (!message) return res.status(200).send('OK');
+        if (message.type !== 'text' && message.type !== 'audio') return res.status(200).send('OK');
+        from        = message.from;
+        msgId       = message.id;
+        platform    = 'whatsapp';
+        rawSenderId = message.from;
+        sendFn      = sendMessage;
 
-          if (!mediaData.url) throw new Error('No URL in mediaData: ' + JSON.stringify(mediaData));
-
-          // 2. Descargar el archivo OGG
-          const audioRes = await fetch(mediaData.url, {
-            headers: { Authorization: `Bearer ${WA_TOKEN}` },
-          });
-          if (!audioRes.ok) throw new Error('Audio download failed: ' + audioRes.status);
-          const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
-
-          // 3. Transcribir con SDK oficial de OpenAI
-          const transcription = await openai.audio.transcriptions.create({
-            file: await toFile(audioBuffer, 'audio.ogg', { type: 'audio/ogg' }),
-            model: 'whisper-1',
-            language: 'es',
-          });
-          text = transcription.text?.trim() || '';
-
-          // Log costo Whisper — en su propio bloque para no cortar el flujo
+        // Transcripción de audio
+        if (message.type === 'audio') {
           try {
-            const durationSec = audioBuffer.length / 4000;
-            const costUsd = (durationSec / 60) * 0.006;
-            await supabaseAdmin.from('api_costs').insert({
-              provider: 'openai', model: 'whisper-1', channel: 'whatsapp',
-              audio_seconds: Math.round(durationSec), cost_usd: costUsd,
+            const mediaId  = message.audio.id;
+            const mediaRes = await fetch(`https://graph.facebook.com/v20.0/${mediaId}`, { headers: { Authorization: `Bearer ${WA_TOKEN}` } });
+            const mediaData = await mediaRes.json();
+            if (!mediaData.url) throw new Error('No URL in mediaData: ' + JSON.stringify(mediaData));
+            const audioRes = await fetch(mediaData.url, { headers: { Authorization: `Bearer ${WA_TOKEN}` } });
+            if (!audioRes.ok) throw new Error('Audio download failed: ' + audioRes.status);
+            const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
+            const transcription = await openai.audio.transcriptions.create({
+              file: await toFile(audioBuffer, 'audio.ogg', { type: 'audio/ogg' }),
+              model: 'whisper-1', language: 'es',
             });
-          } catch (_) {}
-        } catch (e) {
-          console.error('[Whisper] ERROR:', e.message, e.stack);
-          await sendMessage(from, 'No pude escuchar bien el audio. Puedes escribirme tu mensaje?');
-          return res.status(200).send('OK');
+            text = transcription.text?.trim() || '';
+            try {
+              const durationSec = audioBuffer.length / 4000;
+              await supabaseAdmin.from('api_costs').insert({ provider: 'openai', model: 'whisper-1', channel: 'whatsapp', audio_seconds: Math.round(durationSec), cost_usd: (durationSec / 60) * 0.006 });
+            } catch (_) {}
+          } catch (e) {
+            console.error('[Whisper] ERROR:', e.message, e.stack);
+            await sendMessage(from, 'No pude escuchar bien el audio. Puedes escribirme tu mensaje?');
+            return res.status(200).send('OK');
+          }
+        } else {
+          text = message.text.body?.trim();
         }
+
+      } else if (body.object === 'instagram') {
+        const event = body.entry?.[0]?.messaging?.[0];
+        if (!event?.message?.text) return res.status(200).send('OK');
+        rawSenderId = event.sender.id;
+        from        = `ig_${rawSenderId}`;
+        msgId       = event.message.mid;
+        text        = event.message.text?.trim();
+        platform    = 'instagram';
+        sendFn      = (_, t) => sendInstagramMessage(rawSenderId, t);
+
+      } else if (body.object === 'page') {
+        const event = body.entry?.[0]?.messaging?.[0];
+        if (!event?.message?.text) return res.status(200).send('OK');
+        if (event.message.is_echo) return res.status(200).send('OK');
+        rawSenderId = event.sender.id;
+        from        = `fb_${rawSenderId}`;
+        msgId       = event.message.mid;
+        text        = event.message.text?.trim();
+        platform    = 'messenger';
+        sendFn      = (_, t) => sendFBMessage(rawSenderId, t);
+
       } else {
-        text = message.text.body?.trim();
+        return res.status(200).send('OK');
       }
+      // ──────────────────────────────────────────────────────────
 
-      if (!text) return res.status(200).send('OK');
-
-      // ── Deduplicación: ignorar si este message.id ya fue procesado ──
-      const { data: dedupRow } = await supabase
-        .from('conversations')
-        .select('last_message_id')
-        .eq('phone', from)
-        .single();
-
+      // ── Deduplicación ──
+      const { data: dedupRow } = await supabase.from('conversations').select('last_message_id').eq('phone', from).single();
       if (dedupRow?.last_message_id === msgId) return res.status(200).send('OK');
-
-      // Marcar mensaje como en proceso antes de llamar a Claude
       await supabase.from('conversations').upsert(
         { phone: from, last_message_id: msgId, updated_at: new Date().toISOString() },
         { onConflict: 'phone' }
@@ -667,16 +692,11 @@ export default async function handler(req, res) {
       // Historial + perfil del cliente
       const conv = await getConversation(from);
 
-      // Si el bot está pausado, una persona está atendiendo — solo guardar el mensaje, no responder
+      // Si el bot está pausado, guardar el mensaje sin responder
       if (conv.bot_paused) {
         const history = conv.history || [];
-
-        // Historial vacío = cliente eliminado y reingresó → limpiar pausa y dejar que el bot responda
         if (history.length === 0) {
-          await supabase.from('conversations')
-            .update({ bot_paused: false })
-            .eq('phone', from);
-          // Continúa al flujo normal sin return
+          await supabase.from('conversations').update({ bot_paused: false }).eq('phone', from);
         } else {
           history.push({ role: 'user', content: text });
           if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
@@ -689,7 +709,6 @@ export default async function handler(req, res) {
       history.push({ role: 'user', content: text });
       if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
 
-      // Llamar a Claude pasando lead_type y perfil completo del cliente
       const systemPrompt = await buildPrompt(conv.lead_type, conv);
       const aiResponse = await anthropic.messages.create({
         model: 'claude-sonnet-4-6',
@@ -780,6 +799,7 @@ export default async function handler(req, res) {
           }
         }
 
+        const originMap = { whatsapp: 'Bot', instagram: 'Instagram', messenger: 'Facebook' };
         const insertPayload = {
           service: booking.service,
           vehicle_type: booking.vehicleType,
@@ -788,13 +808,14 @@ export default async function handler(req, res) {
           price_display: booking.priceDisplay,
           confirmation_code: booking.confirmationCode,
           client_name: booking.clientName,
-          client_phone: from,
+          client_phone: platform === 'whatsapp' ? from : (booking.clientPhone || null),
           client_email: booking.clientEmail && booking.clientEmail !== 'no_proporcionado' ? booking.clientEmail : null,
           traslado: trasladoFinal,
           cedula: booking.cedula && booking.cedula !== 'no_proporcionado' ? booking.cedula : null,
           placa: booking.placa && booking.placa !== 'no_proporcionado' ? booking.placa : null,
           status: 'pending',
-          channel: 'whatsapp',
+          channel: platform,
+          origin: originMap[platform] || 'Bot',
           created_date: new Date().toISOString(),
         };
 
@@ -831,20 +852,19 @@ export default async function handler(req, res) {
         }).catch(() => {});
       }
 
-      // Escalación al equipo — notificar y confirmar pausa
+      // Escalación al equipo
       if (escalateMatch) {
-        await notifyTeam(from, escalateMatch[1].trim());
-        // Mensaje adicional a Sara informando que el bot ya está pausado
+        const clientRef = platform === 'whatsapp' ? from : `(${platform}) ID ${rawSenderId}`;
+        await notifyTeam(clientRef, escalateMatch[1].trim());
         await sendMessage(TEAM_NUMBER,
-          `⏸️ *Bot pausado* para este cliente.\nPuedes responderle directamente desde la app.\nCuando termines, reactiva el bot desde el dashboard de Esteticar.`
+          `⏸️ *Bot pausado* para este cliente (${platform}).\nPuedes responderle directamente desde la app.\nCuando termines, reactiva el bot desde el dashboard de Esteticar.`
         );
       }
 
-      // Delay humanizador (corto para no exceder timeout de WhatsApp)
       await sleep(600 + Math.random() * 600);
 
       const reply = cleanReply(rawReply);
-      if (reply) await sendMessage(from, reply);
+      if (reply) await sendFn(from, reply);
 
     } catch (err) {
       console.error('WhatsApp webhook error:', err);
