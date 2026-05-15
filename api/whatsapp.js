@@ -58,6 +58,13 @@ const saveHistory = async (phone, history, meta = {}) => {
 };
 
 // ─── Helpers de tiempo ────────────────────────────────────────────
+// Obtiene la fecha real en Colombia (evita el bug de UTC→local que desfasa un día)
+const getColombiaNow = () => {
+  const s = new Date().toLocaleDateString('en-CA', { timeZone: 'America/Bogota' }); // "YYYY-MM-DD"
+  const [y, m, d] = s.split('-').map(Number);
+  return new Date(y, m - 1, d, 12, 0, 0); // mediodía local, sin riesgo de DST
+};
+
 const getGreeting = () => {
   const h = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' })).getHours();
   if (h >= 5 && h < 12) return 'Buenos días';
@@ -66,26 +73,24 @@ const getGreeting = () => {
 };
 
 const getTodayStr = () =>
-  new Date().toLocaleDateString('es-CO', {
-    timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long',
+  getColombiaNow().toLocaleDateString('es-CO', {
+    weekday: 'long', day: 'numeric', month: 'long',
   });
 
 const getTomorrowStr = () => {
-  const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+  const d = getColombiaNow();
   d.setDate(d.getDate() + 1);
-  return d.toLocaleDateString('es-CO', { timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long' });
+  return d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
 };
 
 const getWeekCalendar = () => {
-  const base = new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Bogota' }));
+  const base = getColombiaNow();
   const days = [];
   for (let d = 1; d <= 8; d++) {
     const date = new Date(base);
     date.setDate(base.getDate() + d);
     if (date.getDay() === 0) continue;
-    days.push(date.toLocaleDateString('es-CO', {
-      timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long',
-    }));
+    days.push(date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }));
   }
   return days.join(' · ');
 };
@@ -443,6 +448,11 @@ CEDULA: [número o "no_proporcionado"]
 PLACA: [placa o "no_proporcionado"]
 __END_BOOKING__
 
+━━━ CANCELACIÓN DE CITA ━━━
+Si el cliente pide cancelar o ya no puede venir, confirma con calidez y emite al final:
+__CANCEL_BOOKING__
+Cuando el cliente confirme que sí quiere cancelar (no solo si pregunta), responde con algo como: "Listo, cancelé tu cita. Cuando quieras volver a agendar, aquí estamos."
+
 ━━━ ESCALACIÓN ━━━
 Si no puedes resolver algo: "Danos un momento por favor para comunicarte con el área encargada."
 __ESCALATE__:[pregunta máximo 12 palabras]
@@ -555,6 +565,7 @@ Responde SOLO con JSON puro, sin markdown, sin explicación:
 
 const cleanReply = (text) => text
   .replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, '')
+  .replace(/__CANCEL_BOOKING__/g, '')
   .replace(/__ESCALATE__:[^\n]*/g, '')
   .replace(/__NAME__:[^\n]*/g, '')
   .replace(/__EMAIL__:[^\n]*/g, '')
@@ -785,6 +796,7 @@ export default async function handler(req, res) {
       const leadMatch     = rawReply.match(/__LEAD_TYPE__:([^\n]+)/);
       const objMatch      = rawReply.match(/__OBJECTION__:([^\n]+)/);
       const escalateMatch = rawReply.match(/__ESCALATE__:([^\n]*)/);
+      const cancelMatch   = rawReply.includes('__CANCEL_BOOKING__');
       if (emailMatch) {
         const capturedEmail = emailMatch[1].trim();
         if (capturedEmail && capturedEmail !== 'no_proporcionado' && capturedEmail.includes('@')) {
@@ -840,6 +852,18 @@ export default async function handler(req, res) {
 
       // Pausar bot automáticamente cuando escala a Sara
       if (escalateMatch) meta.bot_paused = true;
+
+      // Cancelar cita más reciente del cliente
+      if (cancelMatch) {
+        supabaseAdmin
+          .from('appointments')
+          .update({ status: 'cancelada' })
+          .eq('client_phone', from)
+          .in('status', ['pending', 'confirmada', 'en_proceso'])
+          .order('created_date', { ascending: false })
+          .limit(1)
+          .then(null, (e) => console.error('CANCEL ERROR:', e));
+      }
 
       history.push({ role: 'assistant', content: rawReply });
       await saveHistory(from, history, meta);
