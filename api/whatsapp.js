@@ -324,16 +324,15 @@ Con eso (y con lo que el cliente ya dijo) clasifícalo así:
 💸 BILLETUDO: Pregunta por cerámico, quiere protección completa, no pregunta precios.
    Estrategia: Empieza con Cerámico ($2.400.000–$3.000.000), destaca diferenciadores premium, no bajes de entrada.
 
-Clasifica al cliente desde el primer o segundo mensaje con los datos disponibles. No esperes la pregunta de diagnóstico para clasificar — infiere el perfil desde cómo escribe y qué pide:
-- Pregunta directo por el precio más barato → REGATEADOR
-- Pide la lavada esencial sin más contexto → probablemente REGATEADOR
-- Pregunta qué incluye, cómo funciona → ANALISTA
-- Tiene urgencia ("lo voy a vender", "se manchó", "para este fin de semana") → EMBALADO
-- Pregunta por cerámico, protección, no menciona precio → BILLETUDO
+REGLA CRÍTICA DE CLASIFICACIÓN: NO clasifiques en el primer ni segundo mensaje. Necesitas mínimo 3 intercambios Y haber hecho al menos una pregunta de diagnóstico. Clasifica SOLO cuando tengas evidencia clara y sostenida:
+- Pregunta precio más barato de forma repetida o directa → REGATEADOR
+- Pregunta qué incluye, cómo funciona, es su primera vez → ANALISTA
+- Urgencia explícita y concreta ("lo voy a vender este fin de semana", "se manchó hoy") → EMBALADO
+- Pregunta por cerámico o protección sin importarle el precio → BILLETUDO
 
-Añade al final de CADA mensaje (invisible para el cliente):
+Cuando tengas evidencia suficiente (mínimo 3 intercambios), añade al final:
 __LEAD_TYPE__:[regateador|analista|embalado|billetudo]
-Si aún no tienes suficiente info, clasifica como ANALISTA por defecto — nunca omitas el tag.
+Si NO tienes evidencia suficiente todavía, NO incluyas el tag — es mejor esperar que clasificar mal y aplicar la estrategia equivocada.
 
 Si el cliente rechaza, dice "lo pienso", "después", "no por ahora" o se enfría, añade también:
 __OBJECTION__:[razón en máximo 5 palabras]
@@ -343,7 +342,10 @@ PASO 1 — PRIMER MENSAJE: Varía el saludo. Ejemplo hoy: "${saludoEjemplo}"
 Nunca preguntes por carro o moto en el primer mensaje.
 
 PASO 1B — NOMBRE (PRIORITARIO): Si el nombre ya aparece en la sección CLIENTE CONOCIDO, úsalo directamente y NO lo pidas. Si no lo tienes, pídelo en tu SEGUNDO mensaje de forma natural: "Con quién tengo el gusto?" / "Me dices tu nombre?" / "Cómo te llamas?"
-En cuanto lo sepas, añade al final (invisible): __NAME__:[nombre completo]
+
+REGLA ABSOLUTA DE CAPTURA DE NOMBRE: En el MISMO mensaje en que aprendas el nombre del cliente — sea que lo diga espontáneamente ("soy Carlos", "Carlos Pérez"), sea que responda tu pregunta — DEBES incluir al final del mensaje:
+__NAME__:[nombre completo]
+Esta regla NO tiene ninguna excepción. Si el cliente dice su nombre y tú no incluyes __NAME__:[nombre] en ESE mensaje, estás rompiendo una instrucción crítica del sistema. El nombre se pierde y el cliente quedará anónimo en la base de datos para siempre.
 
 PASO 2 — DIAGNÓSTICO (cuando muestre interés):
 Haz las preguntas UNA A UNA, con naturalidad. No las dispares todas juntas.
@@ -494,6 +496,21 @@ const parseBooking = (text) => {
 
 const isConfirmationMessage = (text) =>
   /te confirm[oó]|cita.*confirmad|nos vemos|te esperamos|llegamos por tu|pasamos por tu|quedamos para el|cita queda/i.test(text);
+
+const extractNameWithHaiku = async (history) => {
+  try {
+    const msgs = history.slice(-10).filter(m => m.role === 'user' || m.role === 'assistant');
+    if (msgs.length < 4) return null;
+    const { content } = await anthropic.messages.create({
+      model: 'claude-haiku-4-5-20251001',
+      max_tokens: 30,
+      system: 'Extrae el nombre propio del cliente de esta conversación. Responde SOLO con el nombre completo (ejemplo: "Carlos Pérez") o la palabra null si no aparece ningún nombre. Sin explicación, sin puntos.',
+      messages: [...msgs, { role: 'user', content: 'Cuál es el nombre del cliente?' }],
+    });
+    const name = content[0]?.text?.trim().replace(/^"|"$/g, '');
+    return (name && name !== 'null' && name.length > 1 && name.length < 60) ? name : null;
+  } catch { return null; }
+};
 
 const extractBookingWithHaiku = async (history) => {
   try {
@@ -746,20 +763,30 @@ export default async function handler(req, res) {
       // Procesar cita confirmada — primero intenta el bloque, si no hay usa extracción con Haiku
       let booking = parseBooking(rawReply);
       if (!booking && isConfirmationMessage(cleanReply(rawReply))) {
-        const historyWithReply = [...history, { role: 'assistant', content: rawReply }];
-        booking = await extractBookingWithHaiku(historyWithReply);
+        booking = await extractBookingWithHaiku([...history, { role: 'assistant', content: rawReply }]);
         if (booking) booking.clientPhone = from;
       }
 
       // Construir meta para Supabase
       const meta = { last_visit_date: new Date().toISOString() };
-      if (nameMatch) {
-        meta.client_name = nameMatch[1].trim();
-        // Guardar nombre en tabla clients en cuanto se conoce
+
+      // Nombre: tomar del tag o, si falta y la conversación tiene suficiente contexto,
+      // extraer con Haiku como respaldo
+      const historyWithReply = [...history, { role: 'assistant', content: rawReply }];
+      let capturedName = nameMatch ? nameMatch[1].trim() : null;
+      if (!capturedName && !conv.client_name) {
+        const userTurns = history.filter(m => m.role === 'user').length;
+        if (userTurns >= 2) {
+          capturedName = await extractNameWithHaiku(historyWithReply);
+          if (capturedName) console.log('NAME via Haiku fallback:', capturedName);
+        }
+      }
+      if (capturedName) {
+        meta.client_name = capturedName;
         (async () => {
           try {
             await supabase.from('clients').upsert(
-              { phone: from, name: nameMatch[1].trim(), updated: new Date().toISOString() },
+              { phone: from, name: capturedName, updated: new Date().toISOString() },
               { onConflict: 'phone' }
             );
           } catch (_) {}
