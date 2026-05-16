@@ -335,10 +335,12 @@ const FILTERS = [
 ];
 
 export default function AdminLeads() {
-  const [convs, setConvs]   = useState([]);
+  const [convs, setConvs]     = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter]   = useState("all");
   const [search, setSearch]   = useState("");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo]     = useState("");
   const [slot, setSlot]       = useState(nextRemarketingSlot());
 
   const load = useCallback(async () => {
@@ -364,11 +366,21 @@ export default function AdminLeads() {
   const potenciales    = convs.filter(c => c.remarketing_status === "potencial");
   const desinteresados = convs.filter(c => c.remarketing_status === "desinteresado");
 
+  const fromTs = dateFrom ? new Date(dateFrom).getTime() : null;
+  const toTs   = dateTo   ? new Date(dateTo + "T23:59:59").getTime() : null;
+
   const filtered = convs.filter(c => {
     const matchFilter = filter === "all" ? true
       : filter === "efectivo" ? (c.remarketing_status === "efectivo" || c.remarketing_status === "converted")
       : c.remarketing_status === filter;
     if (!matchFilter) return false;
+
+    if (fromTs || toTs) {
+      const ts = new Date(c.updated_at || 0).getTime();
+      if (fromTs && ts < fromTs) return false;
+      if (toTs   && ts > toTs)   return false;
+    }
+
     if (!search) return true;
     const q = search.toLowerCase();
     return (c.client_name || "").toLowerCase().includes(q) ||
@@ -381,40 +393,76 @@ export default function AdminLeads() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="font-heading text-2xl text-ec-dark">Pipeline de Leads</h2>
-          <p className="font-body text-sm text-ec-text-muted mt-0.5">
-            {convs.length} leads · próximo remarketing automático: <span className="text-orange-600 font-medium">{slot.label}</span>
-          </p>
+      <div className="flex flex-col gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h2 className="font-heading text-2xl text-ec-dark">Pipeline de Leads</h2>
+            <p className="font-body text-sm text-ec-text-muted mt-0.5">
+              {filtered.length} de {convs.length} leads · próximo remarketing: <span className="text-orange-600 font-medium">{slot.label}</span>
+            </p>
+          </div>
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={load}
+              className="w-9 h-9 border border-black/[0.08] rounded-lg flex items-center justify-center text-ec-text-muted hover:border-ec-gold/40 hover:text-ec-gold transition-all flex-shrink-0"
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.08-5.96"/>
+              </svg>
+            </button>
+            {filtered.length > 0 && (
+              <button
+                onClick={() => downloadAll(filtered, activeFilter?.label || "todos")}
+                className="flex items-center gap-1.5 px-3 py-2 border border-black/[0.08] rounded-lg font-ui text-[10px] tracking-[0.12em] uppercase text-ec-text-muted hover:border-ec-gold/40 hover:text-ec-gold transition-all"
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                Exportar ({filtered.length})
+              </button>
+            )}
+          </div>
         </div>
-        <div className="flex items-center gap-2">
+
+        {/* Barra de búsqueda + fechas */}
+        <div className="flex flex-wrap items-center gap-2">
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Buscar nombre, teléfono..."
-            className="w-52 px-3 py-2 border border-black/[0.1] rounded-lg font-body text-sm bg-white focus:border-ec-gold focus:outline-none"
+            placeholder="Buscar nombre, teléfono, servicio..."
+            className="flex-1 min-w-[180px] px-3 py-2 border border-black/[0.1] rounded-lg font-body text-sm bg-white focus:border-ec-gold focus:outline-none"
           />
-          <button
-            onClick={load}
-            className="w-9 h-9 border border-black/[0.08] rounded-lg flex items-center justify-center text-ec-text-muted hover:border-ec-gold/40 hover:text-ec-gold transition-all"
-          >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.08-5.96"/>
+          <div className="flex items-center gap-2 bg-white border border-black/[0.1] rounded-lg px-3 py-1.5">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" className="flex-shrink-0">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
-          </button>
-          {filtered.length > 0 && (
-            <button
-              onClick={() => downloadAll(filtered, activeFilter?.label || "todos")}
-              title="Descargar todos los filtrados"
-              className="flex items-center gap-1.5 px-3 py-2 border border-black/[0.08] rounded-lg font-ui text-[10px] tracking-[0.12em] uppercase text-ec-text-muted hover:border-ec-gold/40 hover:text-ec-gold transition-all"
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
-              </svg>
-              Exportar
-            </button>
-          )}
+            <input
+              type="date"
+              value={dateFrom}
+              onChange={e => setDateFrom(e.target.value)}
+              className="font-body text-sm text-ec-dark bg-transparent focus:outline-none w-32"
+              title="Desde"
+            />
+            <span className="font-ui text-[10px] text-ec-text-muted">→</span>
+            <input
+              type="date"
+              value={dateTo}
+              onChange={e => setDateTo(e.target.value)}
+              className="font-body text-sm text-ec-dark bg-transparent focus:outline-none w-32"
+              title="Hasta"
+            />
+            {(dateFrom || dateTo) && (
+              <button
+                onClick={() => { setDateFrom(""); setDateTo(""); }}
+                className="text-ec-text-muted hover:text-red-400 transition-colors"
+                title="Limpiar fechas"
+              >
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
