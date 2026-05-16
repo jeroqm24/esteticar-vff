@@ -171,7 +171,6 @@ export default async function handler(req, res) {
       <tr><td width="44%" style="padding:14px 16px;background:#FAF8F4;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Servicio</td><td style="padding:14px 16px;background:#FAF8F4;border-radius:0 2px 2px 0;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${appt.service}</td></tr>
       <tr><td colspan="2" style="height:4px"></td></tr>
       <tr><td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Fecha y hora</td><td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${appt.date}</td></tr>
-      ${appt.confirmation_code ? `<tr><td colspan="2" style="height:4px"></td></tr><tr><td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Código</td><td style="padding:14px 16px;background:#FAF8F4;font-size:16px;color:#0A0A0A;font-weight:700;font-family:'Courier New',monospace;letter-spacing:2px;vertical-align:middle">${appt.confirmation_code}</td></tr>` : ''}
     </table>
   </td></tr>
   <tr><td style="padding:0 40px 36px">

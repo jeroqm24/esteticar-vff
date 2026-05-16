@@ -1103,14 +1103,9 @@ export default async function handler(req, res) {
   <tr><td style="padding:0 40px 36px">
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
-        <td width="50%" style="padding:20px 24px;background:#0A0A0A;border-radius:2px 0 0 2px;text-align:center">
+        <td width="100%" style="padding:20px 24px;background:#0A0A0A;border-radius:2px;text-align:center">
           <div style="font-family:Arial,sans-serif;font-size:9px;color:#A0916E;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Valor</div>
           <div style="font-size:22px;font-weight:700;color:#C9A84C;font-family:Arial,sans-serif">${booking.priceDisplay}</div>
-        </td>
-        <td width="4px" style="background:#1a1a1a"></td>
-        <td width="50%" style="padding:20px 24px;background:#0A0A0A;border-radius:0 2px 2px 0;text-align:center">
-          <div style="font-family:Arial,sans-serif;font-size:9px;color:#A0916E;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Código</div>
-          <div style="font-size:20px;font-weight:700;color:#ffffff;font-family:'Courier New',monospace;letter-spacing:2px">${booking.confirmationCode}</div>
         </td>
       </tr>
     </table>
@@ -1133,7 +1128,7 @@ export default async function handler(req, res) {
 </body></html>`;
 
         // Email al ADMIN — notificación interna
-        const clientWaUrl = `https://api.whatsapp.com/send/?phone=57${(from || '').replace(/\D/g,'')}&text=${encodeURIComponent(`Hola ${booking.clientName || 'cliente'}, te confirmamos tu cita en Esteticar para el ${booking.date}. Código: ${booking.confirmationCode}. Nos alegra tenerte. Cualquier duda aquí estamos.`)}`;
+        const clientWaUrl = `https://api.whatsapp.com/send/?phone=57${(from || '').replace(/\D/g,'')}&text=${encodeURIComponent(`Hola ${booking.clientName || 'cliente'}, te confirmamos tu cita en Esteticar para el ${booking.date}. Nos alegra tenerte. Cualquier duda aquí estamos.`)}`;
         const adminEmailHtml = `
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#F4F1EC;font-family:Georgia,serif">
@@ -1157,7 +1152,7 @@ export default async function handler(req, res) {
       <tr><td colspan="2" style="height:4px"></td></tr>
       <tr><td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Fecha</td><td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${booking.date}</td></tr>
       <tr><td colspan="2" style="height:4px"></td></tr>
-      <tr><td style="padding:20px 24px;background:#0A0A0A;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Valor</td><td style="padding:20px 24px;background:#0A0A0A;font-size:20px;color:#C9A84C;font-weight:700;font-family:Arial,sans-serif;vertical-align:middle">${booking.priceDisplay} &nbsp;<span style="font-family:'Courier New',monospace;font-size:15px;color:#666">${booking.confirmationCode}</span></td></tr>
+      <tr><td style="padding:20px 24px;background:#0A0A0A;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Valor</td><td style="padding:20px 24px;background:#0A0A0A;font-size:20px;color:#C9A84C;font-weight:700;font-family:Arial,sans-serif;vertical-align:middle">${booking.priceDisplay}</td></tr>
     </table>
   </td></tr>
   <tr><td style="background:#0A0A0A;padding:20px 40px;text-align:center">
@@ -1178,7 +1173,7 @@ export default async function handler(req, res) {
         if (clientEmail) {
           fetch(`${baseUrl}/api/notify`, {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ type: 'email', subject: `Tu cita en Esteticar — ${booking.confirmationCode}`, html: clientEmailHtml, to: clientEmail }),
+            body: JSON.stringify({ type: 'email', subject: `Tu cita en Esteticar`, html: clientEmailHtml, to: clientEmail }),
           }).catch(() => {});
         }
       }
