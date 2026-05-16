@@ -1057,9 +1057,6 @@ export default async function handler(req, res) {
       <p style="margin:0;font-size:14px;color:#C9A84C;font-style:italic;line-height:1.7">"Cuidamos tu vehículo como si fuera nuestro."</p>
     </div>
   </td></tr>
-  <tr><td style="padding:0 40px 16px;text-align:center">
-    <a href="${waUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:17px 40px;border-radius:50px">Escríbenos por WhatsApp →</a>
-  </td></tr>
   ${calUrl ? `<tr><td style="padding:0 40px 40px;text-align:center">
     <a href="${calUrl}" style="display:inline-block;background:#0A0A0A;color:#C9A84C;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:15px 36px;border-radius:50px;border:1.5px solid #C9A84C">Agregar a Google Calendar →</a>
   </td></tr>` : '<tr><td style="height:24px"></td></tr>'}
@@ -1099,9 +1096,6 @@ export default async function handler(req, res) {
       <tr><td colspan="2" style="height:4px"></td></tr>
       <tr><td style="padding:20px 24px;background:#0A0A0A;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Valor</td><td style="padding:20px 24px;background:#0A0A0A;font-size:20px;color:#C9A84C;font-weight:700;font-family:Arial,sans-serif;vertical-align:middle">${booking.priceDisplay} &nbsp;<span style="font-family:'Courier New',monospace;font-size:15px;color:#666">${booking.confirmationCode}</span></td></tr>
     </table>
-  </td></tr>
-  <tr><td style="padding:0 40px 40px;text-align:center">
-    <a href="${clientWaUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:17px 40px;border-radius:50px">Contactar cliente por WhatsApp →</a>
   </td></tr>
   <tr><td style="background:#0A0A0A;padding:20px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#555">Esteticar · Cll 67 #9-26, La Sultana · Manizales</div>

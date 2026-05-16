@@ -348,11 +348,6 @@ export const notifyNewBooking = async ({ clientName, clientPhone, service, date,
     </div>
   </td></tr>
 
-  <!-- CTA WHATSAPP CLIENTE -->
-  ${clientPhone ? `<tr><td style="padding:0 40px 40px;text-align:center">
-    <a href="https://api.whatsapp.com/send/?phone=57${(clientPhone || '').replace(/\D/g,'')}&text=${encodeURIComponent(`Hola ${clientName}, te confirmamos tu cita en Esteticar para el ${date}. Código: ${code}. Cualquier duda aquí estamos.`)}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:17px 40px;border-radius:50px">Contactar cliente por WhatsApp →</a>
-  </td></tr>` : ''}
-
   <!-- FOOTER -->
   <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
@@ -440,11 +435,6 @@ export const check20DayReminders = async () => {
         <td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#7C5C2E;font-weight:700;font-family:Arial,sans-serif;vertical-align:middle">${diffDays} días</td>
       </tr>
     </table>
-  </td></tr>
-
-  <!-- CTA WHATSAPP -->
-  <tr><td style="padding:0 40px 40px;text-align:center">
-    <a href="${whatsappUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:17px 40px;border-radius:50px">Escribirle por WhatsApp →</a>
   </td></tr>
 
   <!-- FOOTER -->

@@ -148,8 +148,6 @@ export default async function handler(req, res) {
 
     // Email de recordatorio al cliente (si tiene correo)
     if (appt.client_email && appt.client_email !== 'no_proporcionado') {
-      const waPhone = '573181983601';
-      const waUrl = `https://api.whatsapp.com/send/?phone=${waPhone}&text=${encodeURIComponent(`Hola Esteticar, soy ${appt.client_name || 'cliente'} y tengo cita mañana. Código: ${appt.confirmation_code || ''}.`)}`;
       const reminderHtml = `
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#F4F1EC;font-family:Georgia,serif">
