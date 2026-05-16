@@ -531,6 +531,32 @@ const sendMessage = async (to, text) => {
   });
 };
 
+const markRead = async (messageId) => {
+  try {
+    await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messaging_product: 'whatsapp', status: 'read', message_id: messageId }),
+    });
+  } catch (_) {}
+};
+
+const showTyping = async (to) => {
+  try {
+    await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        messaging_product: 'whatsapp',
+        to,
+        recipient_type: 'individual',
+        type: 'action',
+        action: { type: 'typing_on' },
+      }),
+    });
+  } catch (_) {}
+};
+
 const sendInstagramMessage = async (recipientId, text) => {
   if (!IG_TOKEN || !IG_USER_ID) return;
   await fetch(`https://graph.facebook.com/v20.0/${IG_USER_ID}/messages`, {
@@ -821,6 +847,12 @@ export default async function handler(req, res) {
         { phone: from, last_message_id: msgId, updated_at: new Date().toISOString() },
         { onConflict: 'phone' }
       );
+
+      // Ticks azules + puntos de "escribiendo..." mientras el bot procesa (solo WhatsApp)
+      if (platform === 'whatsapp') {
+        await markRead(msgId);
+        showTyping(from); // fire-and-forget — los puntos aparecen durante el procesamiento
+      }
 
       // Historial + perfil del cliente
       const conv = await getConversation(from);
