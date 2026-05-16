@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { PICKUP_OPTIONS } from "../lib/constants";
 import { db } from "../lib/storage";
+import { pixelLead } from "../lib/pixel";
 
 export default function BookingPanel({ isOpen, onClose, services, onRemoveService, vehicleType, onOpenChat }) {
   const [step, setStep] = useState(1);
@@ -86,7 +87,7 @@ export default function BookingPanel({ isOpen, onClose, services, onRemoveServic
                     Tu cita ha quedado registrada. Una de nuestras asesoras te contactará pronto para confirmar los detalles.
                   </p>
                   <button
-                    onClick={() => { reset(); onClose(); if (onOpenChat) onOpenChat(); }}
+                    onClick={() => { pixelLead(services.map(s => s.name).join(', ')); reset(); onClose(); if (onOpenChat) onOpenChat(); }}
                     className="w-full py-4 font-ui text-sm tracking-[0.2em] uppercase flex items-center justify-center gap-2 transition-all duration-300 rounded-sm"
                     style={{ background: "#128C7E", color: "white" }}
                   >

@@ -1,5 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { pixelInitiateCheckout } from "../lib/pixel";
 
 export default function BookingFAB({ count, onClick }) {
   if (count === 0) return null;
@@ -12,7 +13,7 @@ export default function BookingFAB({ count, onClick }) {
         exit={{ y: 100, opacity: 0 }}
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
-        onClick={onClick}
+        onClick={() => { pixelInitiateCheckout(count); onClick(); }}
         className="fixed bottom-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-8 py-4 shadow-[0_8px_40px_rgba(184,134,11,0.3)] bg-ec-gold text-white group overflow-hidden rounded-sm"
       >
         <div className="absolute inset-0 bg-white/20 translate-y-full group-hover:translate-y-0 transition-transform duration-300" />

@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { pixelContact } from "../lib/pixel";
 
 const WA_URL = `https://wa.me/573181983601?text=${encodeURIComponent("Hola 👋 acabo de ver la página de Esteticar y me gustaría conocer más sobre sus tratamientos premium. ¿Me pueden asesorar?")}`;
 
@@ -27,6 +28,7 @@ export default function BotFloatButton() {
         href={WA_URL}
         target="_blank"
         rel="noopener noreferrer"
+        onClick={pixelContact}
         initial={{ scale: 0, opacity: 0 }}
         animate={{ scale: 1, opacity: 1 }}
         transition={{ delay: 1.2, type: "spring", stiffness: 220, damping: 16 }}
