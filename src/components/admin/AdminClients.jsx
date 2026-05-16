@@ -567,31 +567,25 @@ export default function AdminClients() {
     { id: "analista",   label: "📚 Analistas" },
     { id: "embalado",   label: "⚡ Embalados" },
     { id: "billetudo",  label: "💸 Billetudos" },
-    { id: "remarket",   label: "🔔 Remarketar" },
-    { id: "lost",       label: "❌ Perdidos" },
   ];
 
   const filtered = clients.filter(c => {
-    if (filter === "lost")      return c.remarketingStatus === "lost";
-    if (filter === "remarket")  return shouldSendRemarketing(c);
-    if (filter === "manual")    return c.botPaused === true;
-    if (filter === "noname")    return !c.name;
-    if (filter !== "all")       return c.leadType === filter;
+    if (filter === "manual")  return c.botPaused === true;
+    if (filter === "noname")  return !c.name;
+    if (filter !== "all")     return c.leadType === filter;
     const q = search.toLowerCase();
     if (!q) return true;
     return c.name?.toLowerCase().includes(q) || c.phone?.includes(q) ||
            c.email?.toLowerCase().includes(q) || c.vehiclePlate?.toLowerCase().includes(q) ||
            c.lastService?.toLowerCase().includes(q);
   }).filter(c => {
-    if (filter !== "all" && filter !== "lost" && filter !== "remarket") return true;
+    if (filter !== "all") return true;
     const q = search.toLowerCase();
     if (!q) return true;
     return c.name?.toLowerCase().includes(q) || c.phone?.includes(q) ||
            c.email?.toLowerCase().includes(q) || c.vehiclePlate?.toLowerCase().includes(q);
   });
 
-  const remarkCount  = clients.filter(shouldSendRemarketing).length;
-  const lostCount    = clients.filter(c => c.remarketingStatus === 'lost').length;
   const manualCount  = clients.filter(c => c.botPaused).length;
   const noNameCount  = clients.filter(c => !c.name).length;
 
@@ -602,7 +596,7 @@ export default function AdminClients() {
         <div>
           <h2 className="font-heading text-2xl text-ec-dark">Tabla Maestra de Clientes</h2>
           <p className="font-body text-sm text-ec-text-muted mt-1 font-light">
-            {clients.length} clientes · {manualCount > 0 ? <span className="text-orange-500 font-medium">{manualCount} en atención manual · </span> : null}{remarkCount > 0 ? <span className="text-amber-600">{remarkCount} para remarketar · </span> : null}
+            {clients.length} clientes · {manualCount > 0 ? <span className="text-orange-500 font-medium">{manualCount} en atención manual · </span> : null}
             {lastUpdate ? `Actualizado hace ${Math.floor((Date.now() - lastUpdate) / 1000)}s` : 'Cargando...'}
           </p>
         </div>
@@ -622,10 +616,8 @@ export default function AdminClients() {
               filter === f.id ? "bg-ec-gold text-white border-ec-gold" : "bg-white text-ec-text-muted border-black/[0.06] hover:border-ec-gold/30"
             }`}>
             {f.label}
-            {f.id === "manual"   && manualCount  > 0 && <span className="ml-1.5 bg-orange-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{manualCount}</span>}
-            {f.id === "noname"   && noNameCount  > 0 && <span className="ml-1.5 bg-gray-400 text-white rounded-full text-[8px] px-1.5 py-0.5">{noNameCount}</span>}
-            {f.id === "remarket" && remarkCount  > 0 && <span className="ml-1.5 bg-amber-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{remarkCount}</span>}
-            {f.id === "lost"     && lostCount    > 0 && <span className="ml-1.5 bg-red-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{lostCount}</span>}
+            {f.id === "manual" && manualCount > 0 && <span className="ml-1.5 bg-orange-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{manualCount}</span>}
+            {f.id === "noname" && noNameCount > 0 && <span className="ml-1.5 bg-gray-400 text-white rounded-full text-[8px] px-1.5 py-0.5">{noNameCount}</span>}
           </button>
         ))}
       </div>
