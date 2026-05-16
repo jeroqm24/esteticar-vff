@@ -1,11 +1,6 @@
 // api/remarketing.js
-// Cron job — envía mensajes de seguimiento a leads no convertidos y clientes anteriores
-// Corre diariamente a las 9 AM Colombia (14:00 UTC)
-//
-// NOTA WhatsApp: fuera de la ventana de 24h se requieren plantillas aprobadas.
-// Este endpoint intenta enviar el mensaje; si el usuario está fuera de ventana,
-// WhatsApp lo rechazará silenciosamente. Integrar plantillas aprobadas en Meta
-// Business cuando estén disponibles.
+// Cron — seguimiento a clientes potenciales en 4 horarios Colombia
+// Lógica: potencial → remarketing enviado → sin respuesta 24h → desinteresado (reversible)
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -17,110 +12,138 @@ const supabaseAdmin = createClient(
 const WA_TOKEN = process.env.WHATSAPP_TOKEN;
 const PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
 
-const sendWA = async (to, text) => {
-  if (!WA_TOKEN || !PHONE_ID || to.startsWith('web_')) return false;
-  try {
-    const r = await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'text', text: { body: text } }),
-    });
-    return r.ok;
-  } catch { return false; }
+const getColombiaTime = () => {
+  const s = new Date().toLocaleTimeString('en-US', { timeZone: 'America/Bogota', hour12: false });
+  const [h, m] = s.split(':').map(Number);
+  return { hour: h, minute: m, total: h * 60 + m };
 };
 
-const daysBetween = (isoA, isoB = new Date().toISOString()) =>
-  Math.floor((new Date(isoB) - new Date(isoA)) / (1000 * 60 * 60 * 24));
+const getSlot = (total) => {
+  if (total >= 480  && total < 510)  return 'manana';   // 8:00–8:30
+  if (total >= 720  && total < 750)  return 'mediodia'; // 12:00–12:30
+  if (total >= 1050 && total < 1080) return 'tarde';    // 5:30–6:00
+  if (total >= 1170 && total < 1200) return 'noche';    // 7:30–8:00
+  return null;
+};
+
+const buildMessage = (slot, name, lastService, vehicleType) => {
+  const first   = (name || 'cliente').split(' ')[0];
+  const vehicle = vehicleType === 'Moto' ? 'tu moto' : 'tu carro';
+  const ref     = lastService ? `lo del ${lastService}` : 'lo que estábamos viendo';
+
+  const msgs = {
+    manana: [
+      `Buenos días ${first}! Te escribe Sara de Esteticar. Me quedé pensando en ${ref} y quería saber si lograste decidirte. Esta semana tenemos buenos espacios. ${vehicle} queda divino, te lo aseguro.`,
+      `Buenos días ${first}! Sara de Esteticar por acá. Tenemos disponibilidad esta semana y no quería que se te fuera el espacio. Cuándo te quedaría mejor para traer ${vehicle}?`,
+    ],
+    mediodia: [
+      `Hola ${first}! Sara de Esteticar. Sé que el día se va volando, pero quería preguntarte si aún tienes en mente traer ${vehicle}. Tenemos disponibilidad y me encantaría ayudarte a cerrar esa cita.`,
+      `${first}, hola! Sara de Esteticar. Aprovecho el mediodía para preguntarte si sigues interesado en ${ref}. Cuéntame cómo vas.`,
+    ],
+    tarde: [
+      `${first} buenas tardes! Sara de Esteticar. Ya saliendo del trabajo? Esta semana nos quedan pocos espacios. Si quieres que ${vehicle} quede impecable antes del fin de semana, dime y lo cuadramos ahora mismo.`,
+      `Buenas tardes ${first}! Sara de Esteticar. Tengo disponibilidad esta semana para ${vehicle}. Cuándo te quedaría mejor?`,
+    ],
+    noche: [
+      `Buenas noches ${first}! Sara de Esteticar por acá. Sé que es tarde, pero lo bueno de WhatsApp es que respondes cuando quieras. Tengo disponibilidad para ${vehicle} esta semana. A qué hora te queda mejor?`,
+      `${first}, buenas noches! Sara de Esteticar. Quería saber cómo vas con ${ref}. No hay afán, respóndeme cuando puedas y lo cuadramos.`,
+    ],
+  };
+
+  const options = msgs[slot];
+  return options[Math.floor(Math.random() * options.length)];
+};
+
+const sendWA = async (to, text) => {
+  const res = await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'text', text: { body: text } }),
+  });
+  return res.ok;
+};
 
 export default async function handler(req, res) {
   if (req.headers['authorization'] !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
+  const { total, hour, minute } = getColombiaTime();
+  const slot = getSlot(total);
+
+  if (!slot) {
+    return res.status(200).json({ message: 'Fuera de horario de remarketing', hour, minute });
+  }
+
+  const { data: convs, error } = await supabaseAdmin
+    .from('conversations')
+    .select('phone, client_name, last_service, vehicle_type, history, updated_at')
+    .eq('remarketing_status', 'potencial');
+
+  if (error) return res.status(500).json({ error: error.message });
+  if (!convs?.length) return res.status(200).json({ sent: 0, slot });
+
+  const now = Date.now();
   let sent = 0;
-  const results = [];
 
-  // ── 1. Seguimiento a leads no convertidos (3-10 días sin respuesta) ──
-  const { data: leads } = await supabaseAdmin
-    .from('conversations')
-    .select('phone, client_name, lead_type, updated_at, remarketing_status')
-    .not('lead_type', 'is', null)
-    .is('remarketing_status', null);
+  // ── Enviar remarketing ──────────────────────────────────────────
+  for (const conv of convs) {
+    // Solo WhatsApp real
+    if (!conv.phone || conv.phone.startsWith('web_') || conv.phone.startsWith('ig_') || conv.phone.startsWith('fb_')) continue;
 
-  for (const lead of leads || []) {
-    const days = daysBetween(lead.updated_at);
-    if (days < 3 || days > 10) continue;
-    if (lead.phone.startsWith('web_')) continue;
+    const history = Array.isArray(conv.history) ? conv.history : [];
 
-    const name = lead.client_name?.split(' ')[0] || '';
-    const msg =
-      `Hola${name ? ` ${name}` : ''} 👋 Soy Sara de Esteticar Manizales.\n\n` +
-      `Hace unos días estuviste preguntando por nuestros servicios y quería ver si ya lograste lo que buscabas para tu vehículo, o si puedo ayudarte con algo.\n\n` +
-      `Seguimos disponibles cuando quieras. 😊`;
+    // No reenviar si ya se mandó un remarketing hace menos de 22h
+    const lastRemark = [...history].reverse().find(m => m.role === 'remarketing');
+    if (lastRemark) {
+      const sentAt = new Date(lastRemark.timestamp || 0).getTime();
+      if (now - sentAt < 22 * 60 * 60 * 1000) continue;
+    }
 
-    const ok = await sendWA(lead.phone, msg);
-    await supabaseAdmin.from('conversations')
-      .update({ remarketing_status: 'lead_seguimiento', updated_at: new Date().toISOString() })
-      .eq('phone', lead.phone);
+    // No enviar si el cliente tuvo actividad reciente (puede estar en conversación)
+    const lastActivity = new Date(conv.updated_at || 0).getTime();
+    if (now - lastActivity < 60 * 60 * 1000) continue;
 
-    results.push({ type: 'lead_seguimiento', phone: lead.phone, sent: ok });
-    if (ok) sent++;
+    const msg = buildMessage(slot, conv.client_name, conv.last_service, conv.vehicle_type);
+    const ok  = await sendWA(conv.phone, msg);
+
+    if (ok) {
+      const newHistory = [...history, { role: 'remarketing', content: msg, timestamp: new Date().toISOString() }];
+      await supabaseAdmin
+        .from('conversations')
+        .update({ history: newHistory })
+        .eq('phone', conv.phone);
+      sent++;
+      console.log('REMARKETING OK:', conv.phone, slot);
+    }
   }
 
-  // ── 2. Remarketing post-servicio (30-50 días después del último servicio) ──
-  const { data: exClients } = await supabaseAdmin
+  // ── Marcar desinteresados: remarketing >24h sin respuesta del cliente ──
+  const { data: toCheck } = await supabaseAdmin
     .from('conversations')
-    .select('phone, client_name, last_service, updated_at, remarketing_status')
-    .not('last_service', 'is', null)
-    .eq('remarketing_status', 'cliente_activo');
+    .select('phone, history')
+    .eq('remarketing_status', 'potencial');
 
-  for (const client of exClients || []) {
-    const days = daysBetween(client.updated_at);
-    if (days < 30 || days > 50) continue;
-    if (client.phone.startsWith('web_')) continue;
+  for (const conv of (toCheck || [])) {
+    const history = Array.isArray(conv.history) ? conv.history : [];
+    const lastRemark = [...history].reverse().find(m => m.role === 'remarketing');
+    if (!lastRemark) continue;
 
-    const name = client.client_name?.split(' ')[0] || '';
-    const service = client.last_service || 'tu servicio';
-    const msg =
-      `Hola${name ? ` ${name}` : ''}! 👋 Soy Sara de Esteticar Manizales.\n\n` +
-      `Hace un mes te atendimos con *${service}*. Espero que tu vehículo haya quedado a tu gusto!\n\n` +
-      `Si necesitas un mantenimiento o quieres proteger más tu carro, aquí estamos. 🚗✨`;
+    const sentAt = new Date(lastRemark.timestamp || 0).getTime();
+    if (now - sentAt < 24 * 60 * 60 * 1000) continue;
 
-    const ok = await sendWA(client.phone, msg);
-    await supabaseAdmin.from('conversations')
-      .update({ remarketing_status: 'post_servicio_30', updated_at: new Date().toISOString() })
-      .eq('phone', client.phone);
+    // Si hubo respuesta del cliente después del remarketing → sigue siendo potencial
+    const clientAfter = history.find(
+      m => m.role === 'user' && new Date(m.timestamp || 0).getTime() > sentAt
+    );
+    if (clientAfter) continue;
 
-    results.push({ type: 'post_servicio_30', phone: client.phone, sent: ok });
-    if (ok) sent++;
+    await supabaseAdmin
+      .from('conversations')
+      .update({ remarketing_status: 'desinteresado' })
+      .eq('phone', conv.phone);
+    console.log('DESINTERESADO:', conv.phone);
   }
 
-  // ── 3. Re-activación tardía (90 días sin actividad para clientes post-servicio) ──
-  const { data: dormant } = await supabaseAdmin
-    .from('conversations')
-    .select('phone, client_name, last_service, updated_at, remarketing_status')
-    .not('last_service', 'is', null)
-    .eq('remarketing_status', 'post_servicio_30');
-
-  for (const client of dormant || []) {
-    const days = daysBetween(client.updated_at);
-    if (days < 55 || days > 100) continue;
-    if (client.phone.startsWith('web_')) continue;
-
-    const name = client.client_name?.split(' ')[0] || '';
-    const msg =
-      `Hola${name ? ` ${name}` : ''}! 👋 Por acá Sara de Esteticar.\n\n` +
-      `Ya hace un tiempo no sabemos nada de ti. Cuando quieras darle un mimo a tu vehículo, nos avisas con gusto. 🚗\n\n` +
-      `Tenemos disponibilidad esta semana. Te esperamos!`;
-
-    const ok = await sendWA(client.phone, msg);
-    await supabaseAdmin.from('conversations')
-      .update({ remarketing_status: 'completado', updated_at: new Date().toISOString() })
-      .eq('phone', client.phone);
-
-    results.push({ type: 'reactivacion', phone: client.phone, sent: ok });
-    if (ok) sent++;
-  }
-
-  return res.status(200).json({ sent, total: results.length, results });
+  return res.status(200).json({ sent, slot, hour, minute });
 }

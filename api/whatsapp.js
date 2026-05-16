@@ -415,16 +415,19 @@ Nunca preguntes "quieres agendar?" Pregunta: "Te queda mejor para el ${tomorrow}
 • Certificado digital de garantía al entregar.
 • Portafolio de trabajos: https://heyzine.com/flip-book/7591b1d346.html#page/1
 
-━━━ CAPTURA ANTES DE CONFIRMAR ━━━
-Pide estos datos UNO A UNO de forma natural ANTES de confirmar. Si el cliente no quiere dar alguno, acepta "no_proporcionado" y sigue:
+━━━ DATOS OBLIGATORIOS ANTES DE CONFIRMAR ━━━
+Estos 6 datos son SIEMPRE necesarios para toda cita. Si el cliente los mencionó antes en la conversación, úsalos directamente sin volver a preguntar. Si no los tienes, pídelos de forma natural, uno a la vez:
 
-1. Nombre completo → al saberlo: __NAME__:[nombre completo]
-2. Placa del vehículo → "Para el registro de entrada necesito la placa de tu moto/carro, me la das?"
-3. Correo electrónico → OBLIGATORIO. "Para mandarte la confirmación y el recordatorio el día antes, cuál es tu correo?" → al saberlo: __EMAIL__:[correo]
-4. Si hay traslado: dirección de recogida/entrega → "Me das la dirección para el traslado?"
+1. Nombre completo → en cuanto lo sepas: __NAME__:[nombre]
+2. Tipo de vehículo (carro o moto)
+3. Marca y modelo
+4. Servicio específico que quiere
+5. Fecha y hora
+6. Correo electrónico → "Para mandarte la confirmación, cuál es tu correo?" → __EMAIL__:[correo]
 
-REGLA CORREO: Es el único dato que no puedes omitir. Si el cliente dice que no tiene correo o no quiere darlo, escribe __EMAIL__:no_proporcionado y confirma. Pero SIEMPRE debes haberlo preguntado.
-REGLA GENERAL: Si el cliente dice que no tiene o no quiere dar otro dato, escribe "no_proporcionado" y confirma igual. Nunca bloquees la cita.
+PROHIBIDO PEDIR: placa y cédula. Si el cliente los menciona espontáneamente, captúralos. Nunca los solicites.
+REGLA CORREO: Único dato que siempre debes haber preguntado. Si no quiere darlo: __EMAIL__:no_proporcionado y confirma.
+REGLA NATURAL: Agrupa preguntas cuando sea posible. Si ya tienes vehículo y falta la fecha, solo pregunta la fecha. Nunca hagas sentir al cliente que está llenando un formulario.
 
 ━━━ TRASLADO ━━━
 Antes de confirmar: "Contamos con traslado: recogida y entrega $9.000, o solo recogida o entrega $7.000. Te interesa?"
@@ -447,6 +450,12 @@ DIRECCION: [dirección del cliente si hay recogida o entrega, sino "no_aplica"]
 CEDULA: [número o "no_proporcionado"]
 PLACA: [placa o "no_proporcionado"]
 __END_BOOKING__
+
+━━━ CLASIFICACIÓN DE CONVERSIÓN ━━━
+Cuando el cliente muestre interés real (preguntó precios, pidió disponibilidad, dio su nombre, preguntó por un servicio específico) pero la conversación termine sin cita confirmada, añade al final del mensaje:
+__LEAD_STATUS__:potencial
+
+NO lo añadas si el cliente fue indiferente, solo saludó, o si ya se confirmó una cita (en ese caso ya queda como efectivo automáticamente).
 
 ━━━ CANCELACIÓN DE CITA ━━━
 Si el cliente pide cancelar o ya no puede venir, confirma con calidez y emite al final:
@@ -570,6 +579,7 @@ const cleanReply = (text) => text
   .replace(/__NAME__:[^\n]*/g, '')
   .replace(/__EMAIL__:[^\n]*/g, '')
   .replace(/__LEAD_TYPE__:[^\n]*/g, '')
+  .replace(/__LEAD_STATUS__:[^\n]*/g, '')
   .replace(/__OBJECTION__:[^\n]*/g, '')
   .trim();
 
@@ -646,6 +656,26 @@ const sendMetaCAPI = async (booking, phone) => {
   } catch (e) {
     console.error('META CAPI FETCH ERROR:', e.message);
   }
+};
+
+const sendLeadCAPI = async (phone, name) => {
+  if (!META_PIXEL_ID || !META_CAPI_TOKEN) return;
+  const userData = { ph: [sha256(phone.replace(/\D/g, ''))] };
+  if (name) {
+    const parts = name.trim().split(/\s+/);
+    if (parts[0]) userData.fn = [sha256(parts[0])];
+    if (parts[1]) userData.ln = [sha256(parts.slice(1).join(' '))];
+  }
+  try {
+    const res = await fetch(`https://graph.facebook.com/v20.0/${META_PIXEL_ID}/events?access_token=${META_CAPI_TOKEN}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ data: [{ event_name: 'Lead', event_time: Math.floor(Date.now() / 1000), action_source: 'system_generated', user_data: userData }] }),
+    });
+    const json = await res.json();
+    if (json.error) console.error('LEAD CAPI ERROR:', JSON.stringify(json.error));
+    else console.log('LEAD CAPI OK:', phone);
+  } catch (e) { console.error('LEAD CAPI FETCH ERROR:', e.message); }
 };
 
 const TEAM_NUMBER = '573008400230';
@@ -791,12 +821,13 @@ export default async function handler(req, res) {
       }).then(null, () => {});
 
       // Extraer marcadores
-      const nameMatch     = rawReply.match(/__NAME__:([^\n]+)/);
-      const emailMatch    = rawReply.match(/__EMAIL__:([^\n]+)/);
-      const leadMatch     = rawReply.match(/__LEAD_TYPE__:([^\n]+)/);
-      const objMatch      = rawReply.match(/__OBJECTION__:([^\n]+)/);
-      const escalateMatch = rawReply.match(/__ESCALATE__:([^\n]*)/);
-      const cancelMatch   = rawReply.includes('__CANCEL_BOOKING__');
+      const nameMatch       = rawReply.match(/__NAME__:([^\n]+)/);
+      const emailMatch      = rawReply.match(/__EMAIL__:([^\n]+)/);
+      const leadMatch       = rawReply.match(/__LEAD_TYPE__:([^\n]+)/);
+      const leadStatusMatch = rawReply.match(/__LEAD_STATUS__:([^\n]+)/);
+      const objMatch        = rawReply.match(/__OBJECTION__:([^\n]+)/);
+      const escalateMatch   = rawReply.match(/__ESCALATE__:([^\n]*)/);
+      const cancelMatch     = rawReply.includes('__CANCEL_BOOKING__');
 
       // Procesar cita confirmada — primero intenta el bloque, si no hay usa extracción con Haiku
       let booking = parseBooking(rawReply);
@@ -838,6 +869,20 @@ export default async function handler(req, res) {
       }
       if (leadMatch)  meta.lead_type   = leadMatch[1].trim();
       if (objMatch)   meta.objection   = objMatch[1].trim();
+
+      // Clasificación de conversión
+      if (leadStatusMatch) {
+        const ls = leadStatusMatch[1].trim();
+        if (ls === 'potencial' && conv.remarketing_status !== 'efectivo') {
+          meta.remarketing_status = 'potencial';
+          sendLeadCAPI(from, capturedName || conv.client_name).catch(() => {});
+        }
+      }
+      // Si el cliente era desinteresado y vuelve a escribir → potencial
+      if (conv.remarketing_status === 'desinteresado') {
+        meta.remarketing_status = 'potencial';
+      }
+
       if (booking) {
         if (booking.clientName)  meta.client_name  = booking.clientName;
         if (booking.service)     meta.last_service  = booking.service;
@@ -847,7 +892,7 @@ export default async function handler(req, res) {
         if (booking.cedula && booking.cedula !== 'no_proporcionado') meta.cedula = booking.cedula;
         if (booking.direccion && booking.direccion !== 'no_aplica' && booking.direccion !== 'no_proporcionado') meta.direccion = booking.direccion;
         meta.last_visit_date = new Date().toISOString();
-        meta.remarketing_status = 'converted';
+        meta.remarketing_status = 'efectivo';
       }
 
       // Pausar bot automáticamente cuando escala a Sara

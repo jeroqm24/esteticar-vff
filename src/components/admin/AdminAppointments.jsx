@@ -2,19 +2,42 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { db, email } from "../../lib/storage";
 
-const STATUS_OPTIONS = ["pending", "confirmed", "in_progress", "completed", "cancelled"];
+const STATUS_OPTIONS = ["confirmada", "cancelada"];
 const ORIGIN_OPTIONS = ["Bot", "Instagram", "Facebook", "Referido", "Calle", "Otro"];
 const STATUS_LABELS = {
+  confirmada: "Confirmada", cancelada: "Cancelada",
+  // legacy — solo para mostrar registros viejos
   pending: "Pendiente", confirmed: "Confirmada", in_progress: "En proceso",
   completed: "Completada", cancelled: "Cancelada",
 };
 const STATUS_COLORS = {
-  pending:    { bg: "#FEF9ED", text: "#B8860B", border: "#F8C840", bar: "#F8C840" },
-  confirmed:  { bg: "#FFFBF0", text: "#92700A", border: "#E6B800", bar: "#E6B800" },
-  in_progress:{ bg: "#EFF6FF", text: "#2563EB", border: "#93C5FD", bar: "#3B82F6" },
-  completed:  { bg: "#F0FDF4", text: "#16A34A", border: "#86EFAC", bar: "#22C55E" },
-  cancelled:  { bg: "#FEF2F2", text: "#DC2626", border: "#FCA5A5", bar: "#EF4444" },
+  confirmada:  { bg: "#F0FDF4", text: "#16A34A", border: "#86EFAC", bar: "#22C55E" },
+  cancelada:   { bg: "#FEF2F2", text: "#DC2626", border: "#FCA5A5", bar: "#EF4444" },
+  // legacy
+  pending:     { bg: "#FEF9ED", text: "#B8860B", border: "#F8C840", bar: "#F8C840" },
+  confirmed:   { bg: "#F0FDF4", text: "#16A34A", border: "#86EFAC", bar: "#22C55E" },
+  in_progress: { bg: "#EFF6FF", text: "#2563EB", border: "#93C5FD", bar: "#3B82F6" },
+  completed:   { bg: "#F0FDF4", text: "#16A34A", border: "#86EFAC", bar: "#22C55E" },
+  cancelled:   { bg: "#FEF2F2", text: "#DC2626", border: "#FCA5A5", bar: "#EF4444" },
 };
+
+const REMARKETING_CONFIG = {
+  efectivo:     { label: "Efectivo",      bg: "#F0FDF4", text: "#16A34A", border: "#86EFAC" },
+  converted:    { label: "Efectivo",      bg: "#F0FDF4", text: "#16A34A", border: "#86EFAC" },
+  potencial:    { label: "Potencial",     bg: "#FFF7ED", text: "#C2410C", border: "#FED7AA" },
+  desinteresado:{ label: "Desinteresado", bg: "#F8FAFC", text: "#64748B", border: "#CBD5E1" },
+};
+
+function RemarkBadge({ status }) {
+  if (!status || !REMARKETING_CONFIG[status]) return null;
+  const c = REMARKETING_CONFIG[status];
+  return (
+    <span className="font-ui text-[9px] tracking-[0.1em] uppercase px-2 py-0.5 rounded-full border"
+      style={{ background: c.bg, color: c.text, borderColor: c.border }}>
+      {c.label}
+    </span>
+  );
+}
 
 const CHANNEL_CFG = {
   whatsapp:  { label: "WhatsApp",  bg: "#25D366" },
@@ -291,7 +314,11 @@ export default function AdminAppointments() {
   const openDetail = (appt) => { setSelected(appt); setShowDetail(true); };
   const closeDetail = () => { setShowDetail(false); };
 
-  const filtered = filter === "all" ? appointments : appointments.filter(a => a.status === filter);
+  const filtered = filter === "all" ? appointments : appointments.filter(a => {
+    if (filter === "confirmada") return a.status === "confirmada" || a.status === "confirmed" || a.status === "completed" || a.status === "in_progress";
+    if (filter === "cancelada")  return a.status === "cancelada"  || a.status === "cancelled";
+    return a.status === filter;
+  });
 
   const counts = {};
   STATUS_OPTIONS.forEach(s => { counts[s] = appointments.filter(a => a.status === s).length; });
@@ -328,6 +355,11 @@ export default function AdminAppointments() {
         {STATUS_OPTIONS.map(f => {
           const c = STATUS_COLORS[f];
           const isActive = filter === f;
+          const count = appointments.filter(a =>
+            f === "confirmada" ? (a.status === "confirmada" || a.status === "confirmed" || a.status === "completed" || a.status === "in_progress")
+            : f === "cancelada" ? (a.status === "cancelada" || a.status === "cancelled")
+            : a.status === f
+          ).length;
           return (
             <button
               key={f}
@@ -338,7 +370,7 @@ export default function AdminAppointments() {
                 : { background: "#fff", color: c.text, borderColor: c.border }
               }
             >
-              {STATUS_LABELS[f]} <span className="ml-1 opacity-60">({counts[f]})</span>
+              {STATUS_LABELS[f]} <span className="ml-1 opacity-60">({count})</span>
             </button>
           );
         })}
@@ -431,6 +463,7 @@ export default function AdminAppointments() {
                               </span>
                             )}
                             {a.leadType && <LeadTypeBadge leadType={a.leadType} />}
+                            {a.remarketing_status && <RemarkBadge status={a.remarketing_status} />}
                           </div>
 
                           {a.services && a.services.length > 0 && (
@@ -592,11 +625,13 @@ export default function AdminAppointments() {
 
                   {/* Change status */}
                   <div className="mb-6">
-                    <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase mb-3">Cambiar Estado</p>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase mb-3">Estado de la cita</p>
+                    <div className="grid grid-cols-2 gap-2">
                       {STATUS_OPTIONS.map(s => {
                         const c = STATUS_COLORS[s];
-                        const isActive = selected.status === s;
+                        const isActive = selected.status === s ||
+                          (s === "confirmada" && ["confirmed","completed","in_progress"].includes(selected.status)) ||
+                          (s === "cancelada"  && selected.status === "cancelled");
                         return (
                           <button
                             key={s}

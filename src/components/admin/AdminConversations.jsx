@@ -54,6 +54,23 @@ const LEAD_CONFIG = {
   regateador:  { label: "🫰 Regateador",  bg: "bg-purple-100", text: "text-purple-700", dot: "bg-purple-500"},
 };
 
+const REMARKETING_CONFIG = {
+  efectivo:     { label: "Efectivo",      bg: "bg-emerald-100", text: "text-emerald-700" },
+  converted:    { label: "Efectivo",      bg: "bg-emerald-100", text: "text-emerald-700" },
+  potencial:    { label: "Potencial",     bg: "bg-orange-100",  text: "text-orange-700"  },
+  desinteresado:{ label: "Desinteresado", bg: "bg-slate-100",   text: "text-slate-500"   },
+};
+
+function RemarkBadge({ status, size = "sm" }) {
+  if (!status || !REMARKETING_CONFIG[status]) return null;
+  const c = REMARKETING_CONFIG[status];
+  return (
+    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full font-ui ${size === "sm" ? "text-[9px]" : "text-[11px] px-2.5 py-1"} ${c.bg} ${c.text}`}>
+      {c.label}
+    </span>
+  );
+}
+
 const CANNED = [
   "Un momento, ya te confirmo esa información 🙏",
   "Claro, con gusto. Cuéntame qué tienes en mente.",
@@ -223,9 +240,10 @@ function InfoSidebar({ conv, appointments }) {
           <span className="font-heading text-xl text-ec-gold">{getDisplayName(conv).charAt(0).toUpperCase()}</span>
         </div>
         <p className="font-ui text-[12px] font-semibold text-ec-dark text-center">{getDisplayName(conv)}</p>
-        <div className="flex items-center justify-center gap-2 mt-2">
+        <div className="flex flex-wrap items-center justify-center gap-1.5 mt-2">
           <ChannelBadge phone={conv.phone} />
           {conv.lead_type && <LeadBadge type={conv.lead_type} />}
+          {conv.remarketing_status && <RemarkBadge status={conv.remarketing_status} size="md" />}
         </div>
       </div>
 
@@ -271,11 +289,12 @@ function InfoSidebar({ conv, appointments }) {
 
 // ─── Main Component ────────────────────────────────────────────────
 const FILTERS = [
-  { id: "all",    label: "Todos" },
-  { id: "active", label: "Bot activo" },
-  { id: "paused", label: "⏸ Pausados" },
-  { id: "leads",  label: "🔥 Leads" },
-  { id: "booked", label: "✅ Cita" },
+  { id: "all",          label: "Todos" },
+  { id: "efectivo",     label: "✅ Efectivos" },
+  { id: "potencial",    label: "🔥 Potenciales" },
+  { id: "desinteresado",label: "💤 Desinteresados" },
+  { id: "leads",        label: "Leads clasificados" },
+  { id: "paused",       label: "⏸ Pausados" },
 ];
 
 export default function AdminConversations() {
@@ -372,10 +391,11 @@ export default function AdminConversations() {
     const q = search.toLowerCase();
     const matchSearch = name.includes(q) || (c.phone || "").includes(q);
     if (!matchSearch) return false;
-    if (filter === "active")  return !c.bot_paused;
-    if (filter === "paused")  return !!c.bot_paused;
-    if (filter === "leads")   return !!c.lead_type;
-    if (filter === "booked")  return c.remarketing_status === "converted";
+    if (filter === "paused")       return !!c.bot_paused;
+    if (filter === "leads")        return !!c.lead_type;
+    if (filter === "efectivo")     return c.remarketing_status === "efectivo" || c.remarketing_status === "converted";
+    if (filter === "potencial")    return c.remarketing_status === "potencial";
+    if (filter === "desinteresado")return c.remarketing_status === "desinteresado";
     return true;
   });
 
@@ -427,23 +447,18 @@ export default function AdminConversations() {
                   }`}
                 >
                   {f.label}
-                  {f.id !== "all" && conversations.filter(c => {
-                    if (f.id === "active")  return !c.bot_paused;
-                    if (f.id === "paused")  return !!c.bot_paused;
-                    if (f.id === "leads")   return !!c.lead_type;
-                    if (f.id === "booked")  return c.remarketing_status === "converted";
-                    return false;
-                  }).length > 0 && (
-                    <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-white/20 text-[8px]">
-                      {conversations.filter(c => {
-                        if (f.id === "active")  return !c.bot_paused;
-                        if (f.id === "paused")  return !!c.bot_paused;
-                        if (f.id === "leads")   return !!c.lead_type;
-                        if (f.id === "booked")  return c.remarketing_status === "converted";
-                        return false;
-                      }).length}
-                    </span>
-                  )}
+                  {f.id !== "all" && (() => {
+                    const fn = c => {
+                      if (f.id === "paused")       return !!c.bot_paused;
+                      if (f.id === "leads")        return !!c.lead_type;
+                      if (f.id === "efectivo")     return c.remarketing_status === "efectivo" || c.remarketing_status === "converted";
+                      if (f.id === "potencial")    return c.remarketing_status === "potencial";
+                      if (f.id === "desinteresado")return c.remarketing_status === "desinteresado";
+                      return false;
+                    };
+                    const n = conversations.filter(fn).length;
+                    return n > 0 ? <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-white/20 text-[8px]">{n}</span> : null;
+                  })()}
                 </button>
               ))}
             </div>
@@ -497,9 +512,7 @@ export default function AdminConversations() {
                         {conv.bot_paused && (
                           <span className="text-[9px] font-ui text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-full">⏸ Pausado</span>
                         )}
-                        {conv.remarketing_status === "converted" && (
-                          <span className="text-[9px] font-ui text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded-full">✅ Cita</span>
-                        )}
+                        {conv.remarketing_status && <RemarkBadge status={conv.remarketing_status} />}
                       </div>
                       <p className="text-[11px] text-ec-text-muted font-body truncate">{getPreview(conv.history)}</p>
                     </div>
