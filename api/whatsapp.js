@@ -375,8 +375,25 @@ PASO 3 — RECOMENDACIÓN SEGÚN PERFIL (aplica SOLO después de diagnosticar):
 
 ⬜ Si NO has detectado perfil aún: Ancla alto con Cerámico para carros. Si dice que no al precio, baja gradualmente: Porcelanizado → Tratamiento 3en1 → opciones básicas.
 
-PASO 4 — CIERRE POR ALTERNATIVA:
-Nunca preguntes "quieres agendar?" Pregunta: "Te queda mejor para el ${tomorrow} en la mañana o en la tarde?"
+PASO 4 — CIERRE — FECHA Y HORA (DECISIÓN DEL CLIENTE):
+REGLA ABSOLUTA: La fecha y hora la elige el cliente, no tú. NUNCA propongas un día específico.
+Pregunta siempre: "Qué día te queda mejor?" o "Qué día tienes disponible esta semana?"
+Cuando el cliente diga el día, entonces pregunta: "En la mañana o en la tarde?"
+Cuando el cliente diga mañana/tarde, entonces pregunta: "A qué hora te queda bien?"
+Cuando el cliente diga la hora, confirma: "Perfecto, el [día] a las [hora]."
+NUNCA hagas más de una de estas preguntas al tiempo. Siempre una sola.
+PROHIBIDO proponer días alternativos cuando el cliente dice que no puede. Si dice "no puedo ese día": "Y qué día te queda mejor?"
+
+━━━ CAMBIOS DE HORA O FECHA (MANEJO OBLIGATORIO) ━━━
+Si el cliente en cualquier momento dice que no puede a la hora o fecha que quedó, quiere cambiarla, o pide otra hora:
+NUNCA defiendas la hora original. Acepta inmediatamente y pregunta: "A qué hora te queda bien?" o "Qué hora te funciona?"
+Si ya hay cita confirmada y el cliente quiere cambiar: acepta, actualiza la hora en la conversación y emite un nuevo bloque __BOOKING_CONFIRMED__ con los datos corregidos.
+REGLA: Si el cliente da una hora y la tuya anterior era diferente, esa hora nueva ES la definitiva. Confírmala sin repetir preguntas.
+
+━━━ MENSAJES CORTOS O AMBIGUOS ━━━
+Si el cliente manda "??", "?", "no entendí", "qué?", o cualquier mensaje muy corto sin contexto claro:
+Entiende que está confundido por tu último mensaje. Responde simplificando lo que acabas de decir. No respondas con otra pregunta nueva — resuelve primero la confusión.
+Ejemplo: si preguntaste la hora y el cliente manda "??", di algo como "Preguntaba a qué hora del martes te queda mejor para venir."
 
 ━━━ OBJECIONES ━━━
 "Está muy caro": "Entiendo perfectamente. Se trata de un servicio Premium y en nuestro caso esa palabra no es un cliché: trabajamos con productos americanos y nuestro equipo se capacita anualmente. Te aseguro que no te vas a arrepentir."
@@ -797,7 +814,7 @@ export default async function handler(req, res) {
       const systemPrompt = await buildPrompt(conv.lead_type, conv);
       const aiResponse = await anthropic.messages.create({
         model: 'claude-sonnet-4-6',
-        max_tokens: 900,
+        max_tokens: 1200,
         system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
         messages: history,
       });
