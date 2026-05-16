@@ -65,14 +65,29 @@ const getServiceDuration = (service) => {
 
 // ─── Helpers ──────────────────────────────────────────────────────
 const parseAppointmentHour = (appt) => {
-  // Try to extract hour from date string
-  const match = (appt.date || '').match(/(\d{1,2}):(\d{2})/);
-  if (match) return parseInt(match[1]);
-  if (appt.time) {
-    const t = appt.time.match(/(\d{1,2})/);
-    if (t) return parseInt(t[1]);
+  const src = appt.date || '';
+  // Match hour:min followed by optional am/pm indicator
+  const match = src.match(/(\d{1,2}):(\d{2})\s*(a\.?m\.?|p\.?m\.?)?/i);
+  if (match) {
+    let h = parseInt(match[1]);
+    const period = (match[3] || '').toLowerCase().replace(/\./g, '');
+    if (period === 'pm' && h < 12) h += 12;
+    if (period === 'am' && h === 12) h = 0;
+    return h;
   }
-  return 9; // default 9am
+  if (appt.time) {
+    const t = appt.time.match(/(\d{1,2}):(\d{2})\s*(a\.?m\.?|p\.?m\.?)?/i);
+    if (t) {
+      let h = parseInt(t[1]);
+      const period = (t[3] || '').toLowerCase().replace(/\./g, '');
+      if (period === 'pm' && h < 12) h += 12;
+      if (period === 'am' && h === 12) h = 0;
+      return h;
+    }
+    const bare = appt.time.match(/(\d{1,2})/);
+    if (bare) return parseInt(bare[1]);
+  }
+  return 9;
 };
 
 const MESES = {
