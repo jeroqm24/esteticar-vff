@@ -26,7 +26,16 @@ function getPreview(history) {
   const last = [...history].reverse().find(m => m.role === "user" || m.role === "admin");
   if (!last) return "Sin mensajes";
   const prefix = last.role === "admin" ? "Tú: " : "";
-  const text = (last.content || "").replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, "✅ Cita").replace(/__ESCALATE__:[^\n]*/g, "").trim();
+  const text = (last.content || "")
+    .replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, "✅ Cita")
+    .replace(/__ESCALATE__:[^\n]*/g, "")
+    .replace(/__LEAD_TYPE__:[^\n]*/g, "")
+    .replace(/__LEAD_STATUS__:[^\n]*/g, "")
+    .replace(/__NAME__:[^\n]*/g, "")
+    .replace(/__EMAIL__:[^\n]*/g, "")
+    .replace(/__OBJECTION__:[^\n]*/g, "")
+    .replace(/__CANCEL_BOOKING__/g, "")
+    .trim();
   return prefix + text.slice(0, 65) + (text.length > 65 ? "…" : "");
 }
 
@@ -121,8 +130,11 @@ function MessageBubble({ msg }) {
     .replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, "✅ Cita confirmada")
     .replace(/__ESCALATE__:[^\n]*/g, "")
     .replace(/__LEAD_TYPE__:[^\n]*/g, "")
+    .replace(/__LEAD_STATUS__:[^\n]*/g, "")
     .replace(/__NAME__:[^\n]*/g, "")
+    .replace(/__EMAIL__:[^\n]*/g, "")
     .replace(/__OBJECTION__:[^\n]*/g, "")
+    .replace(/__CANCEL_BOOKING__/g, "")
     .trim();
 
   if (!clean) return null;

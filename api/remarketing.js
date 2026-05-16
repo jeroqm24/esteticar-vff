@@ -34,15 +34,15 @@ const buildMessage = (slot, name, lastService, vehicleType) => {
   const msgs = {
     manana: [
       `Buenos días ${first}! Te escribe Sara de Esteticar. Me quedé pensando en ${ref} y quería saber si lograste decidirte. Esta semana tenemos buenos espacios. ${vehicle} queda divino, te lo aseguro.`,
-      `Buenos días ${first}! Sara de Esteticar por acá. Tenemos disponibilidad esta semana y no quería que se te fuera el espacio. Cuándo te quedaría mejor para traer ${vehicle}?`,
+      `Buenos días ${first}! Sara de Esteticar por acá. Tenemos disponibilidad esta semana y no quería que se te fuera el espacio. ¿Cuándo te queda mejor para traer ${vehicle}?`,
     ],
     mediodia: [
-      `Hola ${first}! Sara de Esteticar. Sé que el día se va volando, pero quería preguntarte si aún tienes en mente traer ${vehicle}. Tenemos disponibilidad y me encantaría ayudarte a cerrar esa cita.`,
+      `Hola ${first}! Sara de Esteticar. Sé que el día se va volando, pero quería preguntarte si aún tienes en mente traer ${vehicle}. Tenemos disponibilidad esta semana, te ayudo a cuadrar la cita ahora mismo.`,
       `${first}, hola! Sara de Esteticar. Aprovecho el mediodía para preguntarte si sigues interesado en ${ref}. Cuéntame cómo vas.`,
     ],
     tarde: [
       `${first} buenas tardes! Sara de Esteticar. Ya saliendo del trabajo? Esta semana nos quedan pocos espacios. Si quieres que ${vehicle} quede impecable antes del fin de semana, dime y lo cuadramos ahora mismo.`,
-      `Buenas tardes ${first}! Sara de Esteticar. Tengo disponibilidad esta semana para ${vehicle}. Cuándo te quedaría mejor?`,
+      `Buenas tardes ${first}! Sara de Esteticar. Tengo disponibilidad esta semana para ${vehicle}. ¿Qué día te queda mejor?`,
     ],
     noche: [
       `Buenas noches ${first}! Sara de Esteticar por acá. Sé que es tarde, pero lo bueno de WhatsApp es que respondes cuando quieras. Tengo disponibilidad para ${vehicle} esta semana. A qué hora te queda mejor?`,

@@ -320,9 +320,6 @@ export default function AdminAppointments() {
     return a.status === filter;
   });
 
-  const counts = {};
-  STATUS_OPTIONS.forEach(s => { counts[s] = appointments.filter(a => a.status === s).length; });
-
   return (
     <div className="space-y-6">
       {/* Header */}

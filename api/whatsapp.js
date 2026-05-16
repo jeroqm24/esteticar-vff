@@ -452,7 +452,7 @@ PLACA: [placa o "no_proporcionado"]
 __END_BOOKING__
 
 ━━━ CLASIFICACIÓN DE CONVERSIÓN ━━━
-Cuando el cliente muestre interés real (preguntó precios, pidió disponibilidad, dio su nombre, preguntó por un servicio específico) pero la conversación termine sin cita confirmada, añade al final del mensaje:
+Cuando el cliente muestre interés real (preguntó precios, pidió disponibilidad, dio su nombre, preguntó por un servicio específico) añade al final del mensaje donde detectes ese interés por primera vez:
 __LEAD_STATUS__:potencial
 
 NO lo añadas si el cliente fue indiferente, solo saludó, o si ya se confirmó una cita (en ese caso ya queda como efectivo automáticamente).
@@ -873,7 +873,7 @@ export default async function handler(req, res) {
       // Clasificación de conversión
       if (leadStatusMatch) {
         const ls = leadStatusMatch[1].trim();
-        if (ls === 'potencial' && conv.remarketing_status !== 'efectivo') {
+        if (ls === 'potencial' && conv.remarketing_status !== 'efectivo' && conv.remarketing_status !== 'potencial') {
           meta.remarketing_status = 'potencial';
           sendLeadCAPI(from, capturedName || conv.client_name).catch(() => {});
         }
