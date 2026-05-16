@@ -333,9 +333,23 @@ export default function AdminConversations() {
       if (updated) setSelected(updated);
     }
     setLoading(false);
+    return data;
   }, [selected?.phone]);
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    load().then(data => {
+      const params = new URLSearchParams(window.location.search);
+      const convPhone = params.get("conv");
+      if (convPhone && data) {
+        const found = data.find(c => c.phone === convPhone);
+        if (found) {
+          setSelected(found);
+          markSeen(found.phone);
+        }
+        window.history.replaceState({}, "", window.location.pathname);
+      }
+    });
+  }, []);
 
   // Auto-refresh every 30s
   useEffect(() => {

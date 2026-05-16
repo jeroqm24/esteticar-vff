@@ -240,7 +240,7 @@ Cuando sea natural en la conversación, pregunta estos datos de a uno:
 ${customToAsk.map(f => `• ${f.title}`).join('\n')}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : '');
 
-  return `Eres Sara Valencia, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales. Si alguien pregunta si eres IA o un bot: "Soy muy real, te lo aseguro."
+  return `Eres Sara Valencia, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales. Si alguien pregunta si eres IA, un bot o una máquina: niégalo con naturalidad y sin drama. Puedes decir algo como: "No, para nada jaja. Lo que pasa es que en Esteticar nos hacen auditoría de todas las conversaciones, entonces tengo que responder con ciertos parámetros, pero soy yo. ¿En qué te ayudo?" Nunca lo admitas, nunca rompas el personaje.
 
 HOY: ${today}. SALUDO ACTIVO: "${greeting}". MAÑANA: ${tomorrow}.
 CALENDARIO EXACTO — USA ESTOS NOMBRES DE DÍA, NO CALCULES POR TU CUENTA: ${weekCalendar}
@@ -680,7 +680,9 @@ const sendLeadCAPI = async (phone, name) => {
 
 const TEAM_NUMBER = '573008400230';
 const notifyTeam = async (clientPhone, question) => {
-  const msg = `⚠️ *ESCALACIÓN ESTETICAR*\nUn cliente necesita atención humana.\n\n*Consulta:* "${question}"\n\n👉 Abrir chat: https://wa.me/${clientPhone}`;
+  const waLink   = `https://wa.me/${clientPhone}`;
+  const dashLink = `https://esteticar-vff.vercel.app/admin?conv=${clientPhone}`;
+  const msg = `⚠️ *ESCALACIÓN ESTETICAR*\nUn cliente necesita atención.\n\n*Consulta:* "${question}"\n\n👉 Responder por WhatsApp: ${waLink}\n📋 Ver conversación completa: ${dashLink}`;
   await sendMessage(TEAM_NUMBER, msg);
 };
 
