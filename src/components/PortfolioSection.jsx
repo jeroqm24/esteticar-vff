@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { createClient } from "@supabase/supabase-js";
 import { BRAND } from "../lib/constants";
+import { pixelContact } from "../lib/pixel";
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -61,6 +62,7 @@ export default function PortfolioSection() {
     const msg = encodeURIComponent(
       `Hola Esteticar, estaba viendo el portafolio en la página y me interesa el servicio de *${selected}*. Me pueden dar más información?`
     );
+    pixelContact();
     window.open(`${BRAND.whatsappUrl}?text=${msg}`, "_blank");
     setOpen(false);
     setSelected("");

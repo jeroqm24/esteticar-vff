@@ -1,6 +1,7 @@
 import React, { useRef } from "react";
 import { motion, useInView, useScroll, useTransform } from "framer-motion";
 import { FINAL_CTA, BRAND } from "../lib/constants";
+import { pixelContact } from "../lib/pixel";
 
 export default function FinalCTA({ onOpenChat }) {
   const containerRef = useRef(null);
@@ -68,7 +69,7 @@ export default function FinalCTA({ onOpenChat }) {
           </div>
           <div className="space-y-3">
             <p className="font-ui text-[10px] tracking-[0.4em] text-ec-gold-light uppercase">Contacto</p>
-            <a href={BRAND.whatsappUrl} target="_blank" rel="noopener noreferrer" className="font-body text-sm text-white/40 leading-relaxed font-light hover:text-ec-gold-light transition-colors block">{BRAND.whatsapp}</a>
+            <a href={BRAND.whatsappUrl} target="_blank" rel="noopener noreferrer" onClick={pixelContact} className="font-body text-sm text-white/40 leading-relaxed font-light hover:text-ec-gold-light transition-colors block">{BRAND.whatsapp}</a>
           </div>
           <div className="space-y-3">
             <p className="font-ui text-[10px] tracking-[0.4em] text-ec-gold-light uppercase">Horario</p>
