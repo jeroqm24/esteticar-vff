@@ -1192,9 +1192,12 @@ export default async function handler(req, res) {
         );
       }
 
-      await sleep(600 + Math.random() * 600);
-
+      // Pausa natural: proporcional a la longitud de la respuesta + ruido aleatorio
+      // Simula velocidad de escritura humana sin que nunca sea demasiado lento
       const reply = cleanReply(rawReply);
+      const charDelay = Math.min(reply.length * 18, 2200); // ~18ms por carácter, máx 2.2s
+      const noise = 300 + Math.random() * 700;             // 300-1000ms de variación
+      await sleep(charDelay + noise);
       if (reply) await sendFn(from, reply);
 
     } catch (err) {
