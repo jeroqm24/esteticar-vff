@@ -31,7 +31,7 @@ function ProcessStep({ step, index, scrollYProgress }) {
       className="absolute inset-0 z-20 pointer-events-none flex flex-col items-center">
 
       {/* Pill — posición absoluta desde arriba */}
-      <div className="absolute top-[20vh] inset-x-0 flex justify-center">
+      <div className="absolute top-[20vh] md:top-[24vh] inset-x-0 flex justify-center">
         <div className="inline-flex items-center gap-3 px-6 py-2.5 rounded-full"
           style={{
             background: "rgba(0,0,0,0.70)",
@@ -50,13 +50,13 @@ function ProcessStep({ step, index, scrollYProgress }) {
       </div>
 
       {/* Título + desc — posición absoluta desde abajo, igual que el hero */}
-      <div className="absolute top-[66vh] inset-x-0 flex flex-col items-center text-center px-6 gap-3">
+      <div className="absolute top-[66vh] md:top-[52vh] inset-x-0 flex flex-col items-center text-center px-6 gap-3">
         <h2 className="font-heading font-bold text-white"
-          style={{ fontSize: "clamp(2.2rem, 7vw, 4.5rem)", lineHeight: 0.95, letterSpacing: "-0.02em", textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
+          style={{ fontSize: "clamp(2.2rem, 6vw, 4rem)", lineHeight: 0.95, letterSpacing: "-0.02em", textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
           {step.title}
         </h2>
         <div className="w-20 h-[3px] rounded-full" style={{ background: "rgba(184,134,11,0.85)" }} />
-        <p className="font-body text-sm sm:text-base max-w-[280px] sm:max-w-sm leading-relaxed"
+        <p className="font-body text-sm sm:text-base max-w-[280px] sm:max-w-sm md:max-w-md leading-relaxed"
           style={{ color: "rgba(255,255,255,0.55)" }}>{step.desc}</p>
       </div>
     </motion.div>
@@ -145,14 +145,14 @@ export default function CinematicProcess() {
         <div className="absolute inset-0 flex items-center justify-center">
           <div className="relative w-full h-full">
             <video ref={videoDesktopRef}
-              className="absolute inset-0 w-full h-full object-contain"
-              style={{ objectPosition: "center center", filter: "brightness(1.25) contrast(1.05)" }}
+              className="absolute inset-0 w-full h-full object-contain md:object-cover"
+              style={{ objectPosition: "center 35%", filter: "brightness(1.25) contrast(1.05)" }}
               src="/process-hero.mp4" muted playsInline preload="auto"
               onLoadedData={() => setVideoReady(true)}
             />
             <img src="/process-dirty.webp" alt="" fetchPriority="high"
-              className="absolute inset-0 w-full h-full object-contain transition-opacity duration-700"
-              style={{ objectPosition: "center center", opacity: videoReady ? 0 : 1 }}
+              className="absolute inset-0 w-full h-full object-contain md:object-cover transition-opacity duration-700"
+              style={{ objectPosition: "center 35%", opacity: videoReady ? 0 : 1 }}
             />
           </div>
         </div>
@@ -180,7 +180,7 @@ export default function CinematicProcess() {
           className="absolute inset-0 z-20 pointer-events-none flex flex-col items-center">
 
           {/* Logo — arriba */}
-          <div className="flex flex-col items-center mt-[15vh] sm:mt-[18vh] gap-4">
+          <div className="flex flex-col items-center mt-[15vh] sm:mt-[18vh] md:mt-[14vh] gap-4">
             <img src={BRAND.logo} alt="Esteticar"
               className="h-12 sm:h-16 md:h-20 object-contain"
             />
@@ -210,7 +210,7 @@ export default function CinematicProcess() {
           </div>
 
           {/* Headline + CTA — misma posición que los pasos */}
-          <div className="absolute top-[66vh] inset-x-0 flex flex-col items-center text-center px-6 gap-3 sm:gap-4">
+          <div className="absolute top-[66vh] md:top-[46vh] inset-x-0 flex flex-col items-center text-center px-6 gap-3 sm:gap-4">
             <h1 className="font-heading font-light leading-[0.92] tracking-[-0.03em] text-white"
               style={{ fontSize: "clamp(2rem, 7vw, 4.5rem)", textShadow: "0 2px 60px rgba(0,0,0,0.9)" }}>
               {BRAND.heroLines[0]}<br />{BRAND.heroLines[1]}
@@ -240,7 +240,7 @@ export default function CinematicProcess() {
 
         {/* ── Showroom badge ── */}
         <motion.div style={{ opacity: badgeOpacity }}
-          className="absolute bottom-14 sm:bottom-16 inset-x-0 z-20 flex justify-center pointer-events-none">
+          className="absolute bottom-14 sm:bottom-16 md:bottom-8 inset-x-0 z-20 flex justify-center pointer-events-none">
           <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full"
             style={{ background: "linear-gradient(135deg, rgba(184,134,11,0.95), rgba(212,160,23,0.95))", boxShadow: "0 4px 28px rgba(184,134,11,0.5)" }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.9)", flexShrink: 0 }} />
