@@ -190,6 +190,45 @@ const SALUDOS = [
   (g) => `${g}, cómo te va? Soy Sara Valencia de Esteticar Manizales. En qué te puedo ayudar?`,
 ];
 
+const getBotConfig = async () => {
+  try {
+    const { data } = await supabase.from('bot_config').select('value').eq('key', 'default').single();
+    return data ? JSON.parse(data.value || '{}') : {};
+  } catch { return {}; }
+};
+
+const FALLBACK_SERVICES = [
+  { name: "Recubrimiento Cerámico", price: "Bajo cotización · 2 días · protección 5 años", vehicle: "car" },
+  { name: "Porcelanizado", price: "Bajo cotización · 2 días · protección 6m-1 año", vehicle: "car" },
+  { name: "Tratamiento 3 en 1 a Máquina", price: "$350.000 (camioneta $360.000)", vehicle: "car" },
+  { name: "Tratamiento 3 en 1 Manual", price: "$290.000 (camioneta $300.000)", vehicle: "car" },
+  { name: "Mantenimiento del Interior", price: "$280.000", vehicle: "car" },
+  { name: "Lavado de Cojinería", price: "$199.000", vehicle: "car" },
+  { name: "Restauración de Farolas", price: "$180.000", vehicle: "car" },
+  { name: "Descontaminación de Vidrios", price: "todos $250.000 · solo parabrisas $60.000", vehicle: "car" },
+  { name: "Brillado a Máquina", price: "$100.000", vehicle: "car" },
+  { name: "Lavado de Chasis", price: "$59.000", vehicle: "car" },
+  { name: "Lavado de Techo y Parasoles", price: "$49.000", vehicle: "car" },
+  { name: "Limpieza Técnica de Motor", price: "$49.000", vehicle: "car" },
+  { name: "Lavada Esencial Carro", price: "$49.000", vehicle: "car" },
+  { name: "Recubrimiento Cerámico", price: "Bajo cotización · protección 5 años", vehicle: "moto" },
+  { name: "Porcelanizado", price: "Bajo cotización · protección 6m-1 año", vehicle: "moto" },
+  { name: "Tratamiento 3 en 1 a Máquina", price: "$350.000", vehicle: "moto" },
+  { name: "Tratamiento 3 en 1 Manual", price: "$290.000", vehicle: "moto" },
+  { name: "Brillado de Tanque", price: "$59.000", vehicle: "moto" },
+  { name: "Descontaminación de Tubería", price: "$49.000", vehicle: "moto" },
+  { name: "Brillado de Farolas", price: "$49.000", vehicle: "moto" },
+  { name: "Lavada Esencial Moto", price: "$49.000", vehicle: "moto" },
+];
+
+const buildServicesText = (services) => {
+  const fmt = (list) => list.map((s, i) => `${i + 1}. ${s.name} — ${s.price}`).join('\n');
+  return {
+    carText:  fmt(services.filter(s => s.vehicle === 'car')),
+    motoText: fmt(services.filter(s => s.vehicle === 'moto')),
+  };
+};
+
 const buildPrompt = async (leadType = null, clientProfile = {}) => {
   const greeting   = getGreeting();
   const today      = getTodayStr();
@@ -197,6 +236,13 @@ const buildPrompt = async (leadType = null, clientProfile = {}) => {
   const weekCalendar = getWeekCalendar();
   const { text: availability, availableBlocks } = await getAvailabilityInfo();
   const saludoEjemplo = SALUDOS[Math.floor(Math.random() * SALUDOS.length)](greeting);
+
+  const botCfg = await getBotConfig();
+  const rawSvcs = botCfg.portfolio_services;
+  const services = Array.isArray(rawSvcs) && rawSvcs.length > 0 && typeof rawSvcs[0] === 'object'
+    ? rawSvcs : FALLBACK_SERVICES;
+  const { carText, motoText } = buildServicesText(services);
+  const portfolioUrl = botCfg.portfolio_url || 'https://heyzine.com/flip-book/7591b1d346.html#page/1';
 
   const scarcityNote = availableBlocks <= 3
     ? `\nESCASEZ ACTIVA: Solo quedan ${availableBlocks} espacio${availableBlocks === 1 ? '' : 's'} disponibles esta semana. Úsalo naturalmente: "Esta semana la agenda está bastante apretada, me quedan ${availableBlocks} espacio${availableBlocks === 1 ? '' : 's'} disponibles. Si quieres asegurarlo..."`
@@ -433,27 +479,10 @@ Ejemplo: si preguntaste la hora y el cliente manda "??", di algo como "Preguntab
 "Vi algo más barato": "Los precios bajos generalmente significan productos de baja calidad. Aquí trabajamos con garantía escrita y póliza de $5.000.000 activa mientras tu carro está con nosotros."
 
 ━━━ SERVICIOS — CARRO (de mayor a menor) ━━━
-1. Recubrimiento Cerámico — $2.400.000 a $3.000.000 · COTIZACIÓN EN PERSONA · 2 días
-2. Porcelanizado — BAJO COTIZACIÓN · 2 días
-3. Tratamiento 3 en 1 con brillada a máquina $350.000 (camioneta $360.000)
-4. Tratamiento 3 en 1 con brillada a mano $290.000 (camioneta $300.000)
-5. Mantenimiento del Interior $280.000
-6. Lavado de Cojinería $199.000
-7. Restauración de Farolas $180.000
-8. Brillado a Máquina $100.000
-9. Descontaminación de Vidrios (todos) $250.000 · (solo parabrisas $60.000)
-10. Lavado de Chasis $59.000
-11. Lavado de Techo y Parasoles $49.000
-12. Limpieza Técnica de Motor $49.000
-13. Lavada Esencial Carro $49.000
+${carText}
 
 ━━━ SERVICIOS — MOTO (de mayor a menor) ━━━
-1. Tratamiento 3 en 1 con brillada a máquina $350.000
-2. Tratamiento 3 en 1 con brillada a mano $290.000
-3. Brillado de Tanque $59.000
-4. Descontaminación de Tubería $49.000
-5. Brillado de Farolas (moto) $49.000
-6. Lavada Esencial Moto $49.000
+${motoText}
 
 ━━━ DIFERENCIADORES ━━━
 • Póliza de $5.000.000 COP activa mientras el vehículo está con nosotros.
@@ -461,7 +490,7 @@ Ejemplo: si preguntaste la hora y el cliente manda "??", di algo como "Preguntab
 • Cámaras HD 24/7 en tiempo real.
 • Salón VIP: café de especialidad, Smart TV 65" con Netflix, WiFi 300Mbps.
 • Certificado digital de garantía al entregar.
-• Portafolio de trabajos: https://heyzine.com/flip-book/7591b1d346.html#page/1
+• Portafolio de trabajos: ${portfolioUrl}
 
 ━━━ DATOS OBLIGATORIOS ANTES DE CONFIRMAR ━━━
 Estos 6 datos son SIEMPRE necesarios para toda cita. Si el cliente los mencionó antes en la conversación, úsalos directamente sin volver a preguntar. Si no los tienes, pídelos de forma natural, uno a la vez:

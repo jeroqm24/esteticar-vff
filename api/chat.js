@@ -186,6 +186,46 @@ const getClientAppointments = async (sessionId) => {
   } catch { return []; }
 };
 
+// ─── Config dinámica del bot ────────────────────────────────────────
+const getBotConfig = async () => {
+  try {
+    const { data } = await supabase.from('bot_config').select('value').eq('key', 'default').single();
+    return data ? JSON.parse(data.value || '{}') : {};
+  } catch { return {}; }
+};
+
+const FALLBACK_SERVICES = [
+  { name: "Recubrimiento Cerámico", price: "Bajo cotización · 2 días · protección 5 años", vehicle: "car" },
+  { name: "Porcelanizado", price: "Bajo cotización · 2 días · protección 6m-1 año", vehicle: "car" },
+  { name: "Tratamiento 3 en 1 a Máquina", price: "$350.000 (camioneta $360.000)", vehicle: "car" },
+  { name: "Tratamiento 3 en 1 Manual", price: "$290.000 (camioneta $300.000)", vehicle: "car" },
+  { name: "Mantenimiento del Interior", price: "$280.000", vehicle: "car" },
+  { name: "Lavado de Cojinería", price: "$199.000", vehicle: "car" },
+  { name: "Restauración de Farolas", price: "$180.000", vehicle: "car" },
+  { name: "Descontaminación de Vidrios", price: "todos $250.000 · solo parabrisas $60.000", vehicle: "car" },
+  { name: "Brillado a Máquina", price: "$100.000", vehicle: "car" },
+  { name: "Lavado de Chasis", price: "$59.000", vehicle: "car" },
+  { name: "Lavado de Techo y Parasoles", price: "$49.000", vehicle: "car" },
+  { name: "Limpieza Técnica de Motor", price: "$49.000", vehicle: "car" },
+  { name: "Lavada Esencial Carro", price: "$49.000", vehicle: "car" },
+  { name: "Recubrimiento Cerámico", price: "Bajo cotización · protección 5 años", vehicle: "moto" },
+  { name: "Porcelanizado", price: "Bajo cotización · protección 6m-1 año", vehicle: "moto" },
+  { name: "Tratamiento 3 en 1 a Máquina", price: "$350.000", vehicle: "moto" },
+  { name: "Tratamiento 3 en 1 Manual", price: "$290.000", vehicle: "moto" },
+  { name: "Brillado de Tanque", price: "$59.000", vehicle: "moto" },
+  { name: "Descontaminación de Tubería", price: "$49.000", vehicle: "moto" },
+  { name: "Brillado de Farolas", price: "$49.000", vehicle: "moto" },
+  { name: "Lavada Esencial Moto", price: "$49.000", vehicle: "moto" },
+];
+
+const buildServicesText = (services) => {
+  const fmt = (list) => list.map((s, i) => `${i + 1}. ${s.name} — ${s.price}`).join('\n');
+  return {
+    carText:  fmt(services.filter(s => s.vehicle === 'car')),
+    motoText: fmt(services.filter(s => s.vehicle === 'moto')),
+  };
+};
+
 // ─── System prompt ─────────────────────────────────────────────────
 const buildPrompt = async (advisorName, sessionId = null) => {
   const greeting = getGreeting();
@@ -194,6 +234,13 @@ const buildPrompt = async (advisorName, sessionId = null) => {
   const tomorrow = getTomorrowStr();
   const { text: availability, available } = await getAvailability();
   const nextHolidays = getNextHolidaysText();
+  const botCfg = await getBotConfig();
+  const rawSvcs = botCfg.portfolio_services;
+  const services = Array.isArray(rawSvcs) && rawSvcs.length > 0 && typeof rawSvcs[0] === 'object'
+    ? rawSvcs
+    : FALLBACK_SERVICES;
+  const { carText, motoText } = buildServicesText(services);
+  const portfolioUrl = botCfg.portfolio_url || 'https://heyzine.com/flip-book/7591b1d346.html#page/1';
   const clientAppts = await getClientAppointments(sessionId);
 
   const scarcity = available > 0 && available <= 3
@@ -267,29 +314,10 @@ PASO 4: Cierre por alternativa: "Te queda mejor mañana en la mañana o en la ta
 Nombre del cliente — en cuanto lo sepas: __NAME__:[nombre completo]
 
 ━━━ SERVICIOS — CARRO ━━━
-1. Recubrimiento Cerámico — BAJO COTIZACIÓN · 2 días · protección 5 años
-2. Porcelanizado — BAJO COTIZACIÓN · 2 días · protección 6 meses a 1 año
-3. Tratamiento 3 en 1 a Máquina $350.000 (camioneta $360.000)
-4. Tratamiento 3 en 1 Manual $290.000 (camioneta $300.000)
-5. Mantenimiento del Interior $280.000
-6. Lavado de Cojinería $199.000
-7. Restauración de Farolas $180.000
-8. Descontaminación de Vidrios (todos) $250.000 · (solo parabrisas $60.000)
-9. Brillado a Máquina $100.000
-10. Lavado de Chasis $59.000
-11. Lavado de Techo y Parasoles $49.000
-12. Limpieza Técnica de Motor $49.000
-13. Lavada Esencial Carro $49.000
+${carText}
 
 ━━━ SERVICIOS — MOTO ━━━
-1. Recubrimiento Cerámico — BAJO COTIZACIÓN · protección 5 años
-2. Porcelanizado — BAJO COTIZACIÓN · protección 6 meses a 1 año
-3. Tratamiento 3 en 1 a Máquina $350.000
-4. Tratamiento 3 en 1 Manual $290.000
-5. Brillado de Tanque $59.000
-6. Descontaminación de Tubería $49.000
-7. Brillado de Farolas $49.000
-8. Lavada Esencial Moto $49.000
+${motoText}
 NOTA: Para Recubrimiento Cerámico y Porcelanizado en motos, el precio se cotiza según el tipo y estado de la moto. Usa __ESCALATE__ para coordinar la cotización con Sara.
 
 ━━━ DIFERENCIADORES ━━━
@@ -297,7 +325,7 @@ NOTA: Para Recubrimiento Cerámico y Porcelanizado en motos, el precio se cotiza
 • Registro fotográfico 360° y código QR único.
 • Cámaras HD 24/7 en tiempo real.
 • Salón VIP: café de especialidad, Smart TV 65" Netflix, WiFi 300Mbps.
-• Portafolio: https://heyzine.com/flip-book/7591b1d346.html#page/1
+• Portafolio: ${portfolioUrl}
 
 ━━━ CAPTURA ANTES DE CONFIRMAR (pedir UNO A UNO) ━━━
 1. Nombre completo
