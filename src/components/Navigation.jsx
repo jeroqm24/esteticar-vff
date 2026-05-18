@@ -24,14 +24,14 @@ export default function Navigation({ onBookingClick, cartCount, logoHref = "#" }
             : "bg-transparent"
         }`}
       >
-        <div className="relative max-w-7xl mx-auto px-6 flex items-center justify-between h-20">
+        <div className="relative max-w-7xl mx-auto px-6 flex items-center justify-between h-20 md:h-14">
           {/* Logo */}
           <a href={logoHref} className="relative z-10 flex items-center">
             <img
               src={BRAND.logo}
               alt="Esteticar"
               className={`object-contain transition-all duration-700 ${
-                scrolled ? "h-10 sm:h-11" : "h-10 sm:h-12"
+                scrolled ? "h-10 sm:h-11 md:h-8" : "h-10 sm:h-12 md:h-9"
               }`}
               style={{
                 filter: scrolled
