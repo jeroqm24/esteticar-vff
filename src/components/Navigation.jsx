@@ -14,17 +14,9 @@ export default function Navigation({ onBookingClick, cartCount, logoHref = "#" }
   }, []);
 
   useEffect(() => {
-    const checkOverDark = () => {
-      const sections = document.querySelectorAll('[data-dark-nav]');
-      const over = Array.from(sections).some(el => {
-        const rect = el.getBoundingClientRect();
-        return rect.top < 56 && rect.bottom > 0;
-      });
-      setOverDark(over);
-    };
-    window.addEventListener("scroll", checkOverDark, { passive: true });
-    checkOverDark();
-    return () => window.removeEventListener("scroll", checkOverDark);
+    const handle = (e) => setOverDark(e.detail);
+    window.addEventListener("ec:dark", handle);
+    return () => window.removeEventListener("ec:dark", handle);
   }, []);
 
   return (
@@ -33,22 +25,23 @@ export default function Navigation({ onBookingClick, cartCount, logoHref = "#" }
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.9, ease: [0.32, 0.72, 0, 1] }}
-        className={`fixed top-0 inset-x-0 z-[100] transition-all duration-700 ${
+        className="fixed top-0 inset-x-0 z-[100] transition-all duration-700"
+        style={
           scrolled && overDark
-            ? "bg-black/50 backdrop-blur-xl border-b border-white/[0.08]"
+            ? { background: "rgba(0,0,0,0.55)", backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.08)" }
             : scrolled
-            ? "bg-white/92 backdrop-blur-2xl border-b border-black/[0.06] shadow-[0_4px_30px_rgba(0,0,0,0.06)]"
-            : "bg-transparent"
-        }`}
+            ? { background: "rgba(255,255,255,0.92)", backdropFilter: "blur(24px)", WebkitBackdropFilter: "blur(24px)", borderBottom: "1px solid rgba(0,0,0,0.06)", boxShadow: "0 4px 30px rgba(0,0,0,0.06)" }
+            : { background: "transparent" }
+        }
       >
-        <div className="relative max-w-7xl mx-auto px-6 flex items-center justify-between h-20 md:h-14">
+        <div className="relative max-w-7xl mx-auto px-6 flex items-center justify-between h-20 lg:h-14">
           {/* Logo */}
           <a href={logoHref} className="relative z-10 flex items-center">
             <img
               src={BRAND.logo}
               alt="Esteticar"
               className={`object-contain transition-all duration-700 ${
-                scrolled ? "h-10 sm:h-11 md:h-8" : "h-10 sm:h-12 md:h-9"
+                scrolled ? "h-10 sm:h-11 lg:h-8" : "h-10 sm:h-12 lg:h-9"
               }`}
               style={{
                 filter: scrolled && !overDark
@@ -81,7 +74,7 @@ export default function Navigation({ onBookingClick, cartCount, logoHref = "#" }
           <div className="hidden lg:flex items-center gap-5">
             <button
               onClick={onBookingClick}
-              className="relative group/nav px-8 py-3 md:px-6 md:py-2 font-ui text-[11px] tracking-[0.3em] uppercase font-bold rounded-full transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] flex items-center gap-3"
+              className="relative group/nav px-8 py-3 lg:px-6 lg:py-2 font-ui text-[11px] tracking-[0.3em] uppercase font-bold rounded-full transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] flex items-center gap-3"
               style={{
                 background: "linear-gradient(135deg, #B8860B 0%, #D4A017 100%)",
                 color: "#fff",
