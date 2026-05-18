@@ -421,7 +421,7 @@ export const TRANSFORMATIONS = [
     treatment: "Recubrimiento Cerámico",
     label: "BMW X7 — Recubrimiento Cerámico",
     tag: "RECUBRIMIENTO CERÁMICO",
-    price: "$350.000",
+    price: "Bajo cotización",
     desc: "Sellado cerámico de alta resistencia que forma una capa de protección dura sobre la pintura. Brillo de espejo duradero, repelente al agua y resistente a rayones menores.",
     process: [
       "Prelavado con espuma activa para disolver contaminantes adheridos",
@@ -436,7 +436,7 @@ export const TRANSFORMATIONS = [
     treatment: "Porcelanizado",
     label: "Motocicletas — Porcelanizado",
     tag: "PORCELANIZADO DE MOTO",
-    price: "$49.000 - $150.000",
+    price: "Bajo cotización",
     desc: "Tratamiento porcelanizado que devuelve y potencia el brillo original de la moto. Protección contra la oxidación, suciedad y rayos UV con acabado de exhibición.",
     process: [
       "Lavado profundo con énfasis en motor, cadena y guardabarros",
@@ -451,7 +451,7 @@ export const TRANSFORMATIONS = [
     treatment: "Tratamiento 3 en 1 a Máquina",
     label: "Camaro ZL1 — Tratamiento 3 en 1 a Máquina",
     tag: "TRATAMIENTO 3 EN 1 A MÁQUINA",
-    price: "$280.000",
+    price: "$350.000",
     desc: "Corrección profesional con pulidora orbital de doble acción en 3 pasos. De una pintura opaca con swirl marks a un acabado de showroom con brillo de espejo.",
     process: [
       "Prelavado y descontaminación completa de la superficie",
