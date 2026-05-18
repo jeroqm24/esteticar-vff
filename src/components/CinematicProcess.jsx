@@ -133,7 +133,7 @@ export default function CinematicProcess() {
   });
 
   return (
-    <div ref={containerRef} style={{ height: "520vh", position: "relative" }}>
+    <div ref={containerRef} data-dark-nav style={{ height: "520vh", position: "relative" }}>
       <div style={{ position: "sticky", top: 0, height: "100dvh", overflow: "hidden", background: "#040404" }}>
 
         {/* Grain */}

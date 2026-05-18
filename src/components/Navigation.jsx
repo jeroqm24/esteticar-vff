@@ -5,11 +5,26 @@ import { NAV_ITEMS, BRAND } from "../lib/constants";
 export default function Navigation({ onBookingClick, cartCount, logoHref = "#" }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [overDark, setOverDark] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 80);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  useEffect(() => {
+    const checkOverDark = () => {
+      const sections = document.querySelectorAll('[data-dark-nav]');
+      const over = Array.from(sections).some(el => {
+        const rect = el.getBoundingClientRect();
+        return rect.top < 56 && rect.bottom > 0;
+      });
+      setOverDark(over);
+    };
+    window.addEventListener("scroll", checkOverDark, { passive: true });
+    checkOverDark();
+    return () => window.removeEventListener("scroll", checkOverDark);
   }, []);
 
   return (
@@ -19,7 +34,9 @@ export default function Navigation({ onBookingClick, cartCount, logoHref = "#" }
         animate={{ y: 0 }}
         transition={{ duration: 0.9, ease: [0.32, 0.72, 0, 1] }}
         className={`fixed top-0 inset-x-0 z-[100] transition-all duration-700 ${
-          scrolled
+          scrolled && overDark
+            ? "bg-black/50 backdrop-blur-xl border-b border-white/[0.08]"
+            : scrolled
             ? "bg-white/92 backdrop-blur-2xl border-b border-black/[0.06] shadow-[0_4px_30px_rgba(0,0,0,0.06)]"
             : "bg-transparent"
         }`}
@@ -34,7 +51,7 @@ export default function Navigation({ onBookingClick, cartCount, logoHref = "#" }
                 scrolled ? "h-10 sm:h-11 md:h-8" : "h-10 sm:h-12 md:h-9"
               }`}
               style={{
-                filter: scrolled
+                filter: scrolled && !overDark
                   ? "drop-shadow(0 0 4px rgba(184,134,11,0.2))"
                   : "drop-shadow(0 0 16px rgba(248,200,64,0.55)) drop-shadow(0 0 4px rgba(248,200,64,0.3))",
               }}
@@ -48,7 +65,9 @@ export default function Navigation({ onBookingClick, cartCount, logoHref = "#" }
                 key={item.label}
                 href={item.href}
                 className={`font-ui text-[10px] tracking-[0.15em] uppercase transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] px-4 py-2 rounded-full ${
-                  scrolled
+                  scrolled && overDark
+                    ? "text-white/80 bg-white/[0.07] hover:bg-ec-gold hover:text-white"
+                    : scrolled
                     ? "text-ec-text-secondary bg-transparent hover:bg-ec-gold hover:text-white"
                     : "text-white/75 bg-white/[0.07] backdrop-blur-sm border border-white/[0.1] hover:bg-ec-gold hover:text-white hover:border-transparent"
                 }`}
@@ -62,7 +81,7 @@ export default function Navigation({ onBookingClick, cartCount, logoHref = "#" }
           <div className="hidden lg:flex items-center gap-5">
             <button
               onClick={onBookingClick}
-              className="relative group/nav px-8 py-3 font-ui text-[11px] tracking-[0.3em] uppercase font-bold rounded-full transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] flex items-center gap-3"
+              className="relative group/nav px-8 py-3 md:px-6 md:py-2 font-ui text-[11px] tracking-[0.3em] uppercase font-bold rounded-full transition-all duration-[650ms] [transition-timing-function:cubic-bezier(0.32,0.72,0,1)] active:scale-[0.97] flex items-center gap-3"
               style={{
                 background: "linear-gradient(135deg, #B8860B 0%, #D4A017 100%)",
                 color: "#fff",
