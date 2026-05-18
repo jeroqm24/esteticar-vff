@@ -240,7 +240,7 @@ export default function CinematicProcess() {
 
         {/* ── Showroom badge ── */}
         <motion.div style={{ opacity: badgeOpacity }}
-          className="absolute bottom-14 sm:bottom-16 md:bottom-8 inset-x-0 z-20 flex justify-center pointer-events-none">
+          className="absolute bottom-14 sm:bottom-16 md:bottom-16 inset-x-0 z-20 flex justify-center pointer-events-none">
           <div className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full"
             style={{ background: "linear-gradient(135deg, rgba(184,134,11,0.95), rgba(212,160,23,0.95))", boxShadow: "0 4px 28px rgba(184,134,11,0.5)" }}>
             <div style={{ width: 6, height: 6, borderRadius: "50%", background: "rgba(255,255,255,0.9)", flexShrink: 0 }} />
