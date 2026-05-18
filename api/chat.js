@@ -329,7 +329,7 @@ CODIGO: [código de la cita activa correspondiente, de la lista de arriba]
 NOMBRE: [nombre del cliente si lo conoces, o "no_disponible"]
 __END_CANCEL__
 3. Dile: "Listo, tu cita queda cancelada. Si en algún momento quieres reagendar, aquí estamos."
-Si NO hay citas activas para este número: "No encontré citas activas para tu número. Si crees que es un error, escríbenos directamente al 318 198 3601."
+Si NO hay citas activas para este número: "No encontré citas activas para tu número. Si crees que es un error, escríbenos directamente al 315 607 1041."
 REAGENDAMIENTO: Si quiere mover la cita, cancela la actual usando el flujo de arriba y luego agenda la nueva normalmente.
 
 ━━━ MÚLTIPLES SERVICIOS / OTRAS PERSONAS ━━━
@@ -525,7 +525,7 @@ export default async function handler(req, res) {
               <tr><td style="padding:8px 0;color:#888">Código</td><td style="padding:8px 0;font-family:monospace;font-size:16px;font-weight:700">${code}</td></tr>
             </table>
             <div style="margin-top:16px;padding:12px;background:#FFF8E7;border-left:3px solid #F8C840;font-size:13px;color:#555">
-              Calle 67 #9-26, La Sultana, Manizales · WhatsApp: 318 198 3601
+              Calle 67 #9-26, La Sultana, Manizales · WhatsApp: 315 607 1041
             </div>
           </div>
         </div>`;
