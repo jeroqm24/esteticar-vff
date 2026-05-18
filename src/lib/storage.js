@@ -478,7 +478,7 @@ export const generateEscalationURL = (userQuestion) => {
   const msg = encodeURIComponent(
     `Hola Sara 👋 ${g}. Un cliente en la web nos está preguntando:\n\n_"${userQuestion}"_\n\nTe lo paso para que lo puedas atender personalmente. 🙏`
   );
-  return `https://wa.me/573181983601?text=${msg}`;
+  return `https://wa.me/573156071041?text=${msg}`;
 };
 
 export const resetConversationState = () => {};

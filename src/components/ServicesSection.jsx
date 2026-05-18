@@ -115,7 +115,7 @@ function ServicePod({ service, index }) {
             {/* CTA — pill with button-in-button trailing icon */}
             <a
               onClick={() => { pixelViewContent(service.name, service.price || 0); pixelContact(); }}
-              href={`https://wa.me/573181983601?text=${encodeURIComponent(service.cotizacion
+              href={`https://wa.me/573156071041?text=${encodeURIComponent(service.cotizacion
                 ? `Hola Esteticar, estuve revisando la página y me interesa el servicio de *${service.name}*. Me gustaría recibir una cotización personalizada según mi vehículo. Cuándo podemos hablar?`
                 : `Hola Esteticar, estuve en la página y quiero reservar el servicio:\n\n*${service.name}*\nInversión: ${service.priceDisplay}\n\nTienen disponibilidad esta semana?`)}`}
               target="_blank"

@@ -119,7 +119,7 @@ export default function LandingPage() {
         services={selectedServices}
         onRemoveService={removeService}
         vehicleType={vehicleType}
-        onOpenChat={() => window.open(`https://wa.me/573181983601?text=${encodeURIComponent("Hola 👋 acabo de seleccionar mis servicios en la página de Esteticar. Quiero confirmar mi reserva y coordinar los detalles. ¿Me pueden ayudar?")}`, "_blank")}
+        onOpenChat={() => window.open(`https://wa.me/573156071041?text=${encodeURIComponent("Hola 👋 acabo de seleccionar mis servicios en la página de Esteticar. Quiero confirmar mi reserva y coordinar los detalles. ¿Me pueden ayudar?")}`, "_blank")}
       />
 
       {/* Floating buttons */}

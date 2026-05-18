@@ -1057,7 +1057,7 @@ export default async function handler(req, res) {
         }, { onConflict: 'phone' });
         if (clientUpsertError) console.error('Client upsert error:', clientUpsertError);
 
-        const waPhone = '573181983601';
+        const waPhone = '573156071041';
         const waMsg = encodeURIComponent(`Hola ${booking.clientName || 'cliente'}, te confirmo tu cita para el ${booking.date}. Servicios: ${booking.service}. Código: ${booking.confirmationCode}.`);
         const waUrl = `https://api.whatsapp.com/send/?phone=${waPhone}&text=${waMsg}`;
         const calUrl = buildCalendarUrl(booking);
