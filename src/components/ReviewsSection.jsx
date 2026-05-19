@@ -98,7 +98,7 @@ const REVIEWS = [
     gradient: "linear-gradient(135deg, #4A3728 0%, #2D221B 100%)",
     date: "hace 2 meses",
     service: "Tratamiento 3 en 1 a Máquina",
-    text: "Mi BMW Serie 3 estaba con muchos micro-rayones del lavado automático. Jerónimo me explicó todo el proceso antes de empezar, eso me dio mucha confianza. No vuelvo a llevar mi carro a otro lugar.",
+    text: "Mi BMW Serie 3 estaba con muchos micro-rayones del lavado automático. Federico me explicó todo el proceso antes de empezar, eso me dio mucha confianza. No vuelvo a llevar mi carro a otro lugar.",
     stars: 5,
     platform: "google",
   },
