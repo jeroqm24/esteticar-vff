@@ -224,11 +224,12 @@ export default function AdminDashboard({ onClose }) {
 
       {/* ── CONTENT ── */}
       {activeTab === "conversations" ? (
-        <main className="flex-1 min-h-0 overflow-hidden pb-14 lg:pb-0 flex flex-col">
+        /* Conversations: sin padding inferior — AdminConversations lo maneja internamente */
+        <main className="flex-1 min-h-0 overflow-hidden flex flex-col">
           <AdminConversations initialPhone={initialPhone} />
         </main>
       ) : (
-        <main className="flex-1 overflow-y-auto min-h-0 pb-14 lg:pb-0 touch-pan-y">
+        <main className="flex-1 overflow-y-auto min-h-0 pb-16 lg:pb-0 touch-pan-y">
           <div className="p-4 sm:p-6 lg:p-10 xl:p-16">
             <AnimatePresence mode="wait">
               <motion.div
@@ -255,30 +256,36 @@ export default function AdminDashboard({ onClose }) {
         </main>
       )}
 
-      {/* ── BOTTOM NAV (mobile only) ── */}
+      {/* ── BOTTOM NAV (mobile only) — h-16, scrollable, icon + label corto ── */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-black/[0.06] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        <div className="flex overflow-x-auto h-14" style={{ scrollbarWidth: "none" }}>
+        <div className="flex overflow-x-auto h-16" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
+            const shortLabel = {
+              stats: "Panel", appointments: "Citas", clients: "Clientes",
+              leads: "Pipeline", calendar: "Agenda", finanzas: "Finanzas",
+              conversations: "Chats", cancellations: "Cancel.", costs: "API", config: "Config.",
+            }[tab.id] || tab.label;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative flex-shrink-0 flex flex-col items-center justify-center transition-all duration-200 px-3 ${isActive ? "text-ec-gold" : "text-ec-text-muted"}`}
-                style={{ minWidth: "52px" }}
+                className={`relative flex-shrink-0 flex flex-col items-center justify-center gap-0.5 transition-all duration-200 ${isActive ? "text-ec-gold" : "text-ec-text-muted"}`}
+                style={{ minWidth: "62px", paddingLeft: "6px", paddingRight: "6px" }}
               >
                 <div className="relative">
-                  <TabIcon type={tab.icon} size={isActive ? 22 : 20} />
+                  <TabIcon type={tab.icon} size={isActive ? 20 : 18} />
                   {tab.id === "cancellations" && cancellationCount > 0 && (
                     <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full text-[8px] text-white font-bold flex items-center justify-center">
                       {cancellationCount > 9 ? "9+" : cancellationCount}
                     </span>
                   )}
                 </div>
+                <span className={`font-ui text-[8px] leading-none ${isActive ? "font-bold" : ""}`}>{shortLabel}</span>
                 {isActive && (
                   <motion.div
                     layoutId="bottomNav"
-                    className="absolute bottom-0 w-6 h-0.5 bg-ec-gold rounded-full"
+                    className="absolute bottom-0 w-8 h-0.5 bg-ec-gold rounded-full"
                     transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
                   />
                 )}

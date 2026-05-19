@@ -484,21 +484,24 @@ export default function AdminConversations({ initialPhone }) {
         {/* ── Lista de conversaciones ── */}
         <div className={`${selected ? "hidden lg:flex" : "flex"} w-full lg:w-80 xl:w-96 flex-shrink-0 flex-col border-r border-black/[0.06] bg-white`}>
           {/* Header */}
-          <div className="p-4 border-b border-black/[0.06]">
+          <div className="px-4 pt-4 pb-3 border-b border-black/[0.06] bg-white">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-heading text-lg text-ec-dark">Conversaciones</h2>
-              <button onClick={load} className="text-ec-text-muted hover:text-ec-gold transition-colors" title="Recargar">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <h2 className="font-heading text-[17px] text-ec-dark">Conversaciones</h2>
+              <button onClick={load} className="w-8 h-8 flex items-center justify-center text-ec-text-muted active:text-ec-gold rounded-full active:bg-ec-cream" title="Recargar">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                 </svg>
               </button>
             </div>
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="Buscar por nombre o teléfono…"
-              className="w-full px-3 py-2 text-sm border border-black/[0.08] rounded-sm bg-ec-cream focus:border-ec-gold focus:outline-none font-body"
-            />
+            <div className="relative">
+              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-ec-text-muted pointer-events-none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Buscar por nombre o teléfono…"
+                className="w-full pl-9 pr-3 py-2.5 text-[13px] border border-black/[0.08] rounded-xl bg-[#F0F2F5] focus:border-ec-gold focus:outline-none font-body"
+              />
+            </div>
             {/* Filter tabs */}
             <div className="flex gap-1 mt-3 overflow-x-auto pb-0.5">
               {FILTERS.map(f => (
@@ -530,7 +533,7 @@ export default function AdminConversations({ initialPhone }) {
           </div>
 
           {/* List */}
-          <div className="flex-1 overflow-y-auto">
+          <div className="flex-1 overflow-y-auto pb-16 lg:pb-0">
             {loading ? (
               <div className="flex items-center justify-center h-32 text-ec-text-muted text-sm font-body">Cargando…</div>
             ) : filtered.length === 0 ? (
@@ -546,50 +549,50 @@ export default function AdminConversations({ initialPhone }) {
                 <button
                   key={conv.phone}
                   onClick={() => selectConversation(conv)}
-                  className={`w-full text-left px-4 py-3 border-b border-black/[0.04] transition-colors group relative ${
-                    isActive ? "bg-ec-gold/[0.08] border-l-2 border-l-ec-gold" : "hover:bg-ec-cream"
+                  className={`w-full text-left px-4 py-3.5 border-b border-black/[0.05] transition-colors group relative ${
+                    isActive ? "bg-ec-gold/[0.08] border-l-[3px] border-l-ec-gold" : "active:bg-ec-cream"
                   }`}
                 >
-                  <div className="flex items-start gap-3">
+                  <div className="flex items-center gap-3">
                     {/* Avatar */}
                     <div className="relative flex-shrink-0">
-                      <div className="w-9 h-9 rounded-full bg-ec-cream flex items-center justify-center font-heading text-sm text-ec-dark border border-black/[0.06]">
+                      <div className="w-11 h-11 rounded-full bg-gradient-to-br from-ec-gold/30 to-ec-gold/10 flex items-center justify-center font-heading text-base text-ec-dark">
                         {getDisplayName(conv).charAt(0).toUpperCase()}
                       </div>
-                      <div className={`absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full border-2 border-white ${conv.bot_paused ? "bg-orange-400" : "bg-emerald-500"}`} />
+                      <div className={`absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white ${conv.bot_paused ? "bg-orange-400" : "bg-emerald-500"}`} />
                     </div>
 
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center justify-between gap-2 mb-0.5">
-                        <span className={`font-ui text-[12px] font-semibold truncate ${unread > 0 ? "text-ec-dark" : "text-ec-dark/80"}`}>
+                        <span className={`font-ui text-[13px] font-semibold truncate ${unread > 0 ? "text-ec-dark" : "text-ec-dark/80"}`}>
                           {getDisplayName(conv)}
                         </span>
                         <div className="flex items-center gap-1.5 flex-shrink-0">
                           {unread > 0 && (
-                            <span className="w-4 h-4 rounded-full bg-ec-gold flex items-center justify-center text-[9px] text-white font-bold">{unread}</span>
+                            <span className="min-w-[18px] h-[18px] px-1 rounded-full bg-ec-gold flex items-center justify-center text-[10px] text-white font-bold">{unread}</span>
                           )}
-                          <span className="text-[10px] text-ec-text-muted font-ui">{timeAgo(conv.updated_at)}</span>
+                          <span className="text-[11px] text-ec-text-muted font-ui whitespace-nowrap">{timeAgo(conv.updated_at)}</span>
                         </div>
                       </div>
-                      <div className="flex items-center gap-1.5 mb-0.5">
+                      <div className="flex items-center gap-1.5 mb-1">
                         <ChannelBadge phone={conv.phone} />
-                        {conv.lead_type && <LeadBadge type={conv.lead_type} />}
                         {conv.bot_paused && (
                           <span className="text-[9px] font-ui text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-full">⏸ Pausado</span>
                         )}
+                        {conv.lead_type && <LeadBadge type={conv.lead_type} />}
                         {conv.remarketing_status && <RemarkBadge status={conv.remarketing_status} />}
                       </div>
-                      <p className="text-[11px] text-ec-text-muted font-body truncate">{getPreview(conv.history)}</p>
+                      <p className="text-[12px] text-ec-text-muted font-body truncate leading-snug">{getPreview(conv.history)}</p>
                     </div>
                   </div>
 
-                  {/* Delete — only on hover, hidden to prevent accidental tap */}
+                  {/* Delete — long-press area, solo en hover (desktop) */}
                   <button
                     onClick={e => { e.stopPropagation(); setDeleteModal(conv); }}
-                    className="absolute right-2 top-2 opacity-0 group-hover:opacity-100 transition-opacity w-6 h-6 flex items-center justify-center text-red-400 hover:text-red-600"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-600 rounded-full hover:bg-red-50"
                     title="Eliminar"
                   >
-                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>
                   </button>
                 </button>
               );
@@ -600,37 +603,45 @@ export default function AdminConversations({ initialPhone }) {
         {/* ── Panel de conversación ── */}
         <div className="flex-1 flex flex-col min-h-0 bg-[#efeae2]">
           {!selected ? (
-            <div className="flex-1 flex flex-col items-center justify-center gap-3 text-ec-text-muted">
-              <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-              <p className="font-body text-sm">Selecciona una conversación</p>
+            <div className="flex-1 flex flex-col items-center justify-center gap-4 text-ec-text-muted px-8 text-center">
+              <div className="w-20 h-20 rounded-full bg-ec-gold/10 flex items-center justify-center">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+              </div>
+              <div>
+                <p className="font-ui text-[13px] font-semibold text-ec-dark mb-1">Ninguna conversación activa</p>
+                <p className="font-body text-[12px]">Selecciona un chat de la lista para responder</p>
+              </div>
             </div>
           ) : (
             <>
               {/* Header */}
-              <div className="bg-[#128C7E] flex-shrink-0 px-3 py-2">
+              <div className="bg-[#075E54] flex-shrink-0 px-3 pt-2.5 pb-2">
                 {/* Fila 1: back + avatar + nombre + info */}
-                <div className="flex items-center gap-2">
-                  <button onClick={() => setSelected(null)} className="lg:hidden text-white/80 hover:text-white flex-shrink-0">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+                <div className="flex items-center gap-2.5">
+                  <button
+                    onClick={() => setSelected(null)}
+                    className="lg:hidden w-8 h-8 flex items-center justify-center text-white/80 active:text-white flex-shrink-0 -ml-1"
+                  >
+                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
                   </button>
-                  <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                  <div className="w-9 h-9 rounded-full bg-white/25 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
                     {getDisplayName(selected).charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white font-semibold text-[13px] leading-tight truncate">{getDisplayName(selected)}</p>
-                    <p className="text-white/70 text-[10px]">{selectedHistory.length} mensajes · {timeAgo(selected.updated_at)}</p>
+                    <p className="text-white font-bold text-[14px] leading-tight truncate">{getDisplayName(selected)}</p>
+                    <p className="text-white/60 text-[11px] mt-0.5">{selectedHistory.length} msgs · {timeAgo(selected.updated_at)}</p>
                   </div>
                   <button
                     onClick={() => setShowInfo(v => !v)}
                     title="Ver datos del cliente"
-                    className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${showInfo ? "bg-white/30 text-white" : "text-white/60 hover:text-white hover:bg-white/15"}`}
+                    className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors flex-shrink-0 ${showInfo ? "bg-white/25 text-white" : "text-white/60 active:text-white active:bg-white/15"}`}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
                   </button>
                 </div>
 
-                {/* Fila 2: controles */}
-                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                {/* Fila 2: controles — scroll horizontal, nunca wrappea */}
+                <div className="flex items-center gap-2 mt-2 overflow-x-auto pb-0.5" style={{ scrollbarWidth: "none" }}>
                   {/* Lead type */}
                   <div className="relative">
                     <select
@@ -734,8 +745,8 @@ export default function AdminConversations({ initialPhone }) {
                 </AnimatePresence>
               </div>
 
-              {/* Reply bar */}
-              <div className="flex-shrink-0 bg-[#F0F2F5] border-t border-black/[0.06]">
+              {/* Reply bar — pb-16 en móvil para que el nav fijo no tape el input */}
+              <div className="flex-shrink-0 bg-[#F0F2F5] border-t border-black/[0.06] pb-16 lg:pb-0">
                 {/* Canned responses */}
                 <AnimatePresence>
                   {showCanned && (
@@ -762,14 +773,14 @@ export default function AdminConversations({ initialPhone }) {
                   )}
                 </AnimatePresence>
 
-                <div className="flex items-end gap-2 px-3 py-2">
+                <div className="flex items-end gap-2 px-3 py-2.5">
                   {/* Canned toggle */}
                   <button
                     onClick={() => setShowCanned(v => !v)}
                     title="Respuestas rápidas"
-                    className={`w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full transition-colors ${showCanned ? "bg-ec-gold text-white" : "text-ec-text-muted hover:text-ec-gold bg-white border border-black/[0.08]"}`}
+                    className={`w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-full transition-colors ${showCanned ? "bg-ec-gold text-white" : "text-ec-text-muted bg-white border border-black/[0.08]"}`}
                   >
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
                   </button>
 
                   <textarea
@@ -777,22 +788,22 @@ export default function AdminConversations({ initialPhone }) {
                     value={replyText}
                     onChange={e => setReplyText(e.target.value)}
                     onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                    placeholder={selected.bot_paused ? "Escribe tu respuesta (Ctrl+Enter para enviar)…" : "Escribe una respuesta (el bot seguirá activo)…"}
+                    placeholder={selected.bot_paused ? "Escribe tu respuesta…" : "Escribe (el bot seguirá activo)…"}
                     rows={1}
-                    className="flex-1 px-3 py-2 text-[13px] rounded-2xl border border-black/[0.08] bg-white focus:border-[#128C7E] focus:outline-none font-body resize-none leading-relaxed"
-                    style={{ minHeight: "36px", maxHeight: "120px", overflow: "auto" }}
+                    className="flex-1 px-4 py-2.5 text-[14px] rounded-2xl border border-black/[0.08] bg-white focus:border-[#128C7E] focus:outline-none font-body resize-none leading-relaxed"
+                    style={{ minHeight: "40px", maxHeight: "120px", overflow: "auto" }}
                   />
 
                   <button
                     onClick={handleSend}
                     disabled={!replyText.trim() || sending}
-                    className="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-full transition-all"
-                    style={{ background: replyText.trim() && !sending ? "#128C7E" : "#ccc" }}
-                    title={isWhatsApp(selected.phone) ? "Enviar por WhatsApp" : "Enviar (se guardará en el historial)"}
+                    className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full transition-all active:scale-95"
+                    style={{ background: replyText.trim() && !sending ? "#075E54" : "#CBD5E1" }}
+                    title={isWhatsApp(selected.phone) ? "Enviar por WhatsApp" : "Enviar"}
                   >
                     {sending
                       ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      : <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                      : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                     }
                   </button>
                 </div>
