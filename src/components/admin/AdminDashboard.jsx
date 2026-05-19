@@ -150,11 +150,17 @@ export default function AdminDashboard({ onClose }) {
 
   if (!authed) return <AdminLogin onSuccess={() => { setAuthed(true); }} />;
 
+  const shortNavLabel = {
+    stats: "Panel", appointments: "Citas", clients: "Clientes",
+    leads: "Pipeline", calendar: "Agenda", finanzas: "Finanzas",
+    conversations: "Chats", cancellations: "Cancel.", costs: "API", config: "Config.",
+  };
+
   return (
-    <div className="h-[100dvh] bg-ec-cream flex flex-col lg:flex-row overflow-hidden">
+    <div className="h-[100dvh] bg-ec-cream flex flex-col lg:flex-row">
 
       {/* ── SIDEBAR (desktop only) ── */}
-      <div className="hidden lg:flex relative z-20 w-72 xl:w-80 border-r border-black/[0.06] bg-white h-screen flex-col p-8 shadow-[4px_0_30px_rgba(0,0,0,0.03)] flex-shrink-0 sticky top-0">
+      <div className="hidden lg:flex relative z-20 w-72 xl:w-80 border-r border-black/[0.06] bg-white h-full flex-col p-8 shadow-[4px_0_30px_rgba(0,0,0,0.03)] flex-shrink-0">
         <div className="mb-10 flex flex-col items-center gap-4">
           <div className="cursor-pointer hover:scale-105 transition-transform" onClick={onClose}>
             <img src={BRAND.logo} alt="Logo" className="h-12 object-contain" />
@@ -206,94 +212,96 @@ export default function AdminDashboard({ onClose }) {
         </div>
       </div>
 
-      {/* ── MOBILE HEADER ── */}
-      <div className="lg:hidden sticky top-0 z-30 bg-white border-b border-black/[0.06] px-4 py-3 flex items-center justify-between shadow-sm">
-        <img src={BRAND.logo} alt="Logo" className="h-8 object-contain" />
-        <div className="flex items-center gap-3">
-          <span className="font-ui text-[10px] tracking-[0.3em] text-ec-gold uppercase">
-            {TABS.find(t => t.id === activeTab)?.label}
-          </span>
-          <button
-            onClick={onClose}
-            className="w-8 h-8 flex items-center justify-center text-ec-text-muted hover:text-red-500 transition-colors text-lg"
-          >
-            ✕
-          </button>
-        </div>
-      </div>
+      {/* ── COLUMNA DERECHA: header móvil + contenido + nav móvil ── */}
+      {/* En desktop es flex-1 (el sidebar ocupa el lateral). En móvil es toda la pantalla. */}
+      <div className="flex-1 min-h-0 flex flex-col overflow-hidden">
 
-      {/* ── CONTENT ── */}
-      {activeTab === "conversations" ? (
-        /* Conversations: sin padding inferior — AdminConversations lo maneja internamente */
-        <main className="flex-1 min-h-0 overflow-hidden flex flex-col">
-          <AdminConversations initialPhone={initialPhone} />
-        </main>
-      ) : (
-        <main className="flex-1 overflow-y-auto min-h-0 pb-16 lg:pb-0 touch-pan-y">
-          <div className="p-4 sm:p-6 lg:p-10 xl:p-16">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -16 }}
-                transition={{ duration: 0.35, ease: "easeOut" }}
-              >
-                <div className="max-w-6xl mx-auto">
-                  {activeTab === "stats" && <AdminStats onNavigate={(tab) => navigateTo(tab, tab === "calendar")} onNewAppointment={() => navigateTo("calendar", true)} />}
-                  {activeTab === "appointments" && <AdminAppointments />}
-                  {activeTab === "clients" && <AdminClients />}
-                  {activeTab === "leads" && <AdminLeads />}
-                  {activeTab === "calendar" && <CalendarSection isAdmin={true} openNewOnMount={openNewAppt} />}
-                  {activeTab === "finanzas" && <AdminFinanzas />}
-                  {activeTab === "cancellations" && <AdminCancellations onCountChange={setCancellationCount} />}
-                  {activeTab === "costs" && <AdminCosts />}
-                  {activeTab === "config" && <AdminConfig />}
-                </div>
-              </motion.div>
-            </AnimatePresence>
+        {/* Mobile header — in-flow, nunca fixed ni sticky */}
+        <div className="lg:hidden flex-shrink-0 bg-white border-b border-black/[0.06] px-4 py-3 flex items-center justify-between shadow-sm">
+          <img src={BRAND.logo} alt="Logo" className="h-8 object-contain" />
+          <div className="flex items-center gap-3">
+            <span className="font-ui text-[10px] tracking-[0.3em] text-ec-gold uppercase">
+              {TABS.find(t => t.id === activeTab)?.label}
+            </span>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 flex items-center justify-center text-ec-text-muted hover:text-red-500 transition-colors text-lg"
+            >
+              ✕
+            </button>
           </div>
-        </main>
-      )}
-
-      {/* ── BOTTOM NAV (mobile only) — h-16, scrollable, icon + label corto ── */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-black/[0.06] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        <div className="flex overflow-x-auto h-16" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
-          {TABS.map((tab) => {
-            const isActive = activeTab === tab.id;
-            const shortLabel = {
-              stats: "Panel", appointments: "Citas", clients: "Clientes",
-              leads: "Pipeline", calendar: "Agenda", finanzas: "Finanzas",
-              conversations: "Chats", cancellations: "Cancel.", costs: "API", config: "Config.",
-            }[tab.id] || tab.label;
-            return (
-              <button
-                key={tab.id}
-                onClick={() => setActiveTab(tab.id)}
-                className={`relative flex-shrink-0 flex flex-col items-center justify-center gap-0.5 transition-all duration-200 ${isActive ? "text-ec-gold" : "text-ec-text-muted"}`}
-                style={{ minWidth: "62px", paddingLeft: "6px", paddingRight: "6px" }}
-              >
-                <div className="relative">
-                  <TabIcon type={tab.icon} size={isActive ? 20 : 18} />
-                  {tab.id === "cancellations" && cancellationCount > 0 && (
-                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full text-[8px] text-white font-bold flex items-center justify-center">
-                      {cancellationCount > 9 ? "9+" : cancellationCount}
-                    </span>
-                  )}
-                </div>
-                <span className={`font-ui text-[8px] leading-none ${isActive ? "font-bold" : ""}`}>{shortLabel}</span>
-                {isActive && (
-                  <motion.div
-                    layoutId="bottomNav"
-                    className="absolute bottom-0 w-8 h-0.5 bg-ec-gold rounded-full"
-                    transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
-                  />
-                )}
-              </button>
-            );
-          })}
         </div>
-      </div>
+
+        {/* Contenido */}
+        {activeTab === "conversations" ? (
+          <main className="flex-1 min-h-0 overflow-hidden flex flex-col">
+            <AdminConversations initialPhone={initialPhone} />
+          </main>
+        ) : (
+          <main className="flex-1 min-h-0 overflow-y-auto touch-pan-y">
+            <div className="p-4 sm:p-6 lg:p-10 xl:p-16">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 16 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -16 }}
+                  transition={{ duration: 0.35, ease: "easeOut" }}
+                >
+                  <div className="max-w-6xl mx-auto">
+                    {activeTab === "stats" && <AdminStats onNavigate={(tab) => navigateTo(tab, tab === "calendar")} onNewAppointment={() => navigateTo("calendar", true)} />}
+                    {activeTab === "appointments" && <AdminAppointments />}
+                    {activeTab === "clients" && <AdminClients />}
+                    {activeTab === "leads" && <AdminLeads />}
+                    {activeTab === "calendar" && <CalendarSection isAdmin={true} openNewOnMount={openNewAppt} />}
+                    {activeTab === "finanzas" && <AdminFinanzas />}
+                    {activeTab === "cancellations" && <AdminCancellations onCountChange={setCancellationCount} />}
+                    {activeTab === "costs" && <AdminCosts />}
+                    {activeTab === "config" && <AdminConfig />}
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </main>
+        )}
+
+        {/* Mobile bottom nav — in-flow al fondo del flex-col, nunca fixed */}
+        <div className="lg:hidden flex-shrink-0 bg-white border-t border-black/[0.06] shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
+          <div className="flex overflow-x-auto" style={{ height: "60px", scrollbarWidth: "none", msOverflowStyle: "none" }}>
+            {TABS.map((tab) => {
+              const isActive = activeTab === tab.id;
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`relative flex-shrink-0 flex flex-col items-center justify-center gap-0.5 transition-all duration-200 ${isActive ? "text-ec-gold" : "text-[#8696A0]"}`}
+                  style={{ minWidth: "60px", paddingInline: "6px" }}
+                >
+                  <div className="relative">
+                    <TabIcon type={tab.icon} size={isActive ? 21 : 19} />
+                    {tab.id === "cancellations" && cancellationCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-red-500 rounded-full text-[8px] text-white font-bold flex items-center justify-center">
+                        {cancellationCount > 9 ? "9+" : cancellationCount}
+                      </span>
+                    )}
+                  </div>
+                  <span className={`text-[8px] leading-none font-ui ${isActive ? "font-bold text-ec-gold" : "text-[#8696A0]"}`}>
+                    {shortNavLabel[tab.id] || tab.label}
+                  </span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="bottomNav"
+                      className="absolute top-0 inset-x-0 h-[2px] bg-ec-gold rounded-b-sm"
+                      transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
+                    />
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+      </div>{/* fin columna derecha */}
     </div>
   );
 }

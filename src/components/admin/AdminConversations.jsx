@@ -533,7 +533,7 @@ export default function AdminConversations({ initialPhone }) {
           </div>
 
           {/* List */}
-          <div className="flex-1 overflow-y-auto pb-16 lg:pb-0">
+          <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="flex items-center justify-center h-32 text-ec-text-muted text-sm font-body">Cargando…</div>
             ) : filtered.length === 0 ? (
@@ -745,8 +745,8 @@ export default function AdminConversations({ initialPhone }) {
                 </AnimatePresence>
               </div>
 
-              {/* Reply bar — pb-16 en móvil para que el nav fijo no tape el input */}
-              <div className="flex-shrink-0 bg-[#F0F2F5] border-t border-black/[0.06] pb-16 lg:pb-0">
+              {/* Reply bar */}
+              <div className="flex-shrink-0 bg-[#F0F2F5] border-t border-black/[0.06]">
                 {/* Canned responses */}
                 <AnimatePresence>
                   {showCanned && (

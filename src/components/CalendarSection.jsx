@@ -627,14 +627,14 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.96, y: 16 }}
         transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
-        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
+        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden min-w-0"
         onClick={e => e.stopPropagation()}
       >
         {/* Color bar */}
         <div className="h-2 bg-[#F8C840]" />
 
         {/* Header */}
-        <div className="px-6 pt-5 pb-4 flex items-start justify-between gap-4">
+        <div className="px-4 sm:px-6 pt-5 pb-4 flex items-start justify-between gap-4">
           <input
             value={form.clientName}
             onChange={e => setForm({ ...form, clientName: e.target.value })}
@@ -645,7 +645,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
           <button onClick={onClose} className="mt-1 w-8 h-8 flex items-center justify-center rounded-full text-ec-text-muted hover:bg-ec-cream hover:text-ec-dark transition-all text-lg flex-shrink-0">✕</button>
         </div>
 
-        <div className="px-6 pb-6 space-y-0">
+        <div className="px-4 sm:px-6 pb-6 space-y-0">
 
           {/* Date & Time row */}
           <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
@@ -712,11 +712,11 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
             <svg className="text-ec-text-muted flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <rect x="1" y="9" width="22" height="10" rx="2"/><path d="M5 9V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/>
             </svg>
-            <div className="flex gap-2 flex-1">
+            <div className="flex gap-2 flex-1 min-w-0">
               <select
                 value={form.vehicleType}
                 onChange={e => handleVehicleChange(e.target.value)}
-                className="font-body text-sm text-ec-dark bg-ec-cream px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer"
+                className="flex-shrink-0 font-body text-sm text-ec-dark bg-ec-cream px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer"
               >
                 <option>Carro</option>
                 <option>Moto</option>
@@ -724,7 +724,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
               <select
                 value={form.service}
                 onChange={e => handleServiceChange(e.target.value)}
-                className="flex-1 font-body text-sm text-ec-dark bg-transparent border-0 border-b border-black/[0.1] focus:outline-none focus:border-[#F8C840] transition-colors cursor-pointer"
+                className="flex-1 min-w-0 font-body text-sm text-ec-dark bg-transparent border-0 border-b border-black/[0.1] focus:outline-none focus:border-[#F8C840] transition-colors cursor-pointer"
               >
                 {allServices.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -736,7 +736,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
             <svg className="text-ec-text-muted flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
             </svg>
-            <div className="flex-1 flex items-center gap-3 flex-wrap">
+            <div className="flex-1 min-w-0 flex items-center gap-2 flex-wrap">
               {isCotizacion ? (
                 <>
                   <span className="font-ui text-[9px] tracking-[0.15em] uppercase px-2.5 py-1 rounded-full bg-purple-50 text-purple-600 border border-purple-200">Por cotización</span>
@@ -790,7 +790,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-5">
+        <div className="px-4 sm:px-6 pb-5">
           {isCapacityBlocked && (
             <p className="font-ui text-[9px] tracking-[0.15em] uppercase text-red-500 text-right mb-2">
               Bahías llenas a las {firstBlockedHour}:00 — elige otro horario
