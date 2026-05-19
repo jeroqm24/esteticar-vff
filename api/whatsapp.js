@@ -602,14 +602,14 @@ const showTyping = async (to) => {
 };
 
 const sendInstagramMessage = async (recipientId, text) => {
-  if (!IG_TOKEN || !IG_USER_ID) {
-    console.error('[IG] Faltan INSTAGRAM_TOKEN o INSTAGRAM_USER_ID');
+  if (!FB_PAGE_TOKEN) {
+    console.error('[IG] Falta FB_PAGE_TOKEN para Instagram Messaging');
     return;
   }
   try {
-    const r = await fetch(`https://graph.facebook.com/v20.0/${IG_USER_ID}/messages`, {
+    const r = await fetch(`https://graph.facebook.com/v20.0/me/messages`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${IG_TOKEN}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${FB_PAGE_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
     });
     const json = await r.json();
