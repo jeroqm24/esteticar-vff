@@ -602,21 +602,41 @@ const showTyping = async (to) => {
 };
 
 const sendInstagramMessage = async (recipientId, text) => {
-  if (!IG_TOKEN || !IG_USER_ID) return;
-  await fetch(`https://graph.facebook.com/v20.0/${IG_USER_ID}/messages`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${IG_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
-  });
+  if (!IG_TOKEN || !IG_USER_ID) {
+    console.error('[IG] Faltan INSTAGRAM_TOKEN o INSTAGRAM_USER_ID');
+    return;
+  }
+  try {
+    const r = await fetch(`https://graph.facebook.com/v20.0/${IG_USER_ID}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${IG_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
+    });
+    const json = await r.json();
+    if (!r.ok) console.error('[IG] Error al enviar mensaje:', JSON.stringify(json));
+    else console.log('[IG] Mensaje enviado OK a', recipientId);
+  } catch (e) {
+    console.error('[IG] Fetch error:', e.message);
+  }
 };
 
 const sendFBMessage = async (recipientId, text) => {
-  if (!FB_PAGE_TOKEN) return;
-  await fetch(`https://graph.facebook.com/v20.0/me/messages`, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${FB_PAGE_TOKEN}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
-  });
+  if (!FB_PAGE_TOKEN) {
+    console.error('[FB] Falta FB_PAGE_TOKEN');
+    return;
+  }
+  try {
+    const r = await fetch(`https://graph.facebook.com/v20.0/me/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${FB_PAGE_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
+    });
+    const json = await r.json();
+    if (!r.ok) console.error('[FB] Error al enviar mensaje:', JSON.stringify(json));
+    else console.log('[FB] Mensaje enviado OK a', recipientId);
+  } catch (e) {
+    console.error('[FB] Fetch error:', e.message);
+  }
 };
 
 const parseBooking = (text) => {
