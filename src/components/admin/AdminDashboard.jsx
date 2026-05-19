@@ -223,44 +223,49 @@ export default function AdminDashboard({ onClose }) {
       </div>
 
       {/* ── CONTENT ── */}
-      <main className="flex-1 overflow-y-auto min-h-0 pb-20 lg:pb-0 touch-pan-y">
-        <div className="p-4 sm:p-6 lg:p-10 xl:p-16">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeTab}
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -16 }}
-              transition={{ duration: 0.35, ease: "easeOut" }}
-            >
-              <div className={activeTab === "conversations" ? "w-full" : "max-w-6xl mx-auto"}>
-                {activeTab === "stats" && <AdminStats onNavigate={(tab) => navigateTo(tab, tab === "calendar")} onNewAppointment={() => navigateTo("calendar", true)} />}
-                {activeTab === "appointments" && <AdminAppointments />}
-                {activeTab === "clients" && <AdminClients />}
-                {activeTab === "leads" && <AdminLeads />}
-                {activeTab === "calendar" && <CalendarSection isAdmin={true} openNewOnMount={openNewAppt} />}
-                {activeTab === "finanzas" && <AdminFinanzas />}
-                {activeTab === "conversations" && <AdminConversations initialPhone={initialPhone} />}
-                {activeTab === "cancellations" && <AdminCancellations onCountChange={setCancellationCount} />}
-                {activeTab === "costs" && <AdminCosts />}
-                {activeTab === "config" && <AdminConfig />}
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-      </main>
+      {activeTab === "conversations" ? (
+        <main className="flex-1 min-h-0 overflow-hidden pb-14 lg:pb-0 flex flex-col">
+          <AdminConversations initialPhone={initialPhone} />
+        </main>
+      ) : (
+        <main className="flex-1 overflow-y-auto min-h-0 pb-14 lg:pb-0 touch-pan-y">
+          <div className="p-4 sm:p-6 lg:p-10 xl:p-16">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeTab}
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -16 }}
+                transition={{ duration: 0.35, ease: "easeOut" }}
+              >
+                <div className="max-w-6xl mx-auto">
+                  {activeTab === "stats" && <AdminStats onNavigate={(tab) => navigateTo(tab, tab === "calendar")} onNewAppointment={() => navigateTo("calendar", true)} />}
+                  {activeTab === "appointments" && <AdminAppointments />}
+                  {activeTab === "clients" && <AdminClients />}
+                  {activeTab === "leads" && <AdminLeads />}
+                  {activeTab === "calendar" && <CalendarSection isAdmin={true} openNewOnMount={openNewAppt} />}
+                  {activeTab === "finanzas" && <AdminFinanzas />}
+                  {activeTab === "cancellations" && <AdminCancellations onCountChange={setCancellationCount} />}
+                  {activeTab === "costs" && <AdminCosts />}
+                  {activeTab === "config" && <AdminConfig />}
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+        </main>
+      )}
 
       {/* ── BOTTOM NAV (mobile only) ── */}
       <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-black/[0.06] shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
-        <div className="grid grid-cols-9 h-16">
+        <div className="flex overflow-x-auto h-14" style={{ scrollbarWidth: "none" }}>
           {TABS.map((tab) => {
             const isActive = activeTab === tab.id;
             return (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative flex flex-col items-center justify-center gap-1 transition-all duration-200 ${isActive ? "text-ec-gold" : "text-ec-text-muted"
-                  }`}
+                className={`relative flex-shrink-0 flex flex-col items-center justify-center transition-all duration-200 px-3 ${isActive ? "text-ec-gold" : "text-ec-text-muted"}`}
+                style={{ minWidth: "52px" }}
               >
                 <div className="relative">
                   <TabIcon type={tab.icon} size={isActive ? 22 : 20} />
@@ -270,13 +275,10 @@ export default function AdminDashboard({ onClose }) {
                     </span>
                   )}
                 </div>
-                <span className={`font-ui text-[7px] tracking-[0.05em] uppercase ${isActive ? "text-ec-gold font-bold" : "text-ec-text-muted"}`}>
-                  {tab.label === "Cancelaciones" ? "Cancel." : tab.label === "Configuración" ? "Config." : tab.label === "Costos API" ? "Costos" : tab.label}
-                </span>
                 {isActive && (
                   <motion.div
                     layoutId="bottomNav"
-                    className="absolute bottom-0 w-8 h-0.5 bg-ec-gold rounded-full"
+                    className="absolute bottom-0 w-6 h-0.5 bg-ec-gold rounded-full"
                     transition={{ type: "spring", bounce: 0.3, duration: 0.4 }}
                   />
                 )}
