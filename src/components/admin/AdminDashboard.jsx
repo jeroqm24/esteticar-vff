@@ -132,10 +132,12 @@ const TabIcon = ({ type, size = 20 }) => {
 };
 
 export default function AdminDashboard({ onClose }) {
-  const [activeTab, setActiveTab] = useState("stats");
+  const convParam = new URLSearchParams(window.location.search).get("conv");
+  const [activeTab, setActiveTab] = useState(convParam ? "conversations" : "stats");
   const [authed, setAuthed] = useState(() => sessionStorage.getItem("admin_auth") === "1");
   const [openNewAppt, setOpenNewAppt] = useState(false);
   const [cancellationCount, setCancellationCount] = useState(0);
+  const [initialPhone] = useState(convParam);
 
   const navigateTo = (tab, newAppt = false) => {
     setActiveTab(tab);
@@ -146,7 +148,7 @@ export default function AdminDashboard({ onClose }) {
     }
   };
 
-  if (!authed) return <AdminLogin onSuccess={() => setAuthed(true)} />;
+  if (!authed) return <AdminLogin onSuccess={() => { setAuthed(true); }} />;
 
   return (
     <div className="h-[100dvh] bg-ec-cream flex flex-col lg:flex-row overflow-hidden">
@@ -238,7 +240,7 @@ export default function AdminDashboard({ onClose }) {
                 {activeTab === "leads" && <AdminLeads />}
                 {activeTab === "calendar" && <CalendarSection isAdmin={true} openNewOnMount={openNewAppt} />}
                 {activeTab === "finanzas" && <AdminFinanzas />}
-                {activeTab === "conversations" && <AdminConversations />}
+                {activeTab === "conversations" && <AdminConversations initialPhone={initialPhone} />}
                 {activeTab === "cancellations" && <AdminCancellations onCountChange={setCancellationCount} />}
                 {activeTab === "costs" && <AdminCosts />}
                 {activeTab === "config" && <AdminConfig />}

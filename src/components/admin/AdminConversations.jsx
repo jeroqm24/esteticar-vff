@@ -309,7 +309,7 @@ const FILTERS = [
   { id: "paused",       label: "⏸ Pausados" },
 ];
 
-export default function AdminConversations() {
+export default function AdminConversations({ initialPhone }) {
   const [conversations, setConversations] = useState([]);
   const [selected, setSelected] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -331,10 +331,13 @@ export default function AdminConversations() {
     if (selected) {
       const updated = data.find(c => c.phone === selected.phone);
       if (updated) setSelected(updated);
+    } else if (initialPhone) {
+      const match = data.find(c => c.phone === initialPhone);
+      if (match) setSelected(match);
     }
     setLoading(false);
     return data;
-  }, [selected?.phone]);
+  }, [selected?.phone, initialPhone]);
 
   useEffect(() => {
     load().then(data => {

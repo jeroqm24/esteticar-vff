@@ -552,7 +552,9 @@ TRIGGERS DE ESCALACIÓN INMEDIATA:
 
 FORMATO OBLIGATORIO — sin variaciones:
 "Dame un momento, te paso con la administradora."
-__ESCALATE__:[resumen en máximo 12 palabras]
+__ESCALATE__:[resumen completo: vehículo, servicio de interés, motivo de escalación y última petición del cliente]
+
+Ejemplo: "Bajaj NS 125 · interesado en Porcelanizado · pide descuento · quiere hablar con persona"
 
 PROHIBIDO: Responder "ya escalé", "en un momento te atienden" o cualquier frase similar SIN incluir __ESCALATE__ en el mismo mensaje. Si no hay token, no hay escalación.
 
@@ -802,9 +804,8 @@ const notifyTeam = async (clientPhone, question, clientName, platform) => {
   const isWA    = platform === 'whatsapp';
   const channel = platform === 'instagram' ? 'Instagram' : platform === 'messenger' ? 'Facebook' : 'WhatsApp';
   const name    = clientName ? `\n👤 Cliente: ${clientName}` : '';
-  const waLine  = isWA ? `\n📲 Responder: https://wa.me/${clientPhone}` : '';
   const dash    = `https://esteticar-vff.vercel.app/admin${isWA ? `?conv=${clientPhone}` : ''}`;
-  const msg     = `⚠️ ESCALACIÓN — ${channel}${name}\n\n💬 Consulta: "${question}"${waLine}\n\n📋 Dashboard: ${dash}`;
+  const msg     = `⚠️ ESCALACIÓN — ${channel}${name}\n\n💬 Consulta: "${question}"\n\n📋 Dashboard: ${dash}`;
   try {
     const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
       method: 'POST',
