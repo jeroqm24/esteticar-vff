@@ -934,12 +934,21 @@ export default async function handler(req, res) {
       history.push({ role: 'user', content: text });
       if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
 
+      // Normalizar historial: la API solo acepta "user" y "assistant"
+      // Los mensajes del admin se convierten a "assistant" para que el bot tenga contexto
+      const apiHistory = history
+        .map(m => ({
+          role: m.role === 'admin' ? 'assistant' : m.role,
+          content: m.role === 'admin' ? `[Mensaje del equipo Esteticar]: ${m.content}` : (m.content || ''),
+        }))
+        .filter(m => (m.role === 'user' || m.role === 'assistant') && m.content.trim());
+
       const systemPrompt = await buildPrompt(conv.lead_type, conv);
       const aiResponse = await anthropic.messages.create({
         model: 'claude-sonnet-4-6',
         max_tokens: 1200,
         system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
-        messages: history,
+        messages: apiHistory,
       });
 
       const rawReply = aiResponse.content[0]?.text || 'Disculpa, en este momento no puedo responder. Intenta de nuevo.';
