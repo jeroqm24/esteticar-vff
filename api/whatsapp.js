@@ -639,16 +639,38 @@ const parseBooking = (text) => {
 const isConfirmationMessage = (text) =>
   /te confirm[oó]|cita.*confirmad|nos vemos|te esperamos|llegamos por tu|pasamos por tu|quedamos para el|cita queda/i.test(text);
 
+// Logs Haiku token costs fire-and-forget
+const logHaikuCost = (usage, channel) => {
+  const u = usage || {};
+  const inTok  = u.input_tokens || 0;
+  const outTok = u.output_tokens || 0;
+  const cacheR = u.cache_read_input_tokens || 0;
+  const cacheC = u.cache_creation_input_tokens || 0;
+  const costUsd =
+    ((inTok - cacheR - cacheC) * 0.80 / 1_000_000) +
+    (cacheC * 1.00 / 1_000_000) +
+    (cacheR * 0.08 / 1_000_000) +
+    (outTok * 4.00 / 1_000_000);
+  supabaseAdmin.from('api_costs').insert({
+    provider: 'anthropic', model: 'claude-haiku-4-5-20251001', channel,
+    input_tokens: inTok, output_tokens: outTok,
+    cache_read_tokens: cacheR, cache_creation_tokens: cacheC,
+    cost_usd: costUsd,
+  }).then(null, () => {});
+};
+
 const extractNameWithHaiku = async (history) => {
   try {
     const msgs = history.slice(-10).filter(m => m.role === 'user' || m.role === 'assistant');
     if (msgs.length < 4) return null;
-    const { content } = await anthropic.messages.create({
+    const aiRes = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 30,
       system: 'Extrae el nombre propio del cliente de esta conversación. Responde SOLO con el nombre completo (ejemplo: "Carlos Pérez") o la palabra null si no aparece ningún nombre. Sin explicación, sin puntos.',
       messages: [...msgs, { role: 'user', content: 'Cuál es el nombre del cliente?' }],
     });
+    logHaikuCost(aiRes.usage, 'haiku_extract_name');
+    const { content } = aiRes;
     const name = content[0]?.text?.trim().replace(/^"|"$/g, '');
     return (name && name !== 'null' && name.length > 1 && name.length < 60) ? name : null;
   } catch { return null; }
@@ -657,7 +679,7 @@ const extractNameWithHaiku = async (history) => {
 const extractBookingWithHaiku = async (history) => {
   try {
     const msgs = history.slice(-14).filter(m => m.role === 'user' || m.role === 'assistant');
-    const { content } = await anthropic.messages.create({
+    const aiRes = await anthropic.messages.create({
       model: 'claude-haiku-4-5-20251001',
       max_tokens: 400,
       system: `Eres un extractor de datos. Del historial extrae los datos de la cita confirmada.
@@ -665,6 +687,8 @@ Responde SOLO con JSON puro, sin markdown, sin explicación:
 {"service":"nombre exacto del servicio","priceDisplay":"$XX.XXX","date":"fecha y hora completa","vehicleType":"Moto o Carro","clientName":"nombre completo o null","clientEmail":"correo o null","traslado":"descripción del traslado o null","direccion":"dirección o null","cedula":"número o null","placa":"placa en mayúsculas o null"}`,
       messages: [...msgs, { role: 'user', content: 'Extrae los datos de la cita que acaba de confirmarse en esta conversación.' }],
     });
+    logHaikuCost(aiRes.usage, 'haiku_extract_booking');
+    const { content } = aiRes;
     const raw = content[0]?.text || '';
     const jsonStr = raw.match(/\{[\s\S]*\}/)?.[0];
     if (!jsonStr) return null;

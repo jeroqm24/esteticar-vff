@@ -44,7 +44,11 @@ export default async function handler(req, res) {
   const { phone } = req.body || {};
   if (!phone) return res.status(400).json({ error: 'phone required' });
 
-  const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  const supabase      = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  const supabaseAdmin = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY,
+  );
 
   const { data: conv, error } = await supabase
     .from('conversations')
@@ -93,6 +97,24 @@ export default async function handler(req, res) {
     });
 
     let reply = (aiRes.content[0]?.text || '').trim();
+
+    // ── Log de costos (Haiku 4.5) ──
+    const u = aiRes.usage || {};
+    const inTok  = u.input_tokens || 0;
+    const outTok = u.output_tokens || 0;
+    const cacheR = u.cache_read_input_tokens || 0;
+    const cacheC = u.cache_creation_input_tokens || 0;
+    const costUsd =
+      ((inTok - cacheR - cacheC) * 0.80 / 1_000_000) +
+      (cacheC * 1.00 / 1_000_000) +
+      (cacheR * 0.08 / 1_000_000) +
+      (outTok * 4.00 / 1_000_000);
+    supabaseAdmin.from('api_costs').insert({
+      provider: 'anthropic', model: 'claude-haiku-4-5-20251001', channel: 'whatsapp_resume',
+      input_tokens: inTok, output_tokens: outTok,
+      cache_read_tokens: cacheR, cache_creation_tokens: cacheC,
+      cost_usd: costUsd,
+    }).then(null, () => {});
 
     const escalateMatch = reply.match(/__ESCALATE__:([^\n]*)/);
     reply = reply.replace(/__ESCALATE__:[^\n]*/g, '').trim();
