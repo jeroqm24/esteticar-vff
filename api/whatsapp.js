@@ -936,12 +936,26 @@ export default async function handler(req, res) {
 
       // Normalizar historial: la API solo acepta "user" y "assistant"
       // Los mensajes del admin se convierten a "assistant" para que el bot tenga contexto
+      const hadAdminIntervention = history.some(m => m.role === 'admin');
       const apiHistory = history
         .map(m => ({
           role: m.role === 'admin' ? 'assistant' : m.role,
-          content: m.role === 'admin' ? `[Mensaje del equipo Esteticar]: ${m.content}` : (m.content || ''),
+          content: m.role === 'admin'
+            ? `[El equipo de Esteticar atendió directamente al cliente]: ${m.content}`
+            : (m.content || ''),
         }))
         .filter(m => (m.role === 'user' || m.role === 'assistant') && m.content.trim());
+
+      // Si hubo intervención del admin, inyectar nota al final para que el bot no re-escale
+      if (hadAdminIntervention && apiHistory.length > 0) {
+        const last = apiHistory[apiHistory.length - 1];
+        if (last.role === 'user') {
+          apiHistory.splice(apiHistory.length - 1, 0, {
+            role: 'assistant',
+            content: '[NOTA INTERNA: La escalación anterior ya fue atendida por el equipo. Retoma la conversación con normalidad. NO vuelvas a escalar a menos que surja un tema completamente nuevo que no puedas resolver.]',
+          });
+        }
+      }
 
       const systemPrompt = await buildPrompt(conv.lead_type, conv);
       const aiResponse = await anthropic.messages.create({
