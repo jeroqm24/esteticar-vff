@@ -139,12 +139,13 @@ function MessageBubble({ msg }) {
 
   if (!clean) return null;
 
+  // Cliente → izquierda
   if (isUser) {
     return (
-      <div className="flex justify-end mb-1.5">
-        <div className="max-w-[75%] px-3 py-2 rounded-2xl rounded-br-sm text-[13px] leading-relaxed bg-[#D9FDD3] text-[#111B21]">
+      <div className="flex justify-start mb-1.5">
+        <div className="max-w-[75%] px-3 py-2 rounded-2xl rounded-bl-sm text-[13px] leading-relaxed bg-[#F0F0F0] text-[#111B21]">
           {clean}
-          <div className="text-[10px] mt-0.5 text-right text-[#8696A0]">
+          <div className="text-[10px] mt-0.5 text-[#8696A0]">
             {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }) : ""}
           </div>
         </div>
@@ -152,10 +153,11 @@ function MessageBubble({ msg }) {
     );
   }
 
+  // Admin → derecha
   if (isAdmin) {
     return (
-      <div className="flex justify-start mb-1.5">
-        <div className="max-w-[75%] px-3 py-2 rounded-2xl rounded-bl-sm text-[13px] leading-relaxed bg-[#E3E8FF] text-[#1e2a6a] border border-indigo-200">
+      <div className="flex justify-end mb-1.5">
+        <div className="max-w-[75%] px-3 py-2 rounded-2xl rounded-br-sm text-[13px] leading-relaxed bg-[#E3E8FF] text-[#1e2a6a] border border-indigo-200">
           <div className="text-[9px] font-ui font-bold text-indigo-500 mb-1 uppercase tracking-wider">Admin</div>
           {clean}
           <div className="text-[10px] mt-0.5 text-right text-indigo-400">
@@ -166,12 +168,12 @@ function MessageBubble({ msg }) {
     );
   }
 
-  // Bot
+  // Bot → derecha
   return (
-    <div className="flex justify-start mb-1.5">
-      <div className="max-w-[75%] px-3 py-2 rounded-2xl rounded-bl-sm text-[13px] leading-relaxed bg-white text-[#111B21] shadow-sm">
+    <div className="flex justify-end mb-1.5">
+      <div className="max-w-[75%] px-3 py-2 rounded-2xl rounded-br-sm text-[13px] leading-relaxed bg-[#D9FDD3] text-[#111B21]">
         {clean}
-        <div className="text-[10px] mt-0.5 text-[#8696A0]">
+        <div className="text-[10px] mt-0.5 text-right text-[#8696A0]">
           {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }) : ""} · Sara
         </div>
       </div>
