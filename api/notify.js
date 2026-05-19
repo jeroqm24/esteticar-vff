@@ -11,6 +11,27 @@ export default async function handler(req, res) {
     const { type, title, message, priority, subject, html, to } = req.body;
     const results = {};
 
+    // ── Telegram ───────────────────────────────────────────────────
+    if (type === 'telegram') {
+        const token   = process.env.TELEGRAM_BOT_TOKEN;
+        const chatId  = process.env.TELEGRAM_CHAT_ID;
+        if (!token || !chatId) {
+            results.telegram = 'error: TELEGRAM_BOT_TOKEN o TELEGRAM_CHAT_ID no configurados';
+        } else {
+            try {
+                const res2 = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, text: message || title || '' }),
+                });
+                const json = await res2.json();
+                results.telegram = json.ok ? 'ok' : `error: ${JSON.stringify(json)}`;
+            } catch (e) {
+                results.telegram = `error: ${e.message}`;
+            }
+        }
+    }
+
     // ── ntfy push ──────────────────────────────────────────────────
     if (type === 'push' || type === 'both') {
         try {

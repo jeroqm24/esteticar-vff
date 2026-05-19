@@ -321,8 +321,24 @@ export default function AdminConversations({ initialPhone }) {
   const [sending, setSending] = useState(false);
   const [showCanned, setShowCanned] = useState(false);
   const [updatingLead, setUpdatingLead] = useState(false);
+  const [resolving, setResolving] = useState(false);
   const bottomRef = useRef(null);
   const replyRef = useRef(null);
+
+  const handleResolved = async () => {
+    if (!selected || resolving) return;
+    setResolving(true);
+    const clientName = selected.client_name || selected.phone;
+    const msg = `✅ SOLICITUD RESUELTA\n👤 Cliente: ${clientName}\n\nLa escalación fue atendida y resuelta por el equipo.`;
+    try {
+      await fetch('/api/notify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'telegram', message: msg }),
+      });
+    } catch (_) {}
+    setResolving(false);
+  };
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -606,6 +622,19 @@ export default function AdminConversations({ initialPhone }) {
                     </select>
                     <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-70" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg>
                   </div>
+
+                  {/* Solicitud resuelta */}
+                  {selectedHistory.some(m => m.role === 'admin') && (
+                    <button
+                      onClick={handleResolved}
+                      disabled={resolving}
+                      title="Notificar al grupo que la solicitud fue resuelta"
+                      className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-ui font-bold transition-all bg-emerald-500 text-white hover:bg-emerald-400 disabled:opacity-50"
+                    >
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                      {resolving ? "Enviando..." : "Solicitud resuelta"}
+                    </button>
+                  )}
 
                   {/* Bot toggle */}
                   <button
