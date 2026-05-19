@@ -585,7 +585,18 @@ export default async function handler(req, res) {
             <table style="width:100%;border-collapse:collapse;font-size:14px">
               <tr style="border-bottom:1px solid #eee"><td style="padding:8px 0;color:#888;width:130px">Servicio</td><td style="padding:8px 0;font-weight:600">${booking.service}</td></tr>
               <tr style="border-bottom:1px solid #eee"><td style="padding:8px 0;color:#888">Fecha</td><td style="padding:8px 0;font-weight:600">${booking.date}</td></tr>
-              <tr style="border-bottom:1px solid #eee"><td style="padding:8px 0;color:#888">Precio</td><td style="padding:8px 0;font-weight:700;color:#B4821E">${booking.priceDisplay}</td></tr>
+              ${(() => {
+                const hasTrans = booking.traslado && !['sin traslado','no_proporcionado'].includes(booking.traslado);
+                const transAmt = hasTrans ? (/recogida y entrega/i.test(booking.traslado) ? 9000 : 7000) : 0;
+                const serviceAmt = parseInt((booking.priceDisplay || '').replace(/[^0-9]/g,''), 10) || 0;
+                const total = serviceAmt + transAmt;
+                const fmt = (n) => '$' + n.toLocaleString('es-CO');
+                return hasTrans
+                  ? `<tr style="border-bottom:1px solid #eee"><td style="padding:8px 0;color:#888">Servicio</td><td style="padding:8px 0;font-weight:600">${booking.priceDisplay}</td></tr>
+                     <tr style="border-bottom:1px solid #eee"><td style="padding:8px 0;color:#888">Traslado</td><td style="padding:8px 0;font-weight:600">+ ${fmt(transAmt)}</td></tr>
+                     <tr style="border-bottom:1px solid #eee"><td style="padding:8px 0;color:#888;font-weight:700">Total</td><td style="padding:8px 0;font-weight:700;color:#B4821E;font-size:16px">${fmt(total)}</td></tr>`
+                  : `<tr style="border-bottom:1px solid #eee"><td style="padding:8px 0;color:#888">Precio</td><td style="padding:8px 0;font-weight:700;color:#B4821E">${booking.priceDisplay}</td></tr>`;
+              })()}
               <tr><td style="padding:8px 0;color:#888">Código</td><td style="padding:8px 0;font-family:monospace;font-size:16px;font-weight:700">${code}</td></tr>
             </table>
             <div style="margin-top:16px;padding:12px;background:#FFF8E7;border-left:3px solid #F8C840;font-size:13px;color:#555">

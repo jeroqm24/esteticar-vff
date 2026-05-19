@@ -754,6 +754,21 @@ const parsePrice = (display) => {
   return isNaN(n) ? 0 : n;
 };
 
+const trasladoCost = (traslado) => {
+  if (!traslado || traslado === 'sin traslado' || traslado === 'no_proporcionado') return 0;
+  if (/recogida y entrega/i.test(traslado)) return 9000;
+  if (/recogida|entrega/i.test(traslado)) return 7000;
+  return 0;
+};
+
+const formatCOP = (n) => '$' + n.toLocaleString('es-CO');
+
+const calcTotal = (booking) => {
+  const service = parsePrice(booking.priceDisplay);
+  const traslado = trasladoCost(booking.traslado);
+  return { service, traslado, total: service + traslado };
+};
+
 const sendMetaCAPI = async (booking, phone) => {
   if (!META_PIXEL_ID || !META_CAPI_TOKEN) return;
   const priceValue = parsePrice(booking.priceDisplay);
@@ -1211,8 +1226,18 @@ export default async function handler(req, res) {
     <table width="100%" cellpadding="0" cellspacing="0">
       <tr>
         <td width="100%" style="padding:20px 24px;background:#0A0A0A;border-radius:2px;text-align:center">
+          ${(() => { const t = calcTotal(booking); return t.traslado > 0 ? `
+          <div style="font-family:Arial,sans-serif;font-size:9px;color:#A0916E;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px">Servicio</div>
+          <div style="font-size:16px;color:#A0916E;font-family:Arial,sans-serif;margin-bottom:6px">${booking.priceDisplay}</div>
+          <div style="font-family:Arial,sans-serif;font-size:9px;color:#A0916E;letter-spacing:3px;text-transform:uppercase;margin-bottom:4px">Traslado</div>
+          <div style="font-size:16px;color:#A0916E;font-family:Arial,sans-serif;margin-bottom:10px">+ ${formatCOP(t.traslado)}</div>
+          <div style="height:1px;background:#2a2a2a;margin-bottom:10px"></div>
+          <div style="font-family:Arial,sans-serif;font-size:9px;color:#A0916E;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Total</div>
+          <div style="font-size:22px;font-weight:700;color:#C9A84C;font-family:Arial,sans-serif">${formatCOP(t.total)}</div>
+          ` : `
           <div style="font-family:Arial,sans-serif;font-size:9px;color:#A0916E;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Valor</div>
           <div style="font-size:22px;font-weight:700;color:#C9A84C;font-family:Arial,sans-serif">${booking.priceDisplay}</div>
+          `; })()}
         </td>
       </tr>
     </table>
@@ -1259,7 +1284,13 @@ export default async function handler(req, res) {
       <tr><td colspan="2" style="height:4px"></td></tr>
       <tr><td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Fecha</td><td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${booking.date}</td></tr>
       <tr><td colspan="2" style="height:4px"></td></tr>
+      ${(() => { const t = calcTotal(booking); return t.traslado > 0 ? `
+      <tr><td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Traslado</td><td style="padding:14px 16px;background:#FAF8F4;font-size:14px;color:#555;vertical-align:middle">${booking.traslado}</td></tr>
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr><td style="padding:20px 24px;background:#0A0A0A;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Total</td><td style="padding:20px 24px;background:#0A0A0A;font-size:20px;color:#C9A84C;font-weight:700;font-family:Arial,sans-serif;vertical-align:middle">${formatCOP(t.total)} <span style="font-size:12px;color:#666">(servicio ${booking.priceDisplay} + traslado ${formatCOP(t.traslado)})</span></td></tr>
+      ` : `
       <tr><td style="padding:20px 24px;background:#0A0A0A;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Valor</td><td style="padding:20px 24px;background:#0A0A0A;font-size:20px;color:#C9A84C;font-weight:700;font-family:Arial,sans-serif;vertical-align:middle">${booking.priceDisplay}</td></tr>
+      `; })()}
     </table>
   </td></tr>
   <tr><td style="background:#0A0A0A;padding:20px 40px;text-align:center">
