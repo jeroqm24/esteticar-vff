@@ -226,6 +226,28 @@ const buildServicesText = (services) => {
   };
 };
 
+// ─── Notificación Telegram al grupo ───────────────────────────────
+const TELEGRAM_TOKEN   = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+const notifyTeam = async (question, clientName) => {
+  if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) return;
+  const name = clientName ? `\n👤 Cliente: ${clientName}` : '';
+  const msg  = `⚠️ ESCALACIÓN — Chat web${name}\n\n💬 Consulta: "${question}"\n\n📋 Dashboard: https://esteticar-vff.vercel.app/admin`;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg }),
+    });
+    const json = await res.json();
+    if (!json.ok) console.error('TELEGRAM ERROR:', JSON.stringify(json));
+    else console.log('TELEGRAM OK: escalación web enviada');
+  } catch (e) {
+    console.error('TELEGRAM FETCH ERROR:', e.message);
+  }
+};
+
 // ─── System prompt ─────────────────────────────────────────────────
 const buildPrompt = async (advisorName, sessionId = null) => {
   const greeting = getGreeting();
@@ -280,7 +302,7 @@ Si cualquier condición falla, NO confirmes. Redirige con naturalidad.
 
 MISMO DÍA: Puedes agendar para HOY si la disponibilidad muestra "HOY" con espacios libres. Si no aparece "HOY" en la disponibilidad, el día de hoy ya está lleno o cerrado.
 
-MÁXIMO 14 DÍAS: Solo agenda dentro de los próximos 14 días. Si piden más adelante: "Para esa fecha me toca pasarte con Sara para coordinar, te parece bien?" y usa __ESCALATE__.
+MÁXIMO 14 DÍAS: Solo agenda dentro de los próximos 14 días. Si piden más adelante: "Para esa fecha me toca pasarte con la administradora para coordinar, te parece bien?" y usa __ESCALATE__.
 
 FESTIVOS — CERRADO: ${nextHolidays}. Nunca ofrezcas ni confirmes citas en esas fechas. Si el cliente propone una de esas fechas, di: "Ese día es festivo y estamos cerrados. El día siguiente hábil tenemos disponibilidad, qué te parece?"
 
@@ -380,7 +402,7 @@ PLACA: [placa o "no_proporcionado"]
 __END_BOOKING__
 
 ━━━ ESCALACIÓN ━━━
-Si no puedes resolver: "Dame un momento, te paso con Sara la administradora."
+Si no puedes resolver: "Dame un momento, te paso con la administradora."
 __ESCALATE__:[pregunta máximo 12 palabras]
 
 ━━━ FORMATO ━━━
@@ -606,6 +628,12 @@ export default async function handler(req, res) {
           .update({ ...meta, updated_at: new Date().toISOString() })
           .eq('phone', sessionId).catch(() => {});
       }
+    }
+
+    // ── Notificar escalación al grupo de Telegram ──
+    if (escalMatch) {
+      const clientName = nameMatch ? nameMatch[1].trim() : null;
+      notifyTeam(escalMatch[1].trim(), clientName).catch(() => {});
     }
 
     const finalReply = cleanReply(rawReply) + (escalMatch ? `\n__ESCALATE__:${escalMatch[1].trim()}` : '');

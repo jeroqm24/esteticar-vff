@@ -540,7 +540,7 @@ __CANCEL_BOOKING__
 Cuando el cliente confirme que sí quiere cancelar (no solo si pregunta), responde con algo como: "Listo, cancelé tu cita. Cuando quieras volver a agendar, aquí estamos."
 
 ━━━ ESCALACIÓN ━━━
-Si no puedes resolver algo: "Danos un momento por favor para comunicarte con el área encargada."
+Si no puedes resolver algo: "Dame un momento, te paso con la administradora."
 __ESCALATE__:[pregunta máximo 12 palabras]
 
 ━━━ FORMATO ━━━
@@ -781,12 +781,29 @@ const sendLeadCAPI = async (phone, name) => {
   } catch (e) { console.error('LEAD CAPI FETCH ERROR:', e.message); }
 };
 
-const TEAM_NUMBER = '573008400230';
-const notifyTeam = async (clientPhone, question) => {
-  const waLink   = `https://wa.me/${clientPhone}`;
-  const dashLink = `https://esteticar-vff.vercel.app/admin?conv=${clientPhone}`;
-  const msg = `⚠️ *ESCALACIÓN ESTETICAR*\nUn cliente necesita atención.\n\n*Consulta:* "${question}"\n\n👉 Responder por WhatsApp: ${waLink}\n📋 Ver conversación completa: ${dashLink}`;
-  await sendMessage(TEAM_NUMBER, msg);
+const TELEGRAM_TOKEN   = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+const notifyTeam = async (clientPhone, question, clientName, platform) => {
+  if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) return;
+  const isWA    = platform === 'whatsapp';
+  const channel = platform === 'instagram' ? 'Instagram' : platform === 'messenger' ? 'Facebook' : 'WhatsApp';
+  const name    = clientName ? `\n👤 Cliente: ${clientName}` : '';
+  const waLine  = isWA ? `\n📲 Responder: https://wa.me/${clientPhone}` : '';
+  const dash    = `https://esteticar-vff.vercel.app/admin${isWA ? `?conv=${clientPhone}` : ''}`;
+  const msg     = `⚠️ ESCALACIÓN — ${channel}${name}\n\n💬 Consulta: "${question}"${waLine}\n\n📋 Dashboard: ${dash}`;
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg }),
+    });
+    const json = await res.json();
+    if (!json.ok) console.error('TELEGRAM ERROR:', JSON.stringify(json));
+    else console.log('TELEGRAM OK: escalación enviada al grupo');
+  } catch (e) {
+    console.error('TELEGRAM FETCH ERROR:', e.message);
+  }
 };
 
 // ─── Handler principal ────────────────────────────────────────────
@@ -1207,13 +1224,11 @@ export default async function handler(req, res) {
         }
       }
 
-      // Escalación al equipo
+      // Escalación al equipo — notificación en Telegram
       if (escalateMatch) {
-        const clientRef = platform === 'whatsapp' ? from : `(${platform}) ID ${rawSenderId}`;
-        await notifyTeam(clientRef, escalateMatch[1].trim());
-        await sendMessage(TEAM_NUMBER,
-          `⏸️ *Bot pausado* para este cliente (${platform}).\nPuedes responderle directamente desde la app.\nCuando termines, reactiva el bot desde el dashboard de Esteticar.`
-        );
+        const clientRef  = platform === 'whatsapp' ? from : `(${platform}) ID ${rawSenderId}`;
+        const clientName = meta.client_name || conv.client_name || null;
+        notifyTeam(clientRef, escalateMatch[1].trim(), clientName, platform).catch(() => {});
       }
 
       // Pausa natural: proporcional a la longitud de la respuesta + ruido aleatorio
