@@ -944,6 +944,7 @@ export default async function handler(req, res) {
       } else if (body.object === 'instagram') {
         const event = body.entry?.[0]?.messaging?.[0];
         if (!event?.message?.text) return res.status(200).send('OK');
+        if (event.message.is_echo) return res.status(200).send('OK');
         rawSenderId = event.sender.id;
         from        = `ig_${rawSenderId}`;
         msgId       = event.message.mid;
