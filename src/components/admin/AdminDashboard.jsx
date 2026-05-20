@@ -266,7 +266,10 @@ export default function AdminDashboard({ onClose }) {
         )}
 
         {/* Mobile bottom nav — in-flow al fondo del flex-col, nunca fixed */}
-        <div className="lg:hidden flex-shrink-0 bg-white border-t border-black/[0.06] shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
+        <div
+          className="lg:hidden flex-shrink-0 bg-white border-t border-black/[0.06] shadow-[0_-2px_12px_rgba(0,0,0,0.06)]"
+          style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
+        >
           <div className="flex overflow-x-auto" style={{ height: "60px", scrollbarWidth: "none", msOverflowStyle: "none" }}>
             {TABS.map((tab) => {
               const isActive = activeTab === tab.id;

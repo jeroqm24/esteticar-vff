@@ -71,18 +71,20 @@ function StatCard({ label, value, sub, index, sparkData, trend }) {
       transition={{ delay: index * 0.1, duration: 0.6 }}
       className="p-5 sm:p-8 border border-black/[0.06] bg-white rounded-sm shadow-[0_2px_20px_rgba(0,0,0,0.04)] relative overflow-hidden group hover:border-ec-gold/20 transition-all duration-500"
     >
-      <div className="flex items-start justify-between mb-4">
-        <p className="font-ui text-[10px] tracking-[0.3em] text-ec-text-muted uppercase">{label}</p>
+      <div className="flex items-start justify-between mb-3 sm:mb-4 gap-1">
+        <p className="font-ui text-[9px] sm:text-[10px] tracking-[0.25em] sm:tracking-[0.3em] text-ec-text-muted uppercase leading-tight">{label}</p>
         {trend !== undefined && (
-          <span className={`font-ui text-[10px] tracking-wider ${trend >= 0 ? "text-green-500" : "text-red-400"}`}>
-            {trend >= 0 ? "↑" : "↓"} {Math.abs(trend)}%
+          <span className={`font-ui text-[9px] tracking-wider flex-shrink-0 ${trend >= 0 ? "text-green-500" : "text-red-400"}`}>
+            {trend >= 0 ? "↑" : "↓"}{Math.abs(trend)}%
           </span>
         )}
       </div>
       <div className="flex items-end justify-between">
         <p className="font-heading text-4xl sm:text-5xl font-light text-ec-gold">{value}</p>
         {sparkData && sparkData.length > 1 && (
-          <Sparkline data={sparkData} />
+          <div className="hidden sm:block">
+            <Sparkline data={sparkData} />
+          </div>
         )}
       </div>
       {sub && <p className="font-body text-xs mt-3 text-ec-text-muted font-light">{sub}</p>}
@@ -95,12 +97,12 @@ function QuickAction({ icon, label, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-4 p-5 border border-black/[0.06] bg-white hover:bg-ec-gold/[0.04] hover:border-ec-gold/20 transition-all duration-300 rounded-sm group"
+      className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-4 p-4 sm:p-5 border border-black/[0.06] bg-white hover:bg-ec-gold/[0.04] hover:border-ec-gold/20 transition-all duration-300 rounded-sm group text-center sm:text-left"
     >
-      <div className="w-10 h-10 bg-ec-gold/10 text-ec-gold flex items-center justify-center rounded-sm group-hover:bg-ec-gold group-hover:text-white transition-all duration-300">
+      <div className="w-9 h-9 sm:w-10 sm:h-10 bg-ec-gold/10 text-ec-gold flex items-center justify-center rounded-sm group-hover:bg-ec-gold group-hover:text-white transition-all duration-300 flex-shrink-0">
         {icon}
       </div>
-      <span className="font-ui text-[11px] tracking-[0.2em] text-ec-text-secondary uppercase group-hover:text-ec-dark transition-colors">{label}</span>
+      <span className="font-ui text-[9px] sm:text-[11px] tracking-[0.15em] sm:tracking-[0.2em] text-ec-text-secondary uppercase group-hover:text-ec-dark transition-colors leading-tight">{label}</span>
     </button>
   );
 }
@@ -170,20 +172,25 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-6 sm:space-y-12">
       {/* Header */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-4">
-        <img src={BRAND.logo} alt="" className="h-10 sm:h-14 object-contain flex-shrink-0" />
+      {/* Logo header — solo en desktop (en móvil ya está en el header del admin) */}
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="hidden sm:flex items-center gap-4">
+        <img src={BRAND.logo} alt="" className="h-14 object-contain flex-shrink-0" />
         <div className="min-w-0">
-          <h2 className="font-heading text-2xl sm:text-3xl text-ec-dark">Centro de Control</h2>
-          <p className="font-body text-xs sm:text-sm text-ec-text-muted capitalize font-light truncate">
+          <h2 className="font-heading text-3xl text-ec-dark">Centro de Control</h2>
+          <p className="font-body text-sm text-ec-text-muted capitalize font-light truncate">
             {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
           </p>
         </div>
       </motion.div>
+      {/* Fecha solo en móvil */}
+      <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="sm:hidden font-body text-xs text-ec-text-muted capitalize font-light">
+        {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
+      </motion.p>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <StatCard label="Citas Totales" value={stats.total} index={0} sparkData={stats.dailyData} />
         <StatCard label="Este Mes" value={stats.thisMonth} index={1} trend={stats.thisMonth > 0 ? 12 : 0} />
         <StatCard label="Por Atender" value={stats.pending} index={2} sub="Pendientes + Confirmadas" />
@@ -193,7 +200,7 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
       {/* Quick Actions */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
         <h3 className="font-heading text-xl text-ec-dark mb-6">Acciones Rápidas</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <QuickAction
             label="Nueva Cita"
             onClick={() => onNewAppointment ? onNewAppointment() : onNavigate?.('calendar')}
