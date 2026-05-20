@@ -137,16 +137,16 @@ function StatCard({ label, count, sub, color, icon }) {
     <motion.div
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative overflow-hidden bg-white border border-black/[0.06] rounded-2xl p-6 flex flex-col gap-2"
+      className="relative overflow-hidden bg-white border border-black/[0.06] rounded-2xl p-4 flex flex-col gap-1.5"
     >
-      <div className="flex items-center justify-between">
-        <span className="font-ui text-[9px] tracking-[0.2em] uppercase" style={{ color }}>{label}</span>
-        <div className="w-8 h-8 rounded-full flex items-center justify-center text-base" style={{ background: `${color}15` }}>
+      <div className="flex items-center justify-between gap-1">
+        <span className="font-ui text-[9px] tracking-[0.08em] uppercase leading-tight" style={{ color }}>{label}</span>
+        <div className="w-7 h-7 flex-shrink-0 rounded-full flex items-center justify-center text-sm" style={{ background: `${color}15` }}>
           {icon}
         </div>
       </div>
-      <p className="font-heading text-4xl" style={{ color }}>{count}</p>
-      {sub && <p className="font-body text-xs text-ec-text-muted">{sub}</p>}
+      <p className="font-heading text-3xl" style={{ color }}>{count}</p>
+      {sub && <p className="font-body text-[11px] text-ec-text-muted leading-snug">{sub}</p>}
       <div className="absolute bottom-0 left-0 right-0 h-[3px] rounded-b-2xl" style={{ background: `${color}40` }} />
     </motion.div>
   );
