@@ -736,9 +736,6 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
 
           {/* Vehicle & Service row */}
           <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
-            <svg className="text-ec-text-muted flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-              <rect x="1" y="9" width="22" height="10" rx="2"/><path d="M5 9V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/>
-            </svg>
             <div className="flex gap-2 flex-1 min-w-0">
               <select
                 value={form.vehicleType}
