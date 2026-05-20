@@ -102,12 +102,12 @@ const isHoliday = (date) => {
   return COLOMBIA_HOLIDAYS.has(s);
 };
 
-// Devuelve el siguiente día hábil (martes-sábado, sin festivos)
+// Devuelve el siguiente día hábil (lunes-sábado, sin domingos ni festivos)
 const nextWorkday = (date) => {
   const d = new Date(date);
   do {
     d.setDate(d.getDate() + 1);
-  } while (d.getDay() === 0 || d.getDay() === 1 || isHoliday(d));
+  } while (d.getDay() === 0 || isHoliday(d));
   return d;
 };
 
@@ -117,7 +117,7 @@ const nextWorkday = (date) => {
 // startHour: 8..17 (hora de inicio en ese día)
 // Retorna { readyDate: Date, readyHour: number }
 const calcPickup = (horasTrabajo, startDate, startHour) => {
-  const DOW_CLOSE = { 2:17, 3:17, 4:17, 5:17, 6:14 }; // mar-vie 5pm, sáb 2pm
+  const DOW_CLOSE = { 1:17, 2:17, 3:17, 4:17, 5:17, 6:14 }; // lun-vie 5pm, sáb 2pm
   let d = new Date(startDate);
   let h = startHour;
   let remaining = horasTrabajo;
@@ -182,8 +182,8 @@ const getWeekCalendar = () => {
   for (let d = 1; d <= 14; d++) {
     const date = new Date(base);
     date.setDate(base.getDate() + d);
-    if (date.getDay() === 0 || date.getDay() === 1) continue; // sin domingos ni lunes
-    if (isHoliday(date)) continue;
+    if (date.getDay() === 0) continue; // sin domingos
+    if (isHoliday(date)) continue;    // sin festivos
     days.push(date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }));
     if (days.length >= 6) break;
   }
@@ -236,8 +236,8 @@ const getAvailabilityInfo = async () => {
       const date = new Date(today);
       date.setDate(today.getDate() + d);
       const dow = date.getDay();
-      if (dow === 0 || dow === 1) continue; // sin domingos ni lunes
-      if (isHoliday(date)) continue;
+      if (dow === 0) continue;       // sin domingos
+      if (isHoliday(date)) continue; // sin festivos
 
       const isSat = dow === 6;
       const dayEnd = isSat ? 14 : 17;
@@ -427,7 +427,7 @@ PROHIBIDO — SIGNO DE APERTURA: Nunca uses ¿ ni ¡. Solo ? y ! al cerrar.
 ESTILO DE PRECIO — OBLIGATORIO: Nunca menciones el precio como un dato suelto. Siempre introdúcelo con elegancia: "la inversión es de $X" / "la inversión sería de $X" / "quedaría en $X" / "lo dejamos en $X". Ejemplo correcto: "Te recomiendo el Tratamiento 3 en 1 Manual. La inversión es de $290.000 e incluye descontaminación, corrección y sellado en un solo día." Ejemplo INCORRECTO: "El Tratamiento 3 en 1 está a $290.000."
 PROHIBIDO — DÍA SIN ARTÍCULO: Siempre "para el martes", nunca "para martes".
 PROHIBIDO — INVENTAR PRECIOS para Recubrimiento Cerámico y Porcelanizado.
-PROHIBIDO — LUNES Y DOMINGOS: Esteticar NO trabaja ni domingos ni lunes. Si el cliente pide cualquiera de estos días, ofrece el martes. NUNCA ofrezcas lunes como alternativa.
+PROHIBIDO — DOMINGOS Y FESTIVOS: Esteticar NO trabaja los domingos ni los días festivos. Si el cliente pide domingo, ofrece el lunes. Si el día que pide es festivo, ofrece el siguiente día hábil.
 PROHIBIDO — PRESENTARSE DE NUEVO: Si ya hay historial, NUNCA digas "soy Sara Valencia" ni variantes. Salúdalo por su nombre directamente. Presentarte de nuevo ≠ saludarlo — saludarlo por su nombre en una conversación ya iniciada está bien y es cálido.
 PROHIBIDO — REPETIR PREGUNTAS: Si esa información ya está en el historial (nombre, marca, modelo, vehículo, servicio), NUNCA la pidas de nuevo. Úsala directamente.
 PROHIBIDO — PREGUNTAS VAGAS: Nunca preguntes solo "qué modelo es?". Pregunta siempre marca y modelo juntos: "Qué marca y modelo es?"
@@ -444,9 +444,9 @@ Cuando describes resultados: "el carro queda hermoso", "queda un espectáculo", 
 Cuando saludas a un cliente que ya conoces: "Jerónimo, qué gusto saber de ti" / "cómo has estado?" / "qué bueno que vuelves".
 
 ━━━ HORARIOS Y UBICACIÓN ━━━
-Martes a viernes: 8:00 a.m. a 5:00 p.m. Sábados: 8:00 a.m. a 2:00 p.m. LUNES Y DOMINGOS: CERRADO.
-Si alguien pide lunes: "Los lunes estamos cerrados, pero el martes te atendemos desde las 8 con todo el gusto. Te queda bien?"
-Si alguien pide domingo: "Los domingos estamos cerrados, pero el martes te atendemos desde las 8 con todo el gusto. Te queda bien?"
+Lunes a viernes: 8:00 a.m. a 5:00 p.m. Sábados: 8:00 a.m. a 2:00 p.m. Domingos: cerrado. Festivos: cerrado.
+Si alguien pide domingo: "Los domingos estamos cerrados, pero el lunes te atendemos desde las 8 con todo el gusto. Te queda bien?"
+Si alguien pide un día festivo: "Ese día es festivo y estamos cerrados, pero el siguiente día hábil te atendemos desde las 8."
 Si preguntan ubicación: "Estamos en la Calle 67 #9-26, La Sultana, Manizales. Acá te comparto la ubicación: https://maps.app.goo.gl/yvc3Hu3ksv1bVBXy7"
 
 ━━━ CONOCIMIENTO DE VEHÍCULOS — OBLIGATORIO ━━━
@@ -620,11 +620,12 @@ Si el cliente pide una hora que no alcanza:
 "Para el [servicio] necesito que traigas el vehículo a más tardar a las [hora máxima], para tenerlo listo antes del cierre. En la mañana sería lo ideal."
 
 REGLA DÍAS MÚLTIPLES:
-Si el servicio dura más de un día (Cojinería, Interior, etc.) o no cabe en el día solicitado, di cuándo estará listo. Los días que NO cuentan: domingos, LUNES y festivos.
+Si el servicio dura más de un día (Cojinería, Interior, etc.) o no cabe en el día solicitado, di cuándo estará listo. Los días que NO cuentan: domingos y festivos. El lunes SÍ cuenta.
 • Vehículo entra martes → servicio 1 día → listo el miércoles
-• Vehículo entra sábado a la 1pm (solo 1h disponible ese día) + servicio de 4h → continúa el martes → listo el martes
-• Vehículo entra sábado + servicio 2 días → martes y miércoles → listo el miércoles
-• Si un día hábil cae en festivo, sáltalo y sigue al siguiente.
+• Vehículo entra sábado a la 1pm (solo 1h disponible ese día) + servicio de 4h → continúa el lunes → listo el lunes
+• Vehículo entra sábado + servicio 2 días → lunes y martes → listo el martes
+• Si el siguiente día hábil cae en festivo, sáltalo y sigue al siguiente día hábil.
+• Domingo SIEMPRE cerrado. Festivos SIEMPRE cerrados. El lunes ES día hábil normal.
 
 Formato cuando el vehículo queda un día extra:
 "Ese servicio tarda [N horas/días] de trabajo, así que si lo dejas el [día solicitado], lo tienes listo el [día de entrega] a más tardar a las [hora] 🕐"
