@@ -667,6 +667,23 @@ const parseBooking = (text) => {
 const isConfirmationMessage = (text) =>
   /te confirm[oó]|cita.*confirmad|nos vemos|te esperamos|llegamos por tu|pasamos por tu|quedamos para el|cita queda/i.test(text);
 
+// Transcribe audio desde una URL directa (Instagram / Facebook)
+const transcribeAudioUrl = async (audioUrl, token, channel) => {
+  const audioRes = await fetch(audioUrl, token ? { headers: { Authorization: `Bearer ${token}` } } : {});
+  if (!audioRes.ok) throw new Error('Audio download failed: ' + audioRes.status);
+  const audioBuffer = Buffer.from(await audioRes.arrayBuffer());
+  const transcription = await openai.audio.transcriptions.create({
+    file: await toFile(audioBuffer, 'audio.mp4', { type: 'audio/mp4' }),
+    model: 'whisper-1', language: 'es',
+  });
+  const durationSec = audioBuffer.length / 4000;
+  supabaseAdmin.from('api_costs').insert({
+    provider: 'openai', model: 'whisper-1', channel,
+    audio_seconds: Math.round(durationSec), cost_usd: (durationSec / 60) * 0.006,
+  }).then(null, () => {});
+  return transcription.text?.trim() || '';
+};
+
 // Logs Haiku token costs fire-and-forget
 const logHaikuCost = (usage, channel) => {
   const u = usage || {};
@@ -943,25 +960,51 @@ export default async function handler(req, res) {
 
       } else if (body.object === 'instagram') {
         const event = body.entry?.[0]?.messaging?.[0];
-        if (!event?.message?.text) return res.status(200).send('OK');
+        if (!event?.message) return res.status(200).send('OK');
         if (event.message.is_echo) return res.status(200).send('OK');
+        const igHasAudio = event.message.attachments?.[0]?.type === 'audio';
+        if (!event.message.text && !igHasAudio) return res.status(200).send('OK');
         rawSenderId = event.sender.id;
         from        = `ig_${rawSenderId}`;
         msgId       = event.message.mid;
-        text        = event.message.text?.trim();
         platform    = 'instagram';
         sendFn      = (_, t) => sendInstagramMessage(rawSenderId, t);
+        if (igHasAudio) {
+          try {
+            const audioUrl = event.message.attachments[0].payload.url;
+            text = await transcribeAudioUrl(audioUrl, FB_PAGE_TOKEN, 'instagram');
+          } catch (e) {
+            console.error('[Whisper/IG] ERROR:', e.message);
+            await sendInstagramMessage(rawSenderId, 'No pude escuchar bien el audio. Puedes escribirme tu mensaje?');
+            return res.status(200).send('OK');
+          }
+        } else {
+          text = event.message.text?.trim();
+        }
 
       } else if (body.object === 'page') {
         const event = body.entry?.[0]?.messaging?.[0];
-        if (!event?.message?.text) return res.status(200).send('OK');
+        if (!event?.message) return res.status(200).send('OK');
         if (event.message.is_echo) return res.status(200).send('OK');
+        const fbHasAudio = event.message.attachments?.[0]?.type === 'audio';
+        if (!event.message.text && !fbHasAudio) return res.status(200).send('OK');
         rawSenderId = event.sender.id;
         from        = `fb_${rawSenderId}`;
         msgId       = event.message.mid;
-        text        = event.message.text?.trim();
         platform    = 'messenger';
         sendFn      = (_, t) => sendFBMessage(rawSenderId, t);
+        if (fbHasAudio) {
+          try {
+            const audioUrl = event.message.attachments[0].payload.url;
+            text = await transcribeAudioUrl(audioUrl, FB_PAGE_TOKEN, 'facebook');
+          } catch (e) {
+            console.error('[Whisper/FB] ERROR:', e.message);
+            await sendFBMessage(rawSenderId, 'No pude escuchar bien el audio. Puedes escribirme tu mensaje?');
+            return res.status(200).send('OK');
+          }
+        } else {
+          text = event.message.text?.trim();
+        }
 
       } else {
         return res.status(200).send('OK');
