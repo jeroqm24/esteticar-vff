@@ -8,9 +8,10 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
 );
 
-const WA_TOKEN = process.env.WHATSAPP_TOKEN;
-const PHONE_ID = process.env.WHATSAPP_PHONE_NUMBER_ID;
-const ADMIN_SECRET = process.env.ADMIN_SECRET || 'esteticar2026';
+const WA_TOKEN      = process.env.WHATSAPP_TOKEN;
+const PHONE_ID      = process.env.WHATSAPP_PHONE_NUMBER_ID;
+const FB_PAGE_TOKEN = process.env.FB_PAGE_TOKEN;
+const ADMIN_SECRET  = process.env.ADMIN_SECRET || 'esteticar2026';
 
 const sendWAMessage = async (to, text) => {
   if (!WA_TOKEN || !PHONE_ID) return false;
@@ -19,6 +20,34 @@ const sendWAMessage = async (to, text) => {
       method: 'POST',
       headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'text', text: { body: text } }),
+    });
+    return r.ok;
+  } catch { return false; }
+};
+
+const sendIGMessage = async (recipientId, text) => {
+  if (!FB_PAGE_TOKEN) return false;
+  try {
+    // Obtener el token de Instagram desde Supabase
+    const igDb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY);
+    const { data } = await igDb.from('ig_tokens').select('access_token').order('created_at', { ascending: false }).limit(1).single();
+    const token = data?.access_token || FB_PAGE_TOKEN;
+    const r = await fetch(`https://graph.instagram.com/v21.0/me/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
+    });
+    return r.ok;
+  } catch { return false; }
+};
+
+const sendFBMessage = async (recipientId, text) => {
+  if (!FB_PAGE_TOKEN) return false;
+  try {
+    const r = await fetch(`https://graph.facebook.com/v20.0/me/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${FB_PAGE_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
     });
     return r.ok;
   } catch { return false; }
@@ -65,12 +94,18 @@ export default async function handler(req, res) {
       .from('conversations')
       .upsert({ phone, history, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
 
-    let waSent = false;
-    if (!phone.startsWith('web_')) {
-      waSent = await sendWAMessage(phone, text.trim());
+    let sent = false;
+    if (phone.startsWith('ig_')) {
+      const rawId = phone.replace('ig_', '');
+      sent = await sendIGMessage(rawId, text.trim());
+    } else if (phone.startsWith('fb_')) {
+      const rawId = phone.replace('fb_', '');
+      sent = await sendFBMessage(rawId, text.trim());
+    } else if (!phone.startsWith('web_')) {
+      sent = await sendWAMessage(phone, text.trim());
     }
 
-    return res.status(200).json({ ok: true, waSent });
+    return res.status(200).json({ ok: true, sent });
   }
 
   // ── DELETE: remove conversation ──
