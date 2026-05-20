@@ -443,6 +443,14 @@ export default function AdminConversations({ initialPhone }) {
     setUpdatingLead(false);
   };
 
+  const handleRemarkChange = async (status) => {
+    if (!selected) return;
+    const val = status || null;
+    setSelected(prev => ({ ...prev, remarketing_status: val }));
+    setConversations(prev => prev.map(c => c.phone === selected.phone ? { ...c, remarketing_status: val } : c));
+    await db.conversations.update(selected.phone, { remarketing_status: val });
+  };
+
   const handleSend = async () => {
     if (!replyText.trim() || !selected || sending) return;
     const text = replyText.trim();
@@ -676,6 +684,22 @@ export default function AdminConversations({ initialPhone }) {
                       <option value="analista"   style={{ color: "#111", background: "#fff" }}>📚 Analista</option>
                       <option value="embalado"   style={{ color: "#111", background: "#fff" }}>⚡ Embalado</option>
                       <option value="regateador" style={{ color: "#111", background: "#fff" }}>🫰 Regateador</option>
+                    </select>
+                    <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-70" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg>
+                  </div>
+
+                  {/* Remarketing status */}
+                  <div className="relative">
+                    <select
+                      value={selected.remarketing_status || ""}
+                      onChange={e => handleRemarkChange(e.target.value)}
+                      className="text-[10px] font-ui bg-white/15 text-white border border-white/20 rounded-full px-2.5 py-1 focus:outline-none cursor-pointer appearance-none"
+                      style={{ paddingRight: "1.5rem" }}
+                    >
+                      <option value="" style={{ color: "#111", background: "#fff" }}>Sin estado</option>
+                      <option value="potencial"     style={{ color: "#111", background: "#fff" }}>🔵 Potencial</option>
+                      <option value="efectivo"      style={{ color: "#111", background: "#fff" }}>🟢 Efectivo</option>
+                      <option value="desinteresado" style={{ color: "#111", background: "#fff" }}>⚫ Desinteresado</option>
                     </select>
                     <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-70" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg>
                   </div>
