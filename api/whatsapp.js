@@ -1168,7 +1168,19 @@ export default async function handler(req, res) {
       } else if (body.object === 'instagram') {
         const event = body.entry?.[0]?.messaging?.[0];
         if (!event?.message) return res.status(200).send('OK');
-        if (event.message.is_echo) return res.status(200).send('OK');
+        // Echo = mensaje enviado por la página/admin desde la app nativa → guardarlo como admin
+        if (event.message.is_echo) {
+          const clientId = event.recipient?.id;
+          const echoText = event.message.text?.trim();
+          if (clientId && echoText) {
+            const clientPhone = `ig_${clientId}`;
+            const { data: echoConv } = await supabase.from('conversations').select('history').eq('phone', clientPhone).single();
+            const echoHistory = Array.isArray(echoConv?.history) ? echoConv.history : [];
+            echoHistory.push({ role: 'admin', content: echoText, timestamp: new Date().toISOString() });
+            await supabase.from('conversations').upsert({ phone: clientPhone, history: echoHistory, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
+          }
+          return res.status(200).send('OK');
+        }
         const igHasAudio = event.message.attachments?.[0]?.type === 'audio';
         if (!event.message.text && !igHasAudio) return res.status(200).send('OK');
         rawSenderId = event.sender.id;
@@ -1192,7 +1204,19 @@ export default async function handler(req, res) {
       } else if (body.object === 'page') {
         const event = body.entry?.[0]?.messaging?.[0];
         if (!event?.message) return res.status(200).send('OK');
-        if (event.message.is_echo) return res.status(200).send('OK');
+        // Echo = mensaje enviado por la página/admin desde la app nativa → guardarlo como admin
+        if (event.message.is_echo) {
+          const clientId = event.recipient?.id;
+          const echoText = event.message.text?.trim();
+          if (clientId && echoText) {
+            const clientPhone = `fb_${clientId}`;
+            const { data: echoConv } = await supabase.from('conversations').select('history').eq('phone', clientPhone).single();
+            const echoHistory = Array.isArray(echoConv?.history) ? echoConv.history : [];
+            echoHistory.push({ role: 'admin', content: echoText, timestamp: new Date().toISOString() });
+            await supabase.from('conversations').upsert({ phone: clientPhone, history: echoHistory, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
+          }
+          return res.status(200).send('OK');
+        }
         const fbHasAudio = event.message.attachments?.[0]?.type === 'audio';
         if (!event.message.text && !fbHasAudio) return res.status(200).send('OK');
         rawSenderId = event.sender.id;

@@ -392,9 +392,9 @@ export default function AdminConversations({ initialPhone }) {
     });
   }, []);
 
-  // Auto-refresh every 30s
+  // Auto-refresh every 6s
   useEffect(() => {
-    const interval = setInterval(load, 30000);
+    const interval = setInterval(load, 6000);
     return () => clearInterval(interval);
   }, [load]);
 
