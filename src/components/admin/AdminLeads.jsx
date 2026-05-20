@@ -346,9 +346,11 @@ export default function AdminLeads() {
   const load = useCallback(async () => {
     setLoading(true);
     const data = await db.conversations.list();
-    // Solo los que tienen estado de lead (excluir los que nunca interactuaron)
+    // Solo leads reales — excluir sin estado y "otro"
     const leads = data.filter(c =>
-      c.remarketing_status && c.remarketing_status !== null
+      c.remarketing_status &&
+      c.remarketing_status !== null &&
+      c.remarketing_status !== 'otro'
     );
     setConvs(leads);
     setLoading(false);

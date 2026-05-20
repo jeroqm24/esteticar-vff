@@ -34,6 +34,7 @@ const STATUS_CONFIG = {
   potencial:      { label: "Potencial",     bg: "rgba(59,130,246,0.08)",  color: "#2563eb", border: "rgba(59,130,246,0.25)" },
   efectivo:       { label: "Efectivo",      bg: "rgba(34,197,94,0.08)",   color: "#16a34a", border: "rgba(34,197,94,0.25)" },
   desinteresado:  { label: "Desinteresado", bg: "rgba(239,68,68,0.08)",   color: "#dc2626", border: "rgba(239,68,68,0.25)" },
+  otro:           { label: "Otro",          bg: "rgba(107,114,128,0.08)", color: "#6b7280", border: "rgba(107,114,128,0.25)" },
   // aliases legacy por si hay registros viejos en Supabase
   active:    { label: "Potencial",     bg: "rgba(59,130,246,0.08)",  color: "#2563eb", border: "rgba(59,130,246,0.25)" },
   converted: { label: "Efectivo",      bg: "rgba(34,197,94,0.08)",   color: "#16a34a", border: "rgba(34,197,94,0.25)" },
@@ -49,7 +50,7 @@ const daysSince = (dateStr) => {
 };
 
 const shouldSendRemarketing = (client) => {
-  if (!client.leadType || client.remarketingStatus === 'desinteresado' || client.remarketingStatus === 'lost' || client.remarketingStatus === 'efectivo' || client.remarketingStatus === 'converted') return false;
+  if (!client.leadType || ['desinteresado', 'lost', 'efectivo', 'converted', 'otro'].includes(client.remarketingStatus)) return false;
   const profile = LEAD_PROFILES[client.leadType];
   if (!profile) return false;
   const days = daysSince(client.lastRemarketingAt || client.updatedAt);

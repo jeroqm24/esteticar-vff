@@ -707,10 +707,24 @@ PLACA: [placa o "no_proporcionado"]
 __END_BOOKING__
 
 ━━━ CLASIFICACIÓN DE CONVERSIÓN ━━━
-Cuando el cliente muestre interés real (preguntó precios, pidió disponibilidad, dio su nombre, preguntó por un servicio específico) añade al final del mensaje donde detectes ese interés por primera vez:
-__LEAD_STATUS__:potencial
+Clasifica la conversación según la intención real del contacto:
 
-NO lo añadas si el cliente fue indiferente, solo saludó, o si ya se confirmó una cita (en ese caso ya queda como efectivo automáticamente).
+▸ __LEAD_STATUS__:potencial
+  Úsalo cuando el cliente muestre interés real en un servicio: preguntó precios, pidió disponibilidad, mencionó su vehículo con intención de llevarlo, preguntó por un servicio específico. Solo personas que podrían convertirse en clientes.
+
+▸ __LEAD_STATUS__:otro
+  Úsalo cuando el contacto NO busca un servicio para su vehículo:
+  - Propuestas de colaboración, canjes, patrocinios, sorteos
+  - Proveedores ofreciendo productos o servicios
+  - Personas que se equivocaron de número
+  - Encuestas, estudios, periodistas
+  - Cualquier contacto que no sea un cliente potencial
+
+REGLAS:
+- Emite el tag en el primer mensaje donde quede claro el tipo de contacto
+- NO emitas potencial si solo saludó o si ya hay cita confirmada (esa queda efectivo automáticamente)
+- NO emitas ningún tag si todavía no es claro el tipo de contacto
+- Nunca emitas ambos tags en el mismo mensaje
 
 ━━━ CANCELACIÓN DE CITA ━━━
 Si el cliente pide cancelar o ya no puede venir, confirma con calidez y emite al final:
@@ -1334,9 +1348,12 @@ export default async function handler(req, res) {
           meta.remarketing_status = 'potencial';
           sendLeadCAPI(from, capturedName || conv.client_name).catch(() => {});
         }
+        if (ls === 'otro' && !yaEsEfectivo && conv.remarketing_status !== 'otro') {
+          meta.remarketing_status = 'otro';
+        }
       }
-      // Si el cliente era desinteresado y vuelve a escribir → potencial de nuevo
-      if (conv.remarketing_status === 'desinteresado' || conv.remarketing_status === 'lost') {
+      // Si el cliente era desinteresado y vuelve a escribir → potencial de nuevo (excepto si era "otro")
+      if ((conv.remarketing_status === 'desinteresado' || conv.remarketing_status === 'lost') && conv.remarketing_status !== 'otro') {
         meta.remarketing_status = 'potencial';
       }
       // Si Sara detecta objeción fuerte → desinteresado (solo si era potencial, no efectivo)

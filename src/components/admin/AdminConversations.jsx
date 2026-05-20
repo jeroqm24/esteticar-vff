@@ -76,6 +76,7 @@ const REMARKETING_CONFIG = {
   converted:    { label: "Efectivo",      bg: "bg-emerald-100", text: "text-emerald-700" },
   potencial:    { label: "Potencial",     bg: "bg-orange-100",  text: "text-orange-700"  },
   desinteresado:{ label: "Desinteresado", bg: "bg-slate-100",   text: "text-slate-500"   },
+  otro:         { label: "Otro",          bg: "bg-gray-100",    text: "text-gray-500"    },
 };
 
 function RemarkBadge({ status, size = "sm" }) {
@@ -700,6 +701,7 @@ export default function AdminConversations({ initialPhone }) {
                       <option value="potencial"     style={{ color: "#111", background: "#fff" }}>🔵 Potencial</option>
                       <option value="efectivo"      style={{ color: "#111", background: "#fff" }}>🟢 Efectivo</option>
                       <option value="desinteresado" style={{ color: "#111", background: "#fff" }}>⚫ Desinteresado</option>
+                      <option value="otro"          style={{ color: "#111", background: "#fff" }}>⚪ Otro</option>
                     </select>
                     <svg className="absolute right-1.5 top-1/2 -translate-y-1/2 pointer-events-none opacity-70" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3"><polyline points="6 9 12 15 18 9"/></svg>
                   </div>
