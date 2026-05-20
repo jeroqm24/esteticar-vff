@@ -1,7 +1,8 @@
 {
   "rewrites": [
-    { "source": "/api/ig-auth",     "destination": "/api/ig-auth" },
-    { "source": "/api/ig-callback", "destination": "/api/ig-callback" },
+    { "source": "/api/ig-auth",     "destination": "/api/instagram?action=auth" },
+    { "source": "/api/ig-callback", "destination": "/api/instagram?action=callback" },
+    { "source": "/api/ig-refresh",  "destination": "/api/instagram?action=refresh" },
     { "source": "/(.*)",            "destination": "/index.html" }
   ],
   "crons": [
@@ -30,7 +31,7 @@
       "schedule": "30 0 * * *"
     },
     {
-      "path": "/api/ig-refresh",
+      "path": "/api/instagram?action=refresh",
       "schedule": "0 8 1 * *"
     }
   ]
