@@ -165,7 +165,7 @@ export const db = {
       try {
         const { data, error } = await supabase
           .from('conversations')
-          .select('phone, session_id, history, client_name, updated_at, created_at, lead_type, bot_paused, vehicle_type, vehicle_plate, client_email, last_service, direccion, objection, remarketing_status, admin_notes')
+          .select('phone, session_id, history, client_name, updated_at, created_at, lead_type, bot_paused, vehicle_type, vehicle_plate, client_email, last_service, direccion, objection, remarketing_status')
           .order('updated_at', { ascending: false })
           .limit(300);
         if (error) throw error;
@@ -174,7 +174,8 @@ export const db = {
         try {
           const { data } = await supabase
             .from('conversations')
-            .select('phone, session_id, history, client_name, lead_type, bot_paused')
+            .select('phone, session_id, history, client_name, updated_at, lead_type, bot_paused, vehicle_type, remarketing_status, last_service')
+            .order('updated_at', { ascending: false })
             .limit(300);
           return (data || []).filter(r => Array.isArray(r.history) && r.history.length > 0);
         } catch { return []; }
