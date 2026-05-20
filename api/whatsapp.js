@@ -1327,14 +1327,20 @@ export default async function handler(req, res) {
       // Clasificación de conversión
       if (leadStatusMatch) {
         const ls = leadStatusMatch[1].trim();
-        if (ls === 'potencial' && conv.remarketing_status !== 'efectivo' && conv.remarketing_status !== 'potencial') {
+        const yaEsEfectivo = conv.remarketing_status === 'efectivo' || conv.remarketing_status === 'converted';
+        if (ls === 'potencial' && !yaEsEfectivo && conv.remarketing_status !== 'potencial') {
           meta.remarketing_status = 'potencial';
           sendLeadCAPI(from, capturedName || conv.client_name).catch(() => {});
         }
       }
-      // Si el cliente era desinteresado y vuelve a escribir → potencial
-      if (conv.remarketing_status === 'desinteresado') {
+      // Si el cliente era desinteresado y vuelve a escribir → potencial de nuevo
+      if (conv.remarketing_status === 'desinteresado' || conv.remarketing_status === 'lost') {
         meta.remarketing_status = 'potencial';
+      }
+      // Si Sara detecta objeción fuerte → desinteresado (solo si era potencial, no efectivo)
+      if (objMatch && conv.remarketing_status === 'potencial') {
+        // No lo marcamos automáticamente — la admin lo hace manualmente
+        // Pero sí guardamos la objeción para que la vea en el panel
       }
 
       if (booking) {

@@ -31,9 +31,13 @@ const LEAD_PROFILES = {
 };
 
 const STATUS_CONFIG = {
-  active:    { label: "Activo",    bg: "rgba(34,197,94,0.08)",  color: "#16a34a", border: "rgba(34,197,94,0.25)" },
-  converted: { label: "Cliente",   bg: "rgba(184,134,11,0.08)", color: "#B8860B", border: "rgba(184,134,11,0.25)" },
-  lost:      { label: "Perdido",   bg: "rgba(239,68,68,0.08)",  color: "#dc2626", border: "rgba(239,68,68,0.25)" },
+  potencial:      { label: "Potencial",     bg: "rgba(59,130,246,0.08)",  color: "#2563eb", border: "rgba(59,130,246,0.25)" },
+  efectivo:       { label: "Efectivo",      bg: "rgba(34,197,94,0.08)",   color: "#16a34a", border: "rgba(34,197,94,0.25)" },
+  desinteresado:  { label: "Desinteresado", bg: "rgba(239,68,68,0.08)",   color: "#dc2626", border: "rgba(239,68,68,0.25)" },
+  // aliases legacy por si hay registros viejos en Supabase
+  active:    { label: "Potencial",     bg: "rgba(59,130,246,0.08)",  color: "#2563eb", border: "rgba(59,130,246,0.25)" },
+  converted: { label: "Efectivo",      bg: "rgba(34,197,94,0.08)",   color: "#16a34a", border: "rgba(34,197,94,0.25)" },
+  lost:      { label: "Desinteresado", bg: "rgba(239,68,68,0.08)",   color: "#dc2626", border: "rgba(239,68,68,0.25)" },
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -45,7 +49,7 @@ const daysSince = (dateStr) => {
 };
 
 const shouldSendRemarketing = (client) => {
-  if (!client.leadType || client.remarketingStatus === 'lost' || client.remarketingStatus === 'converted') return false;
+  if (!client.leadType || client.remarketingStatus === 'desinteresado' || client.remarketingStatus === 'lost' || client.remarketingStatus === 'efectivo' || client.remarketingStatus === 'converted') return false;
   const profile = LEAD_PROFILES[client.leadType];
   if (!profile) return false;
   const days = daysSince(client.lastRemarketingAt || client.updatedAt);
@@ -401,19 +405,26 @@ function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketin
 
         {/* Acciones de estado */}
         <div className="space-y-2 pt-2 border-t border-black/[0.06]">
-          {client.remarketingStatus !== 'lost' ? (
-            <button
-              onClick={() => onUpdateStatus(client.phone, 'lost')}
-              className="w-full py-3 font-ui text-[10px] tracking-[0.2em] uppercase border border-red-200 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-sm transition-all">
-              Marcar como cliente perdido
-            </button>
-          ) : (
-            <button
-              onClick={() => onUpdateStatus(client.phone, 'active')}
-              className="w-full py-3 font-ui text-[10px] tracking-[0.2em] uppercase border border-green-200 text-green-600 hover:bg-green-50 rounded-sm transition-all">
-              Recuperar cliente
-            </button>
-          )}
+          <p className="font-ui text-[9px] tracking-[0.2em] uppercase text-ec-text-muted mb-1">Cambiar estado manualmente</p>
+          <div className="grid grid-cols-3 gap-1.5">
+            {['potencial', 'efectivo', 'desinteresado'].map(s => {
+              const cfg = STATUS_CONFIG[s];
+              const isActive = client.remarketingStatus === s || (s === 'potencial' && client.remarketingStatus === 'active') || (s === 'efectivo' && client.remarketingStatus === 'converted') || (s === 'desinteresado' && client.remarketingStatus === 'lost');
+              return (
+                <button key={s}
+                  onClick={() => !isActive && onUpdateStatus(client.phone, s)}
+                  disabled={isActive}
+                  className="py-2 font-ui text-[9px] tracking-[0.1em] uppercase rounded-sm transition-all disabled:cursor-default"
+                  style={{
+                    background: isActive ? cfg.bg : 'transparent',
+                    color: isActive ? cfg.color : '#9CA3AF',
+                    border: `1px solid ${isActive ? cfg.border : 'rgba(0,0,0,0.08)'}`,
+                  }}>
+                  {cfg.label}
+                </button>
+              );
+            })}
+          </div>
 
           {!confirmDelete ? (
             <button
