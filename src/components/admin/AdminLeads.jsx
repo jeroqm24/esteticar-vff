@@ -332,6 +332,7 @@ const FILTERS = [
   { id: "potencial",     label: "Potenciales"    },
   { id: "efectivo",      label: "Efectivos"      },
   { id: "desinteresado", label: "Desinteresados" },
+  { id: "otro",          label: "Otros"          },
 ];
 
 export default function AdminLeads() {
@@ -346,11 +347,9 @@ export default function AdminLeads() {
   const load = useCallback(async () => {
     setLoading(true);
     const data = await db.conversations.list();
-    // Solo leads reales — excluir sin estado y "otro"
+    // Todos los que tienen estado asignado
     const leads = data.filter(c =>
-      c.remarketing_status &&
-      c.remarketing_status !== null &&
-      c.remarketing_status !== 'otro'
+      c.remarketing_status && c.remarketing_status !== null
     );
     setConvs(leads);
     setLoading(false);
@@ -367,6 +366,7 @@ export default function AdminLeads() {
   const efectivos      = convs.filter(c => c.remarketing_status === "efectivo" || c.remarketing_status === "converted");
   const potenciales    = convs.filter(c => c.remarketing_status === "potencial");
   const desinteresados = convs.filter(c => c.remarketing_status === "desinteresado");
+  const otros          = convs.filter(c => c.remarketing_status === "otro");
 
   const fromTs = dateFrom ? new Date(dateFrom).getTime() : null;
   const toTs   = dateTo   ? new Date(dateTo + "T23:59:59").getTime() : null;
@@ -472,7 +472,7 @@ export default function AdminLeads() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <StatCard
           label="Efectivos"
           count={efectivos.length}
@@ -494,6 +494,13 @@ export default function AdminLeads() {
           color="#64748B"
           icon="💤"
         />
+        <StatCard
+          label="Otros"
+          count={otros.length}
+          sub="No son clientes potenciales"
+          color="#9CA3AF"
+          icon="⚪"
+        />
       </div>
 
       {/* Filters */}
@@ -502,6 +509,7 @@ export default function AdminLeads() {
           const count = f.id === "all" ? convs.length
             : f.id === "efectivo" ? efectivos.length
             : f.id === "potencial" ? potenciales.length
+            : f.id === "otro" ? otros.length
             : desinteresados.length;
           return (
             <button
