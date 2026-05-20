@@ -362,8 +362,8 @@ export default function AdminConversations({ initialPhone }) {
     setResolving(false);
   };
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
     const data = await db.conversations.list();
     setConversations(data);
     if (selected) {
@@ -373,7 +373,7 @@ export default function AdminConversations({ initialPhone }) {
       const match = data.find(c => c.phone === initialPhone);
       if (match) setSelected(match);
     }
-    setLoading(false);
+    if (!silent) setLoading(false);
     return data;
   }, [selected?.phone, initialPhone]);
 
@@ -392,9 +392,9 @@ export default function AdminConversations({ initialPhone }) {
     });
   }, []);
 
-  // Auto-refresh every 6s
+  // Auto-refresh every 6s (silent — no loading flicker)
   useEffect(() => {
-    const interval = setInterval(load, 6000);
+    const interval = setInterval(() => load(true), 6000);
     return () => clearInterval(interval);
   }, [load]);
 
