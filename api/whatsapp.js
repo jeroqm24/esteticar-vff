@@ -83,14 +83,109 @@ const getTomorrowStr = () => {
   return d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
 };
 
+// ─── Festivos colombianos 2025-2026 ──────────────────────────────
+const COLOMBIA_HOLIDAYS = new Set([
+  // 2025
+  '2025-01-01','2025-01-06','2025-03-24','2025-04-17','2025-04-18',
+  '2025-05-01','2025-06-02','2025-06-23','2025-06-30','2025-07-07',
+  '2025-07-20','2025-08-07','2025-08-18','2025-10-13','2025-11-03',
+  '2025-11-17','2025-12-08','2025-12-25',
+  // 2026
+  '2026-01-01','2026-01-12','2026-03-23','2026-04-02','2026-04-03',
+  '2026-05-01','2026-05-18','2026-06-08','2026-06-15','2026-06-29',
+  '2026-07-20','2026-08-07','2026-08-17','2026-10-12','2026-11-02',
+  '2026-11-16','2026-12-08','2026-12-25',
+]);
+
+const isHoliday = (date) => {
+  const s = new Date(date).toLocaleDateString('en-CA', { timeZone: 'America/Bogota' });
+  return COLOMBIA_HOLIDAYS.has(s);
+};
+
+// Devuelve el siguiente día hábil (martes-sábado, sin festivos)
+const nextWorkday = (date) => {
+  const d = new Date(date);
+  do {
+    d.setDate(d.getDate() + 1);
+  } while (d.getDay() === 0 || d.getDay() === 1 || isHoliday(d));
+  return d;
+};
+
+// Calcula cuándo estará listo el vehículo dado el servicio y hora de entrega
+// horasTrabajo: horas que tarda el servicio
+// startDate: Date del día en que llega el vehículo (Colombia local)
+// startHour: 8..17 (hora de inicio en ese día)
+// Retorna { readyDate: Date, readyHour: number }
+const calcPickup = (horasTrabajo, startDate, startHour) => {
+  const DOW_CLOSE = { 2:17, 3:17, 4:17, 5:17, 6:14 }; // mar-vie 5pm, sáb 2pm
+  let d = new Date(startDate);
+  let h = startHour;
+  let remaining = horasTrabajo;
+
+  while (remaining > 0) {
+    const dow = d.getDay();
+    const close = DOW_CLOSE[dow];
+    if (!close) { d = nextWorkday(d); h = 8; continue; }
+    const availableToday = close - h;
+    if (availableToday <= 0) { d = nextWorkday(d); h = 8; continue; }
+    if (remaining <= availableToday) {
+      h = h + remaining;
+      remaining = 0;
+    } else {
+      remaining -= availableToday;
+      d = nextWorkday(d);
+      h = 8;
+    }
+  }
+  return { readyDate: d, readyHour: h };
+};
+
+// Genera texto natural con la hora máxima de inicio y/o día de entrega
+const getSchedulingNote = (serviceName, requestedHour, startDate) => {
+  const dur = getServiceDuration(serviceName);
+  if (!dur || dur === 0) return null;
+  const dow = startDate.getDay();
+  const close = dow === 6 ? 14 : 17; // sáb 2pm, resto 5pm
+  const maxStart = close - dur;
+
+  const notes = [];
+
+  // Hora límite dentro del día
+  if (requestedHour !== null && requestedHour > maxStart) {
+    const fmt = (h) => h < 12 ? `${h}:00 a.m.` : h === 12 ? '12:00 m.' : `${h - 12}:00 p.m.`;
+    if (maxStart < 8) {
+      // No cabe en este día en absoluto
+      notes.push(`no cabe ese servicio en ${dow === 6 ? 'el sábado' : 'ese día'}`);
+    } else {
+      notes.push(`hora máxima de inicio: ${fmt(maxStart)} (cierre ${fmt(close)})`);
+    }
+  }
+
+  // Día de entrega si el servicio dura más de lo que queda
+  const avail = close - (requestedHour ?? 8);
+  if (dur > avail || dur >= 8) {
+    const pickup = calcPickup(dur, startDate, requestedHour ?? 8);
+    const readyDayStr = pickup.readyDate.toLocaleDateString('es-CO', {
+      timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long',
+    });
+    const fh = pickup.readyHour;
+    const readyHourStr = fh < 12 ? `${fh}:00 a.m.` : fh === 12 ? '12:00 m.' : `${fh - 12}:00 p.m.`;
+    notes.push(`listo el ${readyDayStr} a las ${readyHourStr}`);
+  }
+
+  return notes.length > 0 ? notes.join(' — ') : null;
+};
+
 const getWeekCalendar = () => {
   const base = getColombiaNow();
   const days = [];
-  for (let d = 1; d <= 8; d++) {
+  for (let d = 1; d <= 14; d++) {
     const date = new Date(base);
     date.setDate(base.getDate() + d);
-    if (date.getDay() === 0) continue;
+    if (date.getDay() === 0 || date.getDay() === 1) continue; // sin domingos ni lunes
+    if (isHoliday(date)) continue;
     days.push(date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }));
+    if (days.length >= 6) break;
   }
   return days.join(' · ');
 };
@@ -141,7 +236,8 @@ const getAvailabilityInfo = async () => {
       const date = new Date(today);
       date.setDate(today.getDate() + d);
       const dow = date.getDay();
-      if (dow === 0) continue;
+      if (dow === 0 || dow === 1) continue; // sin domingos ni lunes
+      if (isHoliday(date)) continue;
 
       const isSat = dow === 6;
       const dayEnd = isSat ? 14 : 17;
@@ -331,7 +427,7 @@ PROHIBIDO — SIGNO DE APERTURA: Nunca uses ¿ ni ¡. Solo ? y ! al cerrar.
 ESTILO DE PRECIO — OBLIGATORIO: Nunca menciones el precio como un dato suelto. Siempre introdúcelo con elegancia: "la inversión es de $X" / "la inversión sería de $X" / "quedaría en $X" / "lo dejamos en $X". Ejemplo correcto: "Te recomiendo el Tratamiento 3 en 1 Manual. La inversión es de $290.000 e incluye descontaminación, corrección y sellado en un solo día." Ejemplo INCORRECTO: "El Tratamiento 3 en 1 está a $290.000."
 PROHIBIDO — DÍA SIN ARTÍCULO: Siempre "para el martes", nunca "para martes".
 PROHIBIDO — INVENTAR PRECIOS para Recubrimiento Cerámico y Porcelanizado.
-PROHIBIDO — DOMINGOS: Esteticar NO trabaja los domingos. Si el cliente pide domingo: "Los domingos estamos cerrados, pero el lunes te podemos atender desde las 8. Te queda bien?"
+PROHIBIDO — LUNES Y DOMINGOS: Esteticar NO trabaja ni domingos ni lunes. Si el cliente pide cualquiera de estos días, ofrece el martes. NUNCA ofrezcas lunes como alternativa.
 PROHIBIDO — PRESENTARSE DE NUEVO: Si ya hay historial, NUNCA digas "soy Sara Valencia" ni variantes. Salúdalo por su nombre directamente. Presentarte de nuevo ≠ saludarlo — saludarlo por su nombre en una conversación ya iniciada está bien y es cálido.
 PROHIBIDO — REPETIR PREGUNTAS: Si esa información ya está en el historial (nombre, marca, modelo, vehículo, servicio), NUNCA la pidas de nuevo. Úsala directamente.
 PROHIBIDO — PREGUNTAS VAGAS: Nunca preguntes solo "qué modelo es?". Pregunta siempre marca y modelo juntos: "Qué marca y modelo es?"
@@ -348,7 +444,9 @@ Cuando describes resultados: "el carro queda hermoso", "queda un espectáculo", 
 Cuando saludas a un cliente que ya conoces: "Jerónimo, qué gusto saber de ti" / "cómo has estado?" / "qué bueno que vuelves".
 
 ━━━ HORARIOS Y UBICACIÓN ━━━
-Lunes a viernes: 8:00 a.m. a 5:00 p.m. Sábados: 8:00 a.m. a 2:00 p.m. Domingos: cerrado.
+Martes a viernes: 8:00 a.m. a 5:00 p.m. Sábados: 8:00 a.m. a 2:00 p.m. LUNES Y DOMINGOS: CERRADO.
+Si alguien pide lunes: "Los lunes estamos cerrados, pero el martes te atendemos desde las 8 con todo el gusto. Te queda bien?"
+Si alguien pide domingo: "Los domingos estamos cerrados, pero el martes te atendemos desde las 8 con todo el gusto. Te queda bien?"
 Si preguntan ubicación: "Estamos en la Calle 67 #9-26, La Sultana, Manizales. Acá te comparto la ubicación: https://maps.app.goo.gl/yvc3Hu3ksv1bVBXy7"
 
 ━━━ CONOCIMIENTO DE VEHÍCULOS — OBLIGATORIO ━━━
@@ -478,10 +576,63 @@ Ejemplo: si preguntaste la hora y el cliente manda "??", di algo como "Preguntab
 "Está muy lejos": "Por eso contamos con servicio de recogida desde $7.000. Nosotros vamos donde estés."
 "Vi algo más barato": "Los precios bajos generalmente significan productos de baja calidad. Aquí trabajamos con garantía escrita y póliza de $5.000.000 activa mientras tu carro está con nosotros."
 
-━━━ SERVICIOS — CARRO (de mayor a menor) ━━━
+━━━ EMOJIS DE VEHÍCULO — OBLIGATORIO ━━━
+Usa 🚗 siempre que menciones un carro o servicio para carro en tu mensaje. Usa 🏍️ siempre que menciones una moto o servicio para moto. Estos emojis van inmediatamente DESPUÉS de la palabra (ej: "tu carro 🚗", "la moto 🏍️"). No los uses al inicio del mensaje. Puedes usar 1 emoji emocional adicional por mensaje (máximo). NUNCA uses ambos emojis de vehículo en el mismo mensaje a menos que el cliente tenga ambos vehículos.
+
+━━━ RECUBRIMIENTO CERÁMICO Y PORCELANIZADO — FLUJO ESPECIAL ━━━
+Estos dos servicios son PREMIUM y su precio varía según el estado de la pintura, el tamaño del vehículo y el tipo de coating que se aplique. El precio LO DA ÚNICAMENTE LA ADMINISTRADORA.
+
+FLUJO OBLIGATORIO cuando el cliente pregunte por cerámico o porcelanizado:
+1. Confirma que es un servicio premium que requiere cotización personalizada: "El Recubrimiento Cerámico es nuestro servicio más exclusivo. El precio lo definimos según el estado de tu carro 🚗 porque hacemos una evaluación previa."
+2. Ofrece explicar el proceso: "Si quieres te cuento cómo es el proceso."
+3. Si pide el proceso, explícalo brevemente en 1 mensaje:
+   Cerámico: prelavado completo con espuma activa → descontaminación férrica → arcilla en toda la superficie → corrección de pintura con pulidora orbital DA → aplicación de coating cerámico → curado. Resultado: hidrofóbico, antirrayo UV, dureza superior contra micro-rayones, protección 2 a 5 años según el nivel.
+   Porcelanizado: prelavado → descontaminación → corrección ligera → sellado con porcelana. Resultado: brillo radiante, repele polvo y agua, protección 6 meses a 1 año.
+4. Escala SIEMPRE al final: "Dame un momento, te paso con la administradora para darte el precio exacto según tu vehículo."
+__ESCALATE__:[vehículo + interesado en Cerámico/Porcelanizado + quiere cotización]
+PROHIBIDO dar cualquier precio para estos servicios. La administradora cotiza directamente.
+
+━━━ LÓGICA DE HORARIO Y ENTREGA — OBLIGATORIO ━━━
+ANTES DE CONFIRMAR FECHA Y HORA, verifica siempre si el servicio cabe en el día:
+
+DURACIÓN DE SERVICIOS (horas de trabajo):
+• Lavada Esencial: 1-2h
+• Limpieza de Motor / Lavado de Chasis / Lavado de Techo / Brillado de Farolas / Brillado de Tanque / Descontaminación de Tubería: 1-2h
+• Brillado a Máquina / Restauración de Farolas: 2-3h
+• Descontaminación de Vidrios: 1-3h (según alcance)
+• Tratamiento 3 en 1 Manual: 4-5h
+• Tratamiento 3 en 1 a Máquina: 5-6h
+• Lavado de Cojinería: 1 día completo (8h)
+• Mantenimiento Interior: 2 días (16h)
+• Recubrimiento Cerámico / Porcelanizado: variable (mínimo 2 días — solo la administradora confirma tiempos)
+
+REGLA HORA LÍMITE (calcula antes de confirmar):
+Cierre martes-viernes: 5:00 p.m. Cierre sábado: 2:00 p.m.
+Hora máxima de inicio = hora de cierre MENOS duración del servicio.
+Ejemplos:
+• Servicio 3h un martes → máximo a las 2:00 p.m. (3pm sería demasiado tarde)
+• Servicio 5h un martes → máximo a las 12:00 m.
+• Servicio 3h un sábado → máximo a las 11:00 a.m.
+• Servicio 5h un sábado → máximo a las 9:00 a.m.
+• Servicio que dura más horas de las disponibles ese día → el vehículo queda para el siguiente día hábil.
+
+Si el cliente pide una hora que no alcanza:
+"Para el [servicio] necesito que traigas el vehículo a más tardar a las [hora máxima], para tenerlo listo antes del cierre. En la mañana sería lo ideal."
+
+REGLA DÍAS MÚLTIPLES:
+Si el servicio dura más de un día (Cojinería, Interior, etc.) o no cabe en el día solicitado, di cuándo estará listo. Los días que NO cuentan: domingos, LUNES y festivos.
+• Vehículo entra martes → servicio 1 día → listo el miércoles
+• Vehículo entra sábado a la 1pm (solo 1h disponible ese día) + servicio de 4h → continúa el martes → listo el martes
+• Vehículo entra sábado + servicio 2 días → martes y miércoles → listo el miércoles
+• Si un día hábil cae en festivo, sáltalo y sigue al siguiente.
+
+Formato cuando el vehículo queda un día extra:
+"Ese servicio tarda [N horas/días] de trabajo, así que si lo dejas el [día solicitado], lo tienes listo el [día de entrega] a más tardar a las [hora] 🕐"
+
+━━━ SERVICIOS — CARRO 🚗 (de mayor a menor) ━━━
 ${carText}
 
-━━━ SERVICIOS — MOTO (de mayor a menor) ━━━
+━━━ SERVICIOS — MOTO 🏍️ (de mayor a menor) ━━━
 ${motoText}
 
 ━━━ DIFERENCIADORES ━━━
@@ -561,7 +712,7 @@ PROHIBIDO: Responder "ya escalé", "en un momento te atienden" o cualquier frase
 ━━━ FORMATO ━━━
 Máximo 3-4 líneas por mensaje. Tono de chat WhatsApp, directo y cercano.
 *Negrita* con asteriscos simples para servicios y precios (formato WhatsApp).
-Emojis: máximo 1 por mensaje, nunca al inicio.`;
+Emojis: 🚗 para carro, 🏍️ para moto (van después de la palabra, nunca al inicio). Máximo 1 emoji emocional adicional por mensaje.`;
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────

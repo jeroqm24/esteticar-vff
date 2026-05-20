@@ -537,6 +537,25 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   const defaultService = "Lavada Esencial Carro";
   const toDateInput = (d) => format(d instanceof Date ? d : new Date(), "yyyy-MM-dd");
 
+  const SERVICE_DURATION_DISPLAY = {
+    "Lavada Esencial Carro": "1-2 horas",
+    "Brillado a Máquina": "2-3 horas",
+    "Lavado de Chasis": "2 horas",
+    "Lavado de Techo y Parasoles": "1-2 horas",
+    "Descontaminación de Vidrios (todos)": "1-3 horas",
+    "Descontaminación de Vidrios (parabrisas)": "1 hora",
+    "Restauración de Farolas": "2-3 horas",
+    "Lavado de Cojinería": "1 día completo",
+    "Mantenimiento Interior": "2 días",
+    "Tratamiento 3 en 1 Manual": "4-5 horas",
+    "Tratamiento 3 en 1 a Máquina": "5-6 horas",
+    "Limpieza Técnica de Motor": "2 horas",
+    "Lavada Esencial Moto": "1-2 horas",
+    "Brillado de Farolas": "1 hora",
+    "Brillado de Tanque": "1-2 horas",
+    "Descontaminación de Tubería": "1-2 horas",
+  };
+
   const [form, setForm] = useState({
     clientName: "",
     clientPhone: "",
@@ -548,11 +567,13 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
     manualPrice: "",
     selectedDate: toDateInput(day || new Date()),
     traslado: "",
+    durationHours: "",
   });
 
   const selectedDay = form.selectedDate ? new Date(form.selectedDate + "T12:00:00") : (day || new Date());
   const rawPrice = SERVICE_PRICES[form.service];
   const isCotizacion = rawPrice === null;
+  const isVariableDuration = form.service?.includes("Recubrimiento") || form.service?.includes("Porcelanizado");
 
   // Capacity enforcement
   const countAtHour = (hour) => {
@@ -575,7 +596,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   const hasDiscount = form.discount > 0;
 
   const handleServiceChange = (service) => {
-    setForm(f => ({ ...f, service, discount: 0, manualPrice: "" }));
+    setForm(f => ({ ...f, service, discount: 0, manualPrice: "", durationHours: "" }));
   };
 
   const handleVehicleChange = (vehicleType) => {
@@ -604,6 +625,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
       priceDisplay: (isCotizacion && !basePrice) ? "Por cotización" : formatCOP(finalPrice),
       discount: form.discount,
       traslado: form.traslado || null,
+      duration_hours: isVariableDuration ? (parseInt(form.durationHours) || null) : null,
       confirmationCode: `EST-M${Math.floor(Math.random() * 9000) + 1000}`,
       channel: "manual",
       id: Math.random().toString(36).substr(2, 9),
@@ -735,6 +757,39 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
               >
                 {allServices.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
+            </div>
+          </div>
+
+          {/* Duration row */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <div className="flex-1 flex items-center gap-2 flex-wrap">
+              {isVariableDuration ? (
+                <>
+                  <span className="font-ui text-[10px] tracking-[0.15em] uppercase text-ec-text-muted">Duración estimada</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="96"
+                    value={form.durationHours}
+                    onChange={e => setForm(f => ({ ...f, durationHours: e.target.value }))}
+                    placeholder="Horas"
+                    className="w-20 font-body text-sm text-ec-dark bg-ec-cream px-2 py-1 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 text-center"
+                    style={{ fontSize: '16px' }}
+                  />
+                  <span className="font-body text-sm text-ec-text-muted">horas</span>
+                  <span className="font-ui text-[9px] tracking-[0.1em] uppercase px-2 py-0.5 bg-purple-50 text-purple-500 border border-purple-200 rounded-full">Según cotización</span>
+                </>
+              ) : (
+                <>
+                  <span className="font-ui text-[10px] tracking-[0.15em] uppercase text-ec-text-muted">Duración</span>
+                  <span className="font-body text-sm text-ec-dark font-medium">
+                    {SERVICE_DURATION_DISPLAY[form.service] || "Consultar"}
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
