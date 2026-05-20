@@ -606,8 +606,9 @@ const sendInstagramMessage = async (recipientId, text) => {
     console.error('[IG] Falta FB_PAGE_TOKEN para responder Instagram DMs');
     return;
   }
+  const pageId = process.env.FB_PAGE_ID || 'me';
   try {
-    const r = await fetch(`https://graph.facebook.com/v20.0/me/messages`, {
+    const r = await fetch(`https://graph.facebook.com/v20.0/${pageId}/messages`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${FB_PAGE_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
