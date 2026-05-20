@@ -592,7 +592,8 @@ export default function AdminConversations({ initialPhone }) {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center justify-between gap-2 mb-0.5">
+                      {/* Fila 1: nombre + tiempo */}
+                      <div className="flex items-center justify-between gap-2 mb-1">
                         <span className={`font-ui text-[13px] font-semibold truncate ${unread > 0 ? "text-ec-dark" : "text-ec-dark/80"}`}>
                           {getDisplayName(conv)}
                         </span>
@@ -603,14 +604,21 @@ export default function AdminConversations({ initialPhone }) {
                           <span className="text-[11px] text-ec-text-muted font-ui whitespace-nowrap">{timeAgo(conv.updated_at)}</span>
                         </div>
                       </div>
+                      {/* Fila 2: canal + pausado */}
                       <div className="flex items-center gap-1.5 mb-1">
                         <ChannelBadge phone={conv.phone} />
                         {conv.bot_paused && (
                           <span className="text-[9px] font-ui text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-full">⏸ Pausado</span>
                         )}
-                        {conv.lead_type && <LeadBadge type={conv.lead_type} />}
-                        {conv.remarketing_status && <RemarkBadge status={conv.remarketing_status} />}
                       </div>
+                      {/* Fila 3: tipo de lead + estado */}
+                      {(conv.lead_type || conv.remarketing_status) && (
+                        <div className="flex items-center gap-1.5 mb-1">
+                          {conv.lead_type && <LeadBadge type={conv.lead_type} />}
+                          {conv.remarketing_status && <RemarkBadge status={conv.remarketing_status} />}
+                        </div>
+                      )}
+                      {/* Fila 4: preview */}
                       <p className="text-[12px] text-ec-text-muted font-body truncate leading-snug">{getPreview(conv.history)}</p>
                     </div>
                   </div>
