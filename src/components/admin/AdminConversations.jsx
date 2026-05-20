@@ -518,7 +518,8 @@ export default function AdminConversations({ initialPhone }) {
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Buscar por nombre o teléfono…"
-                className="w-full pl-9 pr-3 py-2.5 text-[13px] border border-black/[0.08] rounded-xl bg-[#F0F2F5] focus:border-ec-gold focus:outline-none font-body"
+                className="w-full pl-9 pr-3 py-2.5 border border-black/[0.08] rounded-xl bg-[#F0F2F5] focus:border-ec-gold focus:outline-none font-body"
+                style={{ fontSize: '16px' }}
               />
             </div>
             {/* Filter tabs */}
@@ -809,8 +810,8 @@ export default function AdminConversations({ initialPhone }) {
                     onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
                     placeholder={selected.bot_paused ? "Escribe tu respuesta…" : "Escribe (el bot seguirá activo)…"}
                     rows={1}
-                    className="flex-1 px-4 py-2.5 text-[14px] rounded-2xl border border-black/[0.08] bg-white focus:border-[#128C7E] focus:outline-none font-body resize-none leading-relaxed"
-                    style={{ minHeight: "40px", maxHeight: "120px", overflow: "auto" }}
+                    className="flex-1 px-4 py-2.5 rounded-2xl border border-black/[0.08] bg-white focus:border-[#128C7E] focus:outline-none font-body resize-none leading-relaxed"
+                    style={{ fontSize: '16px', minHeight: "40px", maxHeight: "120px", overflow: "auto" }}
                   />
 
                   <button
