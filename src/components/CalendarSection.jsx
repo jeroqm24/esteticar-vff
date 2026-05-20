@@ -746,8 +746,8 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                 className="flex-shrink-0 font-body text-sm text-ec-dark bg-ec-cream px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer"
                 style={{ fontSize: '16px' }}
               >
-                <option>Carro</option>
-                <option>Moto</option>
+                <option value="Carro">🚗 Carro</option>
+                <option value="Moto">🏍️ Moto</option>
               </select>
               <select
                 value={form.service}
