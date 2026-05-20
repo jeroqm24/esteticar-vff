@@ -607,7 +607,7 @@ const sendInstagramMessage = async (recipientId, text) => {
     return;
   }
   try {
-    const r = await fetch(`https://graph.facebook.com/v20.0/${IG_USER_ID}/messages`, {
+    const r = await fetch(`https://graph.instagram.com/v21.0/${IG_USER_ID}/messages`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${IG_TOKEN}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
