@@ -220,8 +220,12 @@ function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketin
       initial={{ opacity: 0, x: 20 }}
       animate={{ opacity: 1, x: 0 }}
       exit={{ opacity: 0, x: 20 }}
-      className="border border-black/[0.06] bg-white rounded-sm shadow-[0_8px_40px_rgba(0,0,0,0.08)] sticky top-28 overflow-hidden"
+      className="border border-black/[0.06] bg-white rounded-t-2xl lg:rounded-sm shadow-[0_-4px_40px_rgba(0,0,0,0.12)] lg:shadow-[0_8px_40px_rgba(0,0,0,0.08)] lg:sticky lg:top-28 overflow-hidden"
     >
+      {/* Drag handle — móvil only */}
+      <div className="lg:hidden flex justify-center pt-3 pb-1">
+        <div className="w-10 h-1 bg-black/[0.12] rounded-full" />
+      </div>
       {/* Header */}
       <div className="p-6 border-b border-black/[0.06]">
         <div className="flex items-start justify-between">
@@ -651,16 +655,30 @@ export default function AdminClients() {
           {/* Panel de detalle */}
           <AnimatePresence>
             {selected && (
-              <ClientDetail
-                client={selected}
-                apptCount={apptCounts[selected.phone] || 0}
-                onClose={() => setSelected(null)}
-                onUpdateStatus={updateStatus}
-                onRemarketing={markRemarketing}
-                onDelete={deleteClient}
-                onToggleBot={setBotPaused}
-                onUpdateCustomFields={updateCustomFields}
-              />
+              <>
+                {/* Backdrop móvil */}
+                <motion.div
+                  key="client-backdrop"
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.2 }}
+                  className="lg:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+                  onClick={() => setSelected(null)}
+                />
+                <div className="fixed lg:relative inset-x-0 bottom-0 lg:inset-auto z-50 lg:z-auto max-h-[90dvh] lg:max-h-none overflow-y-auto lg:overflow-visible">
+                  <ClientDetail
+                    client={selected}
+                    apptCount={apptCounts[selected.phone] || 0}
+                    onClose={() => setSelected(null)}
+                    onUpdateStatus={updateStatus}
+                    onRemarketing={markRemarketing}
+                    onDelete={deleteClient}
+                    onToggleBot={setBotPaused}
+                    onUpdateCustomFields={updateCustomFields}
+                  />
+                </div>
+              </>
             )}
           </AnimatePresence>
         </div>

@@ -605,10 +605,10 @@ export default function AdminConversations({ initialPhone }) {
                     </div>
                   </div>
 
-                  {/* Delete — long-press area, solo en hover (desktop) */}
+                  {/* Delete — siempre visible en móvil, hover en desktop */}
                   <button
                     onClick={e => { e.stopPropagation(); setDeleteModal(conv); }}
-                    className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 transition-opacity w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-600 rounded-full hover:bg-red-50"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity w-7 h-7 flex items-center justify-center text-red-400 hover:text-red-600 rounded-full hover:bg-red-50"
                     title="Eliminar"
                   >
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg>

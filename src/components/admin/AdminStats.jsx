@@ -69,7 +69,7 @@ function StatCard({ label, value, sub, index, sparkData, trend }) {
       initial={{ opacity: 0, y: 30 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.1, duration: 0.6 }}
-      className="p-8 border border-black/[0.06] bg-white rounded-sm shadow-[0_2px_20px_rgba(0,0,0,0.04)] relative overflow-hidden group hover:border-ec-gold/20 transition-all duration-500"
+      className="p-5 sm:p-8 border border-black/[0.06] bg-white rounded-sm shadow-[0_2px_20px_rgba(0,0,0,0.04)] relative overflow-hidden group hover:border-ec-gold/20 transition-all duration-500"
     >
       <div className="flex items-start justify-between mb-4">
         <p className="font-ui text-[10px] tracking-[0.3em] text-ec-text-muted uppercase">{label}</p>
@@ -80,7 +80,7 @@ function StatCard({ label, value, sub, index, sparkData, trend }) {
         )}
       </div>
       <div className="flex items-end justify-between">
-        <p className="font-heading text-5xl font-light text-ec-gold">{value}</p>
+        <p className="font-heading text-4xl sm:text-5xl font-light text-ec-gold">{value}</p>
         {sparkData && sparkData.length > 1 && (
           <Sparkline data={sparkData} />
         )}
@@ -172,11 +172,11 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
   return (
     <div className="space-y-12">
       {/* Header */}
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-6">
-        <img src={BRAND.logo} alt="" className="h-14 object-contain" />
-        <div>
-          <h2 className="font-heading text-3xl text-ec-dark">Centro de Control</h2>
-          <p className="font-body text-sm text-ec-text-muted capitalize font-light">
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-4">
+        <img src={BRAND.logo} alt="" className="h-10 sm:h-14 object-contain flex-shrink-0" />
+        <div className="min-w-0">
+          <h2 className="font-heading text-2xl sm:text-3xl text-ec-dark">Centro de Control</h2>
+          <p className="font-body text-xs sm:text-sm text-ec-text-muted capitalize font-light truncate">
             {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
           </p>
         </div>
@@ -224,9 +224,9 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
         transition={{ delay: 0.4 }}
         className="border border-black/[0.06] bg-white overflow-hidden rounded-sm shadow-[0_4px_30px_rgba(0,0,0,0.06)]"
       >
-        <div className="px-8 py-6 border-b border-black/[0.06] flex items-center justify-between">
+        <div className="px-4 py-4 sm:px-8 sm:py-6 border-b border-black/[0.06] flex items-center justify-between gap-3">
           <h3 className="font-heading text-xl text-ec-dark">Actividad Reciente</h3>
-          <span className="font-ui text-[10px] tracking-[0.2em] text-ec-text-muted uppercase">Últimos movimientos</span>
+          <span className="font-ui text-[10px] tracking-[0.2em] text-ec-text-muted uppercase hidden sm:block">Últimos movimientos</span>
         </div>
         <div className="divide-y divide-black/[0.04]">
           {stats.recent.length === 0 ? (
@@ -246,7 +246,7 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
             </div>
           ) : (
             stats.recent.map((a) => (
-              <div key={a.id} className="px-8 py-6 flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-8 hover:bg-ec-cream/50 transition-colors">
+              <div key={a.id} className="px-4 py-4 sm:px-8 sm:py-5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-8 hover:bg-ec-cream/50 transition-colors">
                 <div className="flex-1">
                   <p className="font-heading text-lg text-ec-dark">{a.client_name}</p>
                   <p className="font-body text-xs mt-1 text-ec-text-muted font-light">{a.client_email}</p>

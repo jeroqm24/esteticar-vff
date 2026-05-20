@@ -480,7 +480,7 @@ export default function AdminAppointments() {
                           )}
                           <button
                             onClick={e => { e.stopPropagation(); setDeleteTarget(a); }}
-                            className="opacity-0 group-hover:opacity-100 transition-opacity w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600"
+                            className="sm:opacity-0 sm:group-hover:opacity-100 transition-opacity w-8 h-8 flex items-center justify-center rounded-lg text-red-400 hover:bg-red-50 hover:text-red-600"
                             title="Eliminar cita"
                           >
                             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
@@ -500,14 +500,30 @@ export default function AdminAppointments() {
         {/* Detail panel */}
         <AnimatePresence>
           {showDetail && selected && (
-            <motion.div
-              initial={{ opacity: 0, x: 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: 24 }}
-              transition={{ duration: 0.3 }}
-              className="xl:col-span-2"
-            >
-              <div className="bg-white rounded-2xl border border-black/[0.07] shadow-[0_8px_40px_rgba(0,0,0,0.08)] sticky top-6 overflow-hidden">
+            <>
+              {/* Backdrop móvil */}
+              <motion.div
+                key="appt-backdrop"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.2 }}
+                className="xl:hidden fixed inset-0 z-40 bg-black/50 backdrop-blur-sm"
+                onClick={closeDetail}
+              />
+              <motion.div
+                key="appt-panel"
+                initial={{ opacity: 0, y: 40 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: 40 }}
+                transition={{ duration: 0.3, ease: [0.32, 0.72, 0, 1] }}
+                className="xl:col-span-2 fixed xl:relative inset-x-0 bottom-0 xl:inset-auto z-50 xl:z-auto max-h-[90dvh] xl:max-h-none overflow-y-auto xl:overflow-visible"
+              >
+              <div className="bg-white rounded-t-2xl xl:rounded-2xl border border-black/[0.07] shadow-[0_-4px_40px_rgba(0,0,0,0.12)] xl:shadow-[0_8px_40px_rgba(0,0,0,0.08)] xl:sticky xl:top-6 overflow-hidden">
+                {/* Drag handle — móvil only */}
+                <div className="xl:hidden flex justify-center pt-3 pb-1">
+                  <div className="w-10 h-1 bg-black/[0.12] rounded-full" />
+                </div>
                 {/* Top color bar */}
                 <div className="h-2 w-full" style={{ background: (STATUS_COLORS[selected.status] || STATUS_COLORS.pending).bar }} />
 
@@ -675,7 +691,8 @@ export default function AdminAppointments() {
                   </div>
                 </div>
               </div>
-            </motion.div>
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
       </div>
