@@ -155,10 +155,12 @@ function StatCard({ label, count, sub, color, icon }) {
 // ─── Lead card ────────────────────────────────────────────────────
 
 const REMARK_CFG = {
-  efectivo:      { label: "Efectivo",      color: "#16A34A", bg: "#F0FDF4", border: "#86EFAC" },
-  converted:     { label: "Efectivo",      color: "#16A34A", bg: "#F0FDF4", border: "#86EFAC" },
-  potencial:     { label: "Potencial",     color: "#C2410C", bg: "#FFF7ED", border: "#FED7AA" },
-  desinteresado: { label: "Desinteresado", color: "#64748B", bg: "#F8FAFC", border: "#CBD5E1" },
+  efectivo:        { label: "Efectivo",        color: "#16A34A", bg: "#F0FDF4", border: "#86EFAC" },
+  converted:       { label: "Efectivo",        color: "#16A34A", bg: "#F0FDF4", border: "#86EFAC" },
+  potencial:       { label: "Potencial",       color: "#C2410C", bg: "#FFF7ED", border: "#FED7AA" },
+  desinteresado:   { label: "Desinteresado",   color: "#64748B", bg: "#F8FAFC", border: "#CBD5E1" },
+  otro:            { label: "Otro",            color: "#9CA3AF", bg: "#F9FAFB", border: "#E5E7EB" },
+  sin_clasificar:  { label: "Sin clasificar",  color: "#6366F1", bg: "#EEF2FF", border: "#C7D2FE" },
 };
 
 const LEAD_CFG = {
@@ -168,14 +170,23 @@ const LEAD_CFG = {
   billetudo:  { emoji: "💸", label: "Billetudo"  },
 };
 
-function LeadCard({ conv, slot }) {
+function LeadCard({ conv, slot, onStatusChange }) {
   const [expanded, setExpanded] = useState(false);
-  const rm = REMARK_CFG[conv.remarketing_status] || REMARK_CFG.potencial;
+  const [updating, setUpdating] = useState(false);
+  const rm = REMARK_CFG[conv.remarketing_status] || REMARK_CFG.sin_clasificar;
   const lt = conv.lead_type ? LEAD_CFG[conv.lead_type] : null;
   const preview = getPreview(conv.history);
   const lastRemarkEntry = lastRemarketingEntry(conv.history);
   const isPotencial = conv.remarketing_status === "potencial";
+  const isSinClasificar = !conv.remarketing_status;
   const history = Array.isArray(conv.history) ? conv.history : [];
+
+  const handleQuickStatus = async (status) => {
+    setUpdating(true);
+    await db.conversations.update(conv.phone, { remarketing_status: status });
+    onStatusChange?.(conv.phone, status);
+    setUpdating(false);
+  };
 
   const visibleMessages = history.filter(m => ["user", "assistant", "admin", "remarketing"].includes(m.role));
 
@@ -221,6 +232,28 @@ function LeadCard({ conv, slot }) {
           </div>
 
           <p className="font-body text-xs text-ec-text-muted mt-1.5 truncate">{preview}</p>
+
+          {/* Clasificación rápida — solo sin clasificar */}
+          {isSinClasificar && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+              <span className="font-ui text-[9px] text-ec-text-muted uppercase tracking-wider self-center">Clasificar:</span>
+              {[
+                { v: "potencial",     label: "🔵 Potencial"     },
+                { v: "efectivo",      label: "🟢 Efectivo"      },
+                { v: "desinteresado", label: "⚫ Desinteresado"  },
+                { v: "otro",          label: "⚪ Otro"           },
+              ].map(opt => (
+                <button
+                  key={opt.v}
+                  onClick={() => handleQuickStatus(opt.v)}
+                  disabled={updating}
+                  className="px-2 py-0.5 rounded-full font-ui text-[9px] border border-black/[0.1] bg-white hover:border-ec-gold hover:text-ec-gold transition-all disabled:opacity-40"
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          )}
 
           {/* Remarketing timing — solo potenciales */}
           {isPotencial && (
@@ -328,11 +361,12 @@ function LeadCard({ conv, slot }) {
 // ─── Main component ────────────────────────────────────────────────
 
 const FILTERS = [
-  { id: "all",           label: "Todos"          },
-  { id: "potencial",     label: "Potenciales"    },
-  { id: "efectivo",      label: "Efectivos"      },
-  { id: "desinteresado", label: "Desinteresados" },
-  { id: "otro",          label: "Otros"          },
+  { id: "all",            label: "Todos"           },
+  { id: "sin_clasificar", label: "Sin clasificar"  },
+  { id: "potencial",      label: "Potenciales"     },
+  { id: "efectivo",       label: "Efectivos"       },
+  { id: "desinteresado",  label: "Desinteresados"  },
+  { id: "otro",           label: "Otros"           },
 ];
 
 export default function AdminLeads() {
@@ -347,10 +381,8 @@ export default function AdminLeads() {
   const load = useCallback(async () => {
     setLoading(true);
     const data = await db.conversations.list();
-    // Todos los que tienen estado asignado
-    const leads = data.filter(c =>
-      c.remarketing_status && c.remarketing_status !== null
-    );
+    // Todos los que tienen historial (incluyendo sin clasificar)
+    const leads = data;
     setConvs(leads);
     setLoading(false);
   }, []);
@@ -363,16 +395,22 @@ export default function AdminLeads() {
     return () => clearInterval(t);
   }, []);
 
-  const efectivos      = convs.filter(c => c.remarketing_status === "efectivo" || c.remarketing_status === "converted");
-  const potenciales    = convs.filter(c => c.remarketing_status === "potencial");
-  const desinteresados = convs.filter(c => c.remarketing_status === "desinteresado");
-  const otros          = convs.filter(c => c.remarketing_status === "otro");
+  const efectivos        = convs.filter(c => c.remarketing_status === "efectivo" || c.remarketing_status === "converted");
+  const potenciales      = convs.filter(c => c.remarketing_status === "potencial");
+  const desinteresados   = convs.filter(c => c.remarketing_status === "desinteresado");
+  const otros            = convs.filter(c => c.remarketing_status === "otro");
+  const sinClasificar    = convs.filter(c => !c.remarketing_status);
+
+  const handleStatusChange = (phone, newStatus) => {
+    setConvs(prev => prev.map(c => c.phone === phone ? { ...c, remarketing_status: newStatus } : c));
+  };
 
   const fromTs = dateFrom ? new Date(dateFrom).getTime() : null;
   const toTs   = dateTo   ? new Date(dateTo + "T23:59:59").getTime() : null;
 
   const filtered = convs.filter(c => {
     const matchFilter = filter === "all" ? true
+      : filter === "sin_clasificar" ? !c.remarketing_status
       : filter === "efectivo" ? (c.remarketing_status === "efectivo" || c.remarketing_status === "converted")
       : c.remarketing_status === filter;
     if (!matchFilter) return false;
@@ -472,35 +510,12 @@ export default function AdminLeads() {
       </div>
 
       {/* Stat cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <StatCard
-          label="Efectivos"
-          count={efectivos.length}
-          sub="Convirtieron en cita"
-          color="#16A34A"
-          icon="✅"
-        />
-        <StatCard
-          label="Potenciales"
-          count={potenciales.length}
-          sub={`Próximo contacto: ${slot.text}`}
-          color="#C2410C"
-          icon="🔥"
-        />
-        <StatCard
-          label="Desinteresados"
-          count={desinteresados.length}
-          sub="Sin respuesta tras remarketing"
-          color="#64748B"
-          icon="💤"
-        />
-        <StatCard
-          label="Otros"
-          count={otros.length}
-          sub="No son clientes potenciales"
-          color="#9CA3AF"
-          icon="⚪"
-        />
+      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+        <StatCard label="Sin clasificar" count={sinClasificar.length} sub="Pendientes de revisar" color="#6366F1" icon="❓" />
+        <StatCard label="Potenciales"    count={potenciales.length}   sub={`Próximo contacto: ${slot.text}`} color="#C2410C" icon="🔥" />
+        <StatCard label="Efectivos"      count={efectivos.length}     sub="Convirtieron en cita" color="#16A34A" icon="✅" />
+        <StatCard label="Desinteresados" count={desinteresados.length} sub="Sin respuesta" color="#64748B" icon="💤" />
+        <StatCard label="Otros"          count={otros.length}         sub="No son clientes" color="#9CA3AF" icon="⚪" />
       </div>
 
       {/* Filters */}
@@ -510,6 +525,7 @@ export default function AdminLeads() {
             : f.id === "efectivo" ? efectivos.length
             : f.id === "potencial" ? potenciales.length
             : f.id === "otro" ? otros.length
+            : f.id === "sin_clasificar" ? sinClasificar.length
             : desinteresados.length;
           return (
             <button
@@ -546,7 +562,7 @@ export default function AdminLeads() {
         <div className="space-y-3">
           <AnimatePresence>
             {filtered.map(conv => (
-              <LeadCard key={conv.phone} conv={conv} slot={slot} />
+              <LeadCard key={conv.phone} conv={conv} slot={slot} onStatusChange={handleStatusChange} />
             ))}
           </AnimatePresence>
         </div>
