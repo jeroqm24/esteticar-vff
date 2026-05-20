@@ -247,6 +247,7 @@ export default function AdminConfig() {
               onKeyDown={e => e.key === "Enter" && handleAdd()}
               placeholder="Nombre del empleado"
               className="flex-1 px-4 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm bg-ec-cream focus:border-ec-gold focus:outline-none"
+              style={{ fontSize: '16px' }}
             />
             <button onClick={handleAdd} disabled={!newName.trim()}
               className="px-5 py-2.5 rounded-sm font-ui text-[11px] tracking-widest uppercase text-white transition-all disabled:opacity-40"
@@ -296,6 +297,7 @@ export default function AdminConfig() {
             <input value={portfolioUrl} onChange={e => setPortfolioUrl(e.target.value)}
               placeholder="https://heyzine.com/flip-book/..."
               className="w-full px-4 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm bg-ec-cream focus:border-ec-gold focus:outline-none"
+              style={{ fontSize: '16px' }}
             />
           </div>
 
@@ -348,9 +350,11 @@ export default function AdminConfig() {
               <input value={newSvcName} onChange={e => setNewSvcName(e.target.value)}
                 placeholder="Nombre del servicio"
                 className="flex-1 px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm bg-ec-cream focus:border-ec-gold focus:outline-none"
+                style={{ fontSize: '16px' }}
               />
               <select value={newSvcVehicle} onChange={e => setNewSvcVehicle(e.target.value)}
-                className="px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm bg-ec-cream focus:border-ec-gold focus:outline-none">
+                className="px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm bg-ec-cream focus:border-ec-gold focus:outline-none"
+                style={{ fontSize: '16px' }}>
                 <option value="car">Carro</option>
                 <option value="moto">Moto</option>
               </select>
@@ -360,6 +364,7 @@ export default function AdminConfig() {
                 onKeyDown={e => e.key === "Enter" && handleAddService()}
                 placeholder="Precio (ej: $350.000 o Bajo cotización)"
                 className="flex-1 px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm bg-ec-cream focus:border-ec-gold focus:outline-none"
+                style={{ fontSize: '16px' }}
               />
               <button onClick={handleAddService} disabled={!newSvcName.trim() || !newSvcPrice.trim()}
                 className="px-5 py-2 rounded-sm font-ui text-[11px] tracking-widest uppercase text-white transition-all disabled:opacity-40"

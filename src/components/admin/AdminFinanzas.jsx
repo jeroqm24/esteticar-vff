@@ -340,6 +340,7 @@ export default function AdminFinanzas() {
                   value={form.date}
                   onChange={(e) => setForm({ ...form, date: e.target.value })}
                   className="w-full border border-black/[0.1] rounded-sm px-3 py-2 font-body text-sm text-ec-dark bg-white focus:outline-none focus:border-ec-gold/50 transition-colors"
+                  style={{ fontSize: '16px' }}
                 />
               </div>
               <div>
@@ -350,6 +351,7 @@ export default function AdminFinanzas() {
                   value={form.category}
                   onChange={(e) => setForm({ ...form, category: e.target.value })}
                   className="w-full border border-black/[0.1] rounded-sm px-3 py-2 font-body text-sm text-ec-dark bg-white focus:outline-none focus:border-ec-gold/50 transition-colors"
+                  style={{ fontSize: '16px' }}
                 >
                   {CATEGORIES.map((c) => (
                     <option key={c} value={c}>{c}</option>
@@ -368,6 +370,7 @@ export default function AdminFinanzas() {
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
                 className="w-full border border-black/[0.1] rounded-sm px-3 py-2 font-body text-sm text-ec-dark placeholder-ec-text-muted/50 bg-white focus:outline-none focus:border-ec-gold/50 transition-colors"
+                style={{ fontSize: '16px' }}
               />
             </div>
 
@@ -383,6 +386,7 @@ export default function AdminFinanzas() {
                 value={form.amount}
                 onChange={(e) => setForm({ ...form, amount: e.target.value })}
                 className="w-full border border-black/[0.1] rounded-sm px-3 py-2 font-body text-sm text-ec-dark placeholder-ec-text-muted/50 bg-white focus:outline-none focus:border-ec-gold/50 transition-colors"
+                style={{ fontSize: '16px' }}
               />
             </div>
 

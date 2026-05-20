@@ -431,6 +431,7 @@ export default function AdminLeads() {
             onChange={e => setSearch(e.target.value)}
             placeholder="Buscar nombre, teléfono, servicio..."
             className="flex-1 min-w-[180px] px-3 py-2 border border-black/[0.1] rounded-lg font-body text-sm bg-white focus:border-ec-gold focus:outline-none"
+            style={{ fontSize: '16px' }}
           />
           <div className="flex items-center gap-2 bg-white border border-black/[0.1] rounded-lg px-3 py-1.5">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#9CA3AF" strokeWidth="2" strokeLinecap="round" className="flex-shrink-0">
@@ -441,6 +442,7 @@ export default function AdminLeads() {
               value={dateFrom}
               onChange={e => setDateFrom(e.target.value)}
               className="font-body text-sm text-ec-dark bg-transparent focus:outline-none w-32"
+              style={{ fontSize: '16px' }}
               title="Desde"
             />
             <span className="font-ui text-[10px] text-ec-text-muted">→</span>
@@ -449,6 +451,7 @@ export default function AdminLeads() {
               value={dateTo}
               onChange={e => setDateTo(e.target.value)}
               className="font-body text-sm text-ec-dark bg-transparent focus:outline-none w-32"
+              style={{ fontSize: '16px' }}
               title="Hasta"
             />
             {(dateFrom || dateTo) && (

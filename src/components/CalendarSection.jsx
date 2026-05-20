@@ -611,8 +611,8 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
     });
   };
 
-  const inputCls = "w-full bg-transparent border-0 border-b border-black/[0.1] py-2 font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors placeholder-black/25";
-  const selectCls = "w-full bg-transparent border-0 border-b border-black/[0.1] py-2 font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors";
+  const inputCls = "w-full bg-transparent border-0 border-b border-black/[0.1] py-2 font-body text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors placeholder-black/25";
+  const selectCls = "w-full bg-transparent border-0 border-b border-black/[0.1] py-2 font-body text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors";
 
   return (
     <motion.div
@@ -641,6 +641,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
             placeholder="Nombre del cliente"
             autoFocus
             className="flex-1 font-heading text-2xl text-ec-dark bg-transparent border-0 border-b-2 border-transparent focus:border-[#F8C840] focus:outline-none placeholder-black/20 transition-colors pb-1"
+            style={{ fontSize: '16px' }}
           />
           <button onClick={onClose} className="mt-1 w-8 h-8 flex items-center justify-center rounded-full text-ec-text-muted hover:bg-ec-cream hover:text-ec-dark transition-all text-lg flex-shrink-0">✕</button>
         </div>
@@ -658,11 +659,13 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                 value={form.selectedDate}
                 onChange={e => setForm(f => ({ ...f, selectedDate: e.target.value }))}
                 className="font-body text-sm text-ec-dark bg-ec-cream hover:bg-[#F8C840]/10 px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer transition-colors"
+                style={{ fontSize: '16px' }}
               />
               <select
                 value={form.hour}
                 onChange={e => setForm({ ...form, hour: parseInt(e.target.value) })}
                 className="font-body text-sm text-ec-dark bg-ec-cream hover:bg-[#F8C840]/10 px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer transition-colors"
+                style={{ fontSize: '16px' }}
               >
                 {hours.map(h => {
                   const cnt = countAtHour(h);
@@ -687,6 +690,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
               onChange={e => setForm({ ...form, clientPhone: e.target.value })}
               placeholder="Teléfono del cliente"
               className={inputCls}
+              style={{ fontSize: '16px' }}
             />
           </div>
 
@@ -699,6 +703,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
               value={form.traslado}
               onChange={e => setForm(f => ({ ...f, traslado: e.target.value }))}
               className={selectCls}
+              style={{ fontSize: '16px' }}
             >
               <option value="">Sin traslado (cliente trae y recoge)</option>
               <option value="Solo recogida">Solo recogida · $7.000</option>
@@ -717,6 +722,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                 value={form.vehicleType}
                 onChange={e => handleVehicleChange(e.target.value)}
                 className="flex-shrink-0 font-body text-sm text-ec-dark bg-ec-cream px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer"
+                style={{ fontSize: '16px' }}
               >
                 <option>Carro</option>
                 <option>Moto</option>
@@ -725,6 +731,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                 value={form.service}
                 onChange={e => handleServiceChange(e.target.value)}
                 className="flex-1 min-w-0 font-body text-sm text-ec-dark bg-transparent border-0 border-b border-black/[0.1] focus:outline-none focus:border-[#F8C840] transition-colors cursor-pointer"
+                style={{ fontSize: '16px' }}
               >
                 {allServices.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
@@ -747,6 +754,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                     onChange={e => setForm(f => ({ ...f, manualPrice: e.target.value }))}
                     placeholder="Precio acordado (opcional)"
                     className="flex-1 font-body text-sm text-ec-dark bg-ec-cream px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-purple-300 min-w-0"
+                    style={{ fontSize: '16px' }}
                   />
                 </>
               ) : (
@@ -762,6 +770,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                   onChange={e => setForm(f => ({ ...f, discount: parseInt(e.target.value) || 0 }))}
                   placeholder="0"
                   className="w-20 font-body text-sm text-ec-dark bg-ec-cream px-2 py-1 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 text-center"
+                  style={{ fontSize: '16px' }}
                 />
               </div>
               {(basePrice > 0) && (
@@ -781,6 +790,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
               value={form.status}
               onChange={e => setForm({ ...form, status: e.target.value })}
               className="font-body text-sm text-ec-dark bg-ec-cream px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer"
+              style={{ fontSize: '16px' }}
             >
               <option value="pending">Pendiente</option>
               <option value="confirmed">Confirmada</option>

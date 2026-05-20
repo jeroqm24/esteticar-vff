@@ -365,18 +365,21 @@ function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketin
           {addingField && (
             <div className="p-3 bg-white border border-ec-gold/20 rounded-sm space-y-2">
               <select value={fieldTitle} onChange={e => setFieldTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm bg-white focus:border-ec-gold focus:outline-none">
+                className="w-full px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm bg-white focus:border-ec-gold focus:outline-none"
+                style={{ fontSize: '16px' }}>
                 <option value="">Seleccionar campo...</option>
                 {FIELD_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
               </select>
               {isCustom && (
                 <input value={customTitle} onChange={e => setCustomTitle(e.target.value)}
                   placeholder="Nombre del campo..."
-                  className="w-full px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm focus:border-ec-gold focus:outline-none" />
+                  className="w-full px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm focus:border-ec-gold focus:outline-none"
+                  style={{ fontSize: '16px' }} />
               )}
               <input value={fieldValue} onChange={e => setFieldValue(e.target.value)}
                 placeholder="Valor (opcional — el bot puede preguntarlo)"
-                className="w-full px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm focus:border-ec-gold focus:outline-none" />
+                className="w-full px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm focus:border-ec-gold focus:outline-none"
+                style={{ fontSize: '16px' }} />
               <label className="flex items-center gap-2 cursor-pointer select-none">
                 <input type="checkbox" checked={fieldBotAsk} onChange={e => setFieldBotAsk(e.target.checked)}
                   className="accent-ec-gold w-4 h-4" />
@@ -609,6 +612,7 @@ export default function AdminClients() {
           onChange={e => setSearch(e.target.value)}
           placeholder="Buscar por nombre, teléfono, placa..."
           className="w-full sm:w-64 px-4 py-2.5 border border-black/[0.1] rounded-sm font-body text-sm bg-white focus:border-ec-gold focus:outline-none"
+          style={{ fontSize: '16px' }}
         />
       </div>
 

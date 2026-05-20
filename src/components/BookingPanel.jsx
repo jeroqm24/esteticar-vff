@@ -143,12 +143,14 @@ export default function BookingPanel({ isOpen, onClose, services, onRemoveServic
                       <div>
                         <label className="font-ui text-[10px] tracking-[0.2em] text-ec-text-muted uppercase block mb-2">Fecha</label>
                         <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
-                          className="w-full p-4 border border-black/[0.06] bg-ec-cream text-ec-dark outline-none focus:border-ec-gold transition-colors font-body rounded-sm" />
+                          className="w-full p-4 border border-black/[0.06] bg-ec-cream text-ec-dark outline-none focus:border-ec-gold transition-colors font-body rounded-sm"
+                          style={{ fontSize: '16px' }} />
                       </div>
                       <div>
                         <label className="font-ui text-[10px] tracking-[0.2em] text-ec-text-muted uppercase block mb-2">Hora preferida</label>
                         <input type="time" value={time} onChange={(e) => setTime(e.target.value)}
-                          className="w-full p-4 border border-black/[0.06] bg-ec-cream text-ec-dark outline-none focus:border-ec-gold transition-colors font-body rounded-sm" />
+                          className="w-full p-4 border border-black/[0.06] bg-ec-cream text-ec-dark outline-none focus:border-ec-gold transition-colors font-body rounded-sm"
+                          style={{ fontSize: '16px' }} />
                       </div>
                     </div>
                   )}
@@ -159,12 +161,14 @@ export default function BookingPanel({ isOpen, onClose, services, onRemoveServic
                       <div>
                         <label className="font-ui text-[10px] tracking-[0.2em] text-ec-text-muted uppercase block mb-2">Nombre</label>
                         <input type="text" value={name} onChange={(e) => setName(e.target.value)} placeholder="Tu nombre completo"
-                          className="w-full p-4 border border-black/[0.06] bg-ec-cream text-ec-dark outline-none focus:border-ec-gold transition-colors font-body placeholder:text-black/20 rounded-sm" />
+                          className="w-full p-4 border border-black/[0.06] bg-ec-cream text-ec-dark outline-none focus:border-ec-gold transition-colors font-body placeholder:text-black/20 rounded-sm"
+                          style={{ fontSize: '16px' }} />
                       </div>
                       <div>
                       <label className="font-ui text-[10px] tracking-[0.2em] text-ec-text-muted uppercase block mb-2">Teléfono o Email</label>
                         <input type="text" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="318 198 3601"
-                          className="w-full p-4 border border-black/[0.06] bg-ec-cream text-ec-dark outline-none focus:border-ec-gold transition-colors font-body placeholder:text-black/20 rounded-sm" />
+                          className="w-full p-4 border border-black/[0.06] bg-ec-cream text-ec-dark outline-none focus:border-ec-gold transition-colors font-body placeholder:text-black/20 rounded-sm"
+                          style={{ fontSize: '16px' }} />
                       </div>
                     </div>
                   )}

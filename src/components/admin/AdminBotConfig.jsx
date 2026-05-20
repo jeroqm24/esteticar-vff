@@ -77,6 +77,7 @@ export default function AdminBotConfig() {
               value={config.bot_name || ""}
               onChange={(e) => setConfig({ ...config, bot_name: e.target.value })}
               className="w-full p-4 border border-black/[0.06] bg-ec-cream text-ec-dark font-body outline-none focus:border-ec-gold transition-colors rounded-sm"
+              style={{ fontSize: '16px' }}
             />
           </div>
 
@@ -87,6 +88,7 @@ export default function AdminBotConfig() {
               onChange={(e) => setConfig({ ...config, greeting_message: e.target.value })}
               rows={3}
               className="w-full p-4 border border-black/[0.06] bg-ec-cream text-ec-dark font-body outline-none focus:border-ec-gold transition-colors resize-none rounded-sm"
+              style={{ fontSize: '16px' }}
             />
           </div>
 
@@ -100,6 +102,7 @@ export default function AdminBotConfig() {
               onChange={(e) => setConfig({ ...config, personality: e.target.value })}
               rows={6}
               className="w-full p-4 border border-black/[0.06] bg-ec-cream text-ec-dark font-body outline-none focus:border-ec-gold transition-colors resize-none rounded-sm"
+              style={{ fontSize: '16px' }}
             />
           </div>
 
@@ -110,6 +113,7 @@ export default function AdminBotConfig() {
               value={config.available_hours_start || "08:00"}
               onChange={(e) => setConfig({ ...config, available_hours_start: e.target.value })}
               className="w-full p-4 border border-black/[0.06] bg-ec-cream text-ec-dark outline-none focus:border-ec-gold transition-colors rounded-sm"
+              style={{ fontSize: '16px' }}
             />
           </div>
           <div>
@@ -119,6 +123,7 @@ export default function AdminBotConfig() {
               value={config.available_hours_end || "18:00"}
               onChange={(e) => setConfig({ ...config, available_hours_end: e.target.value })}
               className="w-full p-4 border border-black/[0.06] bg-ec-cream text-ec-dark outline-none focus:border-ec-gold transition-colors rounded-sm"
+              style={{ fontSize: '16px' }}
             />
           </div>
 
@@ -163,6 +168,7 @@ export default function AdminBotConfig() {
               onChange={(e) => setConfig({ ...config, confirmation_email_template: e.target.value })}
               rows={5}
               className="w-full p-4 border border-black/[0.06] bg-ec-cream text-sm text-ec-dark font-body outline-none focus:border-ec-gold transition-colors resize-none rounded-sm"
+              style={{ fontSize: '16px' }}
             />
           </div>
           <div>
@@ -172,6 +178,7 @@ export default function AdminBotConfig() {
               onChange={(e) => setConfig({ ...config, reminder_email_template: e.target.value })}
               rows={5}
               className="w-full p-4 border border-black/[0.06] bg-ec-cream text-sm text-ec-dark font-body outline-none focus:border-ec-gold transition-colors resize-none rounded-sm"
+              style={{ fontSize: '16px' }}
             />
           </div>
         </div>
