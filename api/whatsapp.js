@@ -602,15 +602,22 @@ const showTyping = async (to) => {
 };
 
 const sendInstagramMessage = async (recipientId, text) => {
-  if (!FB_PAGE_TOKEN) {
-    console.error('[IG] Falta FB_PAGE_TOKEN para responder Instagram DMs');
-    return;
-  }
-  const pageId = process.env.FB_PAGE_ID || 'me';
   try {
-    const r = await fetch(`https://graph.facebook.com/v20.0/${pageId}/messages`, {
+    const { data: tokenRow } = await supabaseAdmin
+      .from('ig_tokens')
+      .select('access_token')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .single();
+
+    if (!tokenRow?.access_token) {
+      console.error('[IG] No hay token en Supabase. Visita /api/ig-auth para autorizar.');
+      return;
+    }
+
+    const r = await fetch(`https://graph.instagram.com/v21.0/me/messages`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${FB_PAGE_TOKEN}`, 'Content-Type': 'application/json' },
+      headers: { Authorization: `Bearer ${tokenRow.access_token}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
     });
     const json = await r.json();
