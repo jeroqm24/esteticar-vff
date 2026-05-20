@@ -178,13 +178,13 @@ function LeadCard({ conv, slot, onStatusChange }) {
   const preview = getPreview(conv.history);
   const lastRemarkEntry = lastRemarketingEntry(conv.history);
   const isPotencial = conv.remarketing_status === "potencial";
-  const isSinClasificar = !conv.remarketing_status;
+  const isSinClasificar = !conv.lead_type;
   const history = Array.isArray(conv.history) ? conv.history : [];
 
-  const handleQuickStatus = async (status) => {
+  const handleQuickStatus = async (leadType) => {
     setUpdating(true);
-    await db.conversations.update(conv.phone, { remarketing_status: status });
-    onStatusChange?.(conv.phone, status);
+    await db.conversations.update(conv.phone, { lead_type: leadType });
+    onStatusChange?.(conv.phone, leadType);
     setUpdating(false);
   };
 
@@ -233,15 +233,15 @@ function LeadCard({ conv, slot, onStatusChange }) {
 
           <p className="font-body text-xs text-ec-text-muted mt-1.5 truncate">{preview}</p>
 
-          {/* Clasificación rápida — solo sin clasificar */}
+          {/* Clasificación rápida de tipo de lead — solo sin clasificar */}
           {isSinClasificar && (
             <div className="mt-2 flex flex-wrap gap-1.5">
               <span className="font-ui text-[9px] text-ec-text-muted uppercase tracking-wider self-center">Clasificar:</span>
               {[
-                { v: "potencial",     label: "🔵 Potencial"     },
-                { v: "efectivo",      label: "🟢 Efectivo"      },
-                { v: "desinteresado", label: "⚫ Desinteresado"  },
-                { v: "otro",          label: "⚪ Otro"           },
+                { v: "regateador", label: "🫰 Regateador" },
+                { v: "analista",   label: "📚 Analista"   },
+                { v: "embalado",   label: "⚡ Embalado"   },
+                { v: "billetudo",  label: "💸 Billetudo"  },
               ].map(opt => (
                 <button
                   key={opt.v}
@@ -399,10 +399,10 @@ export default function AdminLeads() {
   const potenciales      = convs.filter(c => c.remarketing_status === "potencial");
   const desinteresados   = convs.filter(c => c.remarketing_status === "desinteresado");
   const otros            = convs.filter(c => c.remarketing_status === "otro");
-  const sinClasificar    = convs.filter(c => !c.remarketing_status);
+  const sinClasificar    = convs.filter(c => !c.lead_type);
 
-  const handleStatusChange = (phone, newStatus) => {
-    setConvs(prev => prev.map(c => c.phone === phone ? { ...c, remarketing_status: newStatus } : c));
+  const handleStatusChange = (phone, newLeadType) => {
+    setConvs(prev => prev.map(c => c.phone === phone ? { ...c, lead_type: newLeadType } : c));
   };
 
   const fromTs = dateFrom ? new Date(dateFrom).getTime() : null;
@@ -410,7 +410,7 @@ export default function AdminLeads() {
 
   const filtered = convs.filter(c => {
     const matchFilter = filter === "all" ? true
-      : filter === "sin_clasificar" ? !c.remarketing_status
+      : filter === "sin_clasificar" ? !c.lead_type
       : filter === "efectivo" ? (c.remarketing_status === "efectivo" || c.remarketing_status === "converted")
       : c.remarketing_status === filter;
     if (!matchFilter) return false;
