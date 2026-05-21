@@ -105,7 +105,7 @@ export default async function handler(req, res) {
     timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long',
   }).split(',')[0].toLowerCase();
 
-  const { data: appointments } = await supabase
+  const { data: appointments } = await supabaseAdmin
     .from('appointments')
     .select('*')
     .not('status', 'in', '("cancelada","cancelled","reminder_sent")')
@@ -139,15 +139,19 @@ export default async function handler(req, res) {
     }
 
     if (ok) {
-      await supabaseAdmin
-        .from('appointments')
-        .update({ status: 'reminder_sent' })
-        .eq('confirmation_code', appt.confirmation_code);
+      if (appt.confirmation_code) {
+        await supabaseAdmin
+          .from('appointments')
+          .update({ status: 'reminder_sent' })
+          .eq('confirmation_code', appt.confirmation_code);
+      }
       sent++;
     }
 
     // Email de recordatorio al cliente (si tiene correo)
     if (appt.client_email && appt.client_email !== 'no_proporcionado') {
+      const waMsg = encodeURIComponent(`Hola, quiero confirmar mi cita de mañana. Código: ${appt.confirmation_code || appt.service}`);
+      const reminderWaUrl = `https://api.whatsapp.com/send/?phone=573156071041&text=${waMsg}`;
       const reminderHtml = `
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#F4F1EC;font-family:Georgia,serif">
@@ -179,7 +183,7 @@ export default async function handler(req, res) {
     </div>
   </td></tr>
   <tr><td style="padding:0 40px 20px;text-align:center">
-    <a href="${waUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:17px 40px;border-radius:50px">Escríbenos por WhatsApp →</a>
+    <a href="${reminderWaUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:17px 40px;border-radius:50px">Escríbenos por WhatsApp →</a>
   </td></tr>
   <tr><td style="padding:0 40px 36px;text-align:center">
     <a href="https://maps.google.com/?q=Cll+67+9-26+La+Sultana+Manizales" style="display:inline-block;background:#0A0A0A;color:#C9A84C;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:15px 26px;border-radius:50px;border:1.5px solid #C9A84C;margin-right:10px">Google Maps →</a>

@@ -856,7 +856,9 @@ const sendFBMessage = async (recipientId, text) => {
 
 const parseBooking = (text) => {
   if (!text.includes('__BOOKING_CONFIRMED__')) return null;
-  const block = text.match(/__BOOKING_CONFIRMED__([\s\S]*?)__END_BOOKING__/)?.[1] || '';
+  const block = text.match(/__BOOKING_CONFIRMED__([\s\S]*?)__END_BOOKING__/)?.[1]
+             || text.match(/__BOOKING_CONFIRMED__([\s\S]*)/)?.[1]
+             || '';
   if (!block) return null;
   const get = (key) => block.match(new RegExp(`${key}:\\s*(.+)`))?.[1]?.trim() || '';
   const vehicleRaw = get('VEHICULO').toLowerCase();
