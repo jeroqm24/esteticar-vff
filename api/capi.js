@@ -16,7 +16,8 @@ const parsePrice = (display) => {
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).send('Method not allowed');
 
-  if (req.headers['x-admin-key'] !== 'esteticar2026')
+  const ADMIN_SECRET = process.env.ADMIN_SECRET || 'esteticar2026';
+  if (req.headers['x-admin-key'] !== ADMIN_SECRET)
     return res.status(403).json({ error: 'Forbidden' });
 
   if (!META_PIXEL_ID || !META_CAPI_TOKEN)

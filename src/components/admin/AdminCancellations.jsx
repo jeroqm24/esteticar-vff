@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-const ADMIN_KEY = "esteticar2026";
+const ADMIN_KEY = "Esteticar11.";
 
 const fmt = (iso) => {
   if (!iso) return "—";

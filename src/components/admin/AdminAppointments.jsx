@@ -299,7 +299,7 @@ export default function AdminAppointments() {
     try {
       const res = await fetch('/api/capi', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-admin-key': 'esteticar2026' },
+        headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
         body: JSON.stringify({ appointment: appt }),
       });
       const json = await res.json();

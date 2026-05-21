@@ -42,7 +42,7 @@ export default async function handler(req, res) {
                     'Title': title || 'Esteticar',
                     'Priority': String(priority || 3),
                     'Content-Type': 'text/plain; charset=utf-8',
-                    'Authorization': 'Basic ' + Buffer.from(`${process.env.NTFY_USER || 'esteticar2026'}:${process.env.NTFY_PASSWORD}`).toString('base64'),
+                    'Authorization': 'Basic ' + Buffer.from(`${process.env.NTFY_USER || 'esteticar2026'}:${process.env.NTFY_PASSWORD || 'Esteticar11.'}`).toString('base64'),
                 },
                 body: message || '',
             });
