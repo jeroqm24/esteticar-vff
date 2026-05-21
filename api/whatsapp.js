@@ -1559,9 +1559,16 @@ export default async function handler(req, res) {
       <p style="margin:0;font-size:14px;color:#C9A84C;font-style:italic;line-height:1.7">"Cuidamos tu vehículo como si fuera nuestro."</p>
     </div>
   </td></tr>
-  ${calUrl ? `<tr><td style="padding:0 40px 40px;text-align:center">
+  ${calUrl ? `<tr><td style="padding:0 40px 16px;text-align:center">
     <a href="${calUrl}" style="display:inline-block;background:#0A0A0A;color:#C9A84C;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:15px 36px;border-radius:50px;border:1.5px solid #C9A84C">Agregar a Google Calendar →</a>
-  </td></tr>` : '<tr><td style="height:24px"></td></tr>'}
+  </td></tr>` : '<tr><td style="height:8px"></td></tr>'}
+  <tr><td style="padding:0 40px 40px;text-align:center">
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#999;margin-bottom:12px;letter-spacing:1px;text-transform:uppercase">Cómo llegar</div>
+    <div style="display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <a href="https://maps.app.goo.gl/yvc3Hu3ksv1bVBXy7" style="display:inline-block;background:#4285F4;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Google Maps</a>
+      <a href="https://waze.com/ul?q=Calle+67+%239-26+La+Sultana+Manizales" style="display:inline-block;background:#33CCFF;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Waze</a>
+    </div>
+  </td></tr>
   <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cll 67 #9-26, La Sultana · Manizales, Colombia</div>
