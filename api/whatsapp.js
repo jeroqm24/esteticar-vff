@@ -52,7 +52,7 @@ const getConversation = async (phone) => {
 };
 
 const saveHistory = async (phone, history, meta = {}) => {
-  await supabase
+  await supabaseAdmin
     .from('conversations')
     .upsert({ phone, history, ...meta, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
 };
@@ -488,7 +488,7 @@ CONFUSIONES FRECUENTES — MEMORIZA ESTO:
 • "Tucson" o "Santa Fe" = siempre Hyundai
 
 ━━━ CLASIFICACIÓN DE LEADS ━━━
-En algún momento natural de la conversación haz esta pregunta: "Cuéntame, qué es lo que más te gustaría mejorarle al vehículo?"
+Clasifica al cliente con lo que ya dijo o con la pregunta de diagnóstico del Paso 2. NO hagas esta pregunta si el cliente ya indicó qué quiere.
 Con eso (y con lo que el cliente ya dijo) clasifícalo así:
 
 🫰 REGATEADOR: Solo pregunta precios, busca lo más barato, pide descuentos.
@@ -1174,10 +1174,10 @@ export default async function handler(req, res) {
           const echoText = event.message.text?.trim();
           if (clientId && echoText) {
             const clientPhone = `ig_${clientId}`;
-            const { data: echoConv } = await supabase.from('conversations').select('history').eq('phone', clientPhone).single();
+            const { data: echoConv } = await supabaseAdmin.from('conversations').select('history').eq('phone', clientPhone).single();
             const echoHistory = Array.isArray(echoConv?.history) ? echoConv.history : [];
             echoHistory.push({ role: 'admin', content: echoText, timestamp: new Date().toISOString() });
-            await supabase.from('conversations').upsert({ phone: clientPhone, history: echoHistory, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
+            await supabaseAdmin.from('conversations').upsert({ phone: clientPhone, history: echoHistory, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
           }
           return res.status(200).send('OK');
         }
@@ -1210,10 +1210,10 @@ export default async function handler(req, res) {
           const echoText = event.message.text?.trim();
           if (clientId && echoText) {
             const clientPhone = `fb_${clientId}`;
-            const { data: echoConv } = await supabase.from('conversations').select('history').eq('phone', clientPhone).single();
+            const { data: echoConv } = await supabaseAdmin.from('conversations').select('history').eq('phone', clientPhone).single();
             const echoHistory = Array.isArray(echoConv?.history) ? echoConv.history : [];
             echoHistory.push({ role: 'admin', content: echoText, timestamp: new Date().toISOString() });
-            await supabase.from('conversations').upsert({ phone: clientPhone, history: echoHistory, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
+            await supabaseAdmin.from('conversations').upsert({ phone: clientPhone, history: echoHistory, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
           }
           return res.status(200).send('OK');
         }
@@ -1243,9 +1243,9 @@ export default async function handler(req, res) {
       // ──────────────────────────────────────────────────────────
 
       // ── Deduplicación ──
-      const { data: dedupRow } = await supabase.from('conversations').select('last_message_id').eq('phone', from).single();
+      const { data: dedupRow } = await supabaseAdmin.from('conversations').select('last_message_id').eq('phone', from).single();
       if (dedupRow?.last_message_id === msgId) return res.status(200).send('OK');
-      await supabase.from('conversations').upsert(
+      await supabaseAdmin.from('conversations').upsert(
         { phone: from, last_message_id: msgId, updated_at: new Date().toISOString() },
         { onConflict: 'phone' }
       );
@@ -1263,7 +1263,7 @@ export default async function handler(req, res) {
       if (conv.bot_paused) {
         const history = conv.history || [];
         if (history.length === 0) {
-          await supabase.from('conversations').update({ bot_paused: false }).eq('phone', from);
+          await supabaseAdmin.from('conversations').update({ bot_paused: false }).eq('phone', from);
         } else {
           history.push({ role: 'user', content: text });
           if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
