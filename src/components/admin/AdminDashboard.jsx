@@ -12,7 +12,7 @@ import AdminLeads from "./AdminLeads";
 import CalendarSection from "../CalendarSection";
 import { BRAND } from "../../lib/constants";
 
-const ADMIN_PASSWORD = "esteticar2026";
+const ADMIN_PASSWORD = "Esteticar11.";
 
 function AdminLogin({ onSuccess }) {
   const [pwd, setPwd] = useState("");
