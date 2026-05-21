@@ -185,7 +185,7 @@ export const db = {
       try {
         await fetch('/api/conversations', {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'esteticar2026' },
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
           body: JSON.stringify({ phone, updates }),
         });
         return true;
@@ -195,7 +195,7 @@ export const db = {
       try {
         const res = await fetch('/api/conversations', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'esteticar2026' },
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
           body: JSON.stringify({ phone, text }),
         });
         return await res.json();
@@ -205,7 +205,7 @@ export const db = {
       try {
         await fetch('/api/conversations', {
           method: 'DELETE',
-          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'esteticar2026' },
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
           body: JSON.stringify({ phone }),
         });
       } catch { }
