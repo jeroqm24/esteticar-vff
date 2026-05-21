@@ -1,6 +1,8 @@
 // api/whatsapp.js
 // Webhook de WhatsApp Cloud API — Sara Valencia con clasificación de leads
 
+export const config = { api: { bodyParser: false } };
+
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI, { toFile } from 'openai';
 import { createClient } from '@supabase/supabase-js';
@@ -1111,6 +1113,15 @@ const notifyTeam = async (clientPhone, question, clientName, platform) => {
   }
 };
 
+// ─── Leer raw body (necesario para verificar firma HMAC de Meta) ──
+const getRawBody = (req) =>
+  new Promise((resolve, reject) => {
+    const chunks = [];
+    req.on('data', c => chunks.push(c));
+    req.on('end', () => resolve(Buffer.concat(chunks)));
+    req.on('error', reject);
+  });
+
 // ─── Handler principal ────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -1120,20 +1131,25 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
+    // Leer raw body una sola vez
+    const rawBodyBuf = await getRawBody(req);
+    const rawBodyStr = rawBodyBuf.toString('utf8');
+
     // ── Verificar firma Meta (X-Hub-Signature-256) ──
     const META_APP_SECRET = process.env.META_APP_SECRET;
     if (META_APP_SECRET) {
       const sig = req.headers['x-hub-signature-256'];
       if (!sig) return res.status(403).send('Missing signature');
-      const rawBody = JSON.stringify(req.body);
-      const expected = 'sha256=' + crypto.createHmac('sha256', META_APP_SECRET).update(rawBody).digest('hex');
-      if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+      const expected = 'sha256=' + crypto.createHmac('sha256', META_APP_SECRET).update(rawBodyBuf).digest('hex');
+      const sigBuf = Buffer.from(sig);
+      const expBuf = Buffer.from(expected);
+      if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
         return res.status(403).send('Invalid signature');
       }
     }
 
     try {
-      const body = req.body;
+      const body = JSON.parse(rawBodyStr);
 
       // ── Detectar plataforma y extraer mensaje ─────────────────
       let from, msgId, platform, sendFn, rawSenderId;
