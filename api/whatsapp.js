@@ -1367,7 +1367,7 @@ export default async function handler(req, res) {
         meta.client_name = capturedName;
         (async () => {
           try {
-            await supabase.from('clients').upsert(
+            await supabaseAdmin.from('clients').upsert(
               { phone: from, name: capturedName, updated: new Date().toISOString() },
               { onConflict: 'phone' }
             );
