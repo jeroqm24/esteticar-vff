@@ -33,7 +33,7 @@ const MAX_TURNS = 20;
 const getConversation = async (phone) => {
   // Intentar con todas las columnas; si falla (columna no existe), usar las garantizadas
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseAdmin
       .from('conversations')
       .select('history, lead_type, client_name, bot_paused, vehicle_type, vehicle_plate, client_email, last_service, direccion, custom_fields')
       .eq('phone', phone)
@@ -42,7 +42,7 @@ const getConversation = async (phone) => {
     return data || { history: [], lead_type: null, client_name: null, bot_paused: false };
   } catch {
     // Fallback: solo columnas base que siempre existen
-    const { data } = await supabase
+    const { data } = await supabaseAdmin
       .from('conversations')
       .select('history, lead_type, client_name, bot_paused')
       .eq('phone', phone)
