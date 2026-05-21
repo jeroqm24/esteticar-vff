@@ -145,7 +145,7 @@ function GuaranteeModal({ onClose }) {
           {/* Footer */}
           <div className="p-6 sm:p-8 border-t border-black/[0.06] flex flex-col sm:flex-row gap-3">
             <a
-              href={`https://wa.me/573156071041?text=${encodeURIComponent("Hola 👋 acabo de revisar la garantía de custodia de $5.000.000 COP en la página de Esteticar y me genera mucha confianza.\n\nMe gustaría agendar una cita. ¿Qué disponibilidad tienen esta semana?")}`}
+              href={`https://wa.me/573156071041?text=${encodeURIComponent("Hola, acabo de revisar la garantia de custodia de $5.000.000 COP en la pagina de Esteticar y me genera mucha confianza. Me gustaria agendar una cita. Que disponibilidad tienen esta semana?")}`}
               target="_blank"
               rel="noopener noreferrer"
               onClick={onClose}

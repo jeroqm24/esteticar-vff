@@ -477,7 +477,7 @@ export const getGreeting = () => {
 export const generateEscalationURL = (userQuestion) => {
   const g = getGreeting().toLowerCase();
   const msg = encodeURIComponent(
-    `Hola Sara 👋 ${g}. Un cliente en la web nos está preguntando:\n\n_"${userQuestion}"_\n\nTe lo paso para que lo puedas atender personalmente. 🙏`
+    `Hola Sara, ${g}. Un cliente en la web nos esta preguntando: "${userQuestion}". Te lo paso para que lo puedas atender personalmente.`
   );
   return `https://wa.me/573156071041?text=${msg}`;
 };

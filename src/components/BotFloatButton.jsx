@@ -2,7 +2,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { pixelContact } from "../lib/pixel";
 
-const WA_URL = `https://wa.me/573156071041?text=${encodeURIComponent("Hola 👋 acabo de ver la página de Esteticar y me gustaría conocer más sobre sus tratamientos premium. ¿Me pueden asesorar?")}`;
+const WA_URL = `https://wa.me/573156071041?text=${encodeURIComponent("Hola, acabo de ver la página de Esteticar y me gustaría conocer más sobre sus tratamientos premium. Me pueden asesorar?")}`;
 
 
 export default function BotFloatButton() {

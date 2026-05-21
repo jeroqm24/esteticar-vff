@@ -60,7 +60,7 @@ export default function PortfolioSection() {
   const handleContact = () => {
     if (!selected) return;
     const msg = encodeURIComponent(
-      `Hola Esteticar, estaba viendo el portafolio en la página y me interesa el servicio de *${selected}*. Me pueden dar más información?`
+      `Hola Esteticar, estaba viendo el portafolio en la pagina y me interesa el servicio de ${selected}. Me pueden dar mas informacion?`
     );
     pixelContact();
     window.open(`${BRAND.whatsappUrl}?text=${msg}`, "_blank");
