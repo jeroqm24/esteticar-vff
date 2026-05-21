@@ -1120,6 +1120,18 @@ export default async function handler(req, res) {
   }
 
   if (req.method === 'POST') {
+    // ── Verificar firma Meta (X-Hub-Signature-256) ──
+    const META_APP_SECRET = process.env.META_APP_SECRET;
+    if (META_APP_SECRET) {
+      const sig = req.headers['x-hub-signature-256'];
+      if (!sig) return res.status(403).send('Missing signature');
+      const rawBody = JSON.stringify(req.body);
+      const expected = 'sha256=' + crypto.createHmac('sha256', META_APP_SECRET).update(rawBody).digest('hex');
+      if (!crypto.timingSafeEqual(Buffer.from(sig), Buffer.from(expected))) {
+        return res.status(403).send('Invalid signature');
+      }
+    }
+
     try {
       const body = req.body;
 

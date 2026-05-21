@@ -11,7 +11,8 @@ const supabaseAdmin = createClient(
 const WA_TOKEN      = process.env.WHATSAPP_TOKEN;
 const PHONE_ID      = process.env.WHATSAPP_PHONE_NUMBER_ID;
 const FB_PAGE_TOKEN = process.env.FB_PAGE_TOKEN;
-const ADMIN_SECRET  = process.env.ADMIN_SECRET || 'esteticar2026';
+const ADMIN_SECRET  = process.env.ADMIN_SECRET;
+if (!ADMIN_SECRET) throw new Error('ADMIN_SECRET env var is required');
 
 const sendWAMessage = async (to, text) => {
   if (!WA_TOKEN || !PHONE_ID) return false;
@@ -54,7 +55,7 @@ const sendFBMessage = async (recipientId, text) => {
 };
 
 export default async function handler(req, res) {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', process.env.ALLOWED_ORIGIN || 'https://esteticarmanizales.com');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,x-admin-key');
   if (req.method === 'OPTIONS') return res.status(200).end();
@@ -62,13 +63,16 @@ export default async function handler(req, res) {
   const key = req.headers['x-admin-key'];
   if (key !== ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
 
-  // ── PATCH: update fields (bot_paused, lead_type, admin_notes) ──
+  // ── PATCH: update fields (whitelist only) ──
   if (req.method === 'PATCH') {
     const { phone, updates } = req.body || {};
     if (!phone || !updates) return res.status(400).json({ error: 'Missing fields' });
+    const ALLOWED = ['bot_paused', 'lead_type', 'remarketing_status', 'admin_notes', 'objection', 'client_name', 'client_email', 'vehicle_type', 'vehicle_plate', 'last_service', 'direccion'];
+    const safe = Object.fromEntries(Object.entries(updates).filter(([k]) => ALLOWED.includes(k)));
+    if (Object.keys(safe).length === 0) return res.status(400).json({ error: 'No valid fields' });
     const { error } = await supabaseAdmin
       .from('conversations')
-      .update({ ...updates, updated_at: new Date().toISOString() })
+      .update({ ...safe, updated_at: new Date().toISOString() })
       .eq('phone', phone);
     if (error) return res.status(500).json({ error: error.message });
     return res.status(200).json({ ok: true });
