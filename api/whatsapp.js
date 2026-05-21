@@ -1265,7 +1265,7 @@ export default async function handler(req, res) {
         if (history.length === 0) {
           await supabaseAdmin.from('conversations').update({ bot_paused: false }).eq('phone', from);
         } else {
-          history.push({ role: 'user', content: text });
+          history.push({ role: 'user', content: text, timestamp: new Date().toISOString() });
           if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
           await saveHistory(from, history, {});
           return res.status(200).send('OK');
@@ -1273,7 +1273,7 @@ export default async function handler(req, res) {
       }
 
       const history = conv.history || [];
-      history.push({ role: 'user', content: text });
+      history.push({ role: 'user', content: text, timestamp: new Date().toISOString() });
       if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
 
       // Normalizar historial: la API solo acepta "user" y "assistant"
@@ -1439,7 +1439,7 @@ export default async function handler(req, res) {
         })();
       }
 
-      history.push({ role: 'assistant', content: rawReply });
+      history.push({ role: 'assistant', content: rawReply, timestamp: new Date().toISOString() });
       await saveHistory(from, history, meta);
 
       if (booking) {
