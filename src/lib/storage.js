@@ -101,13 +101,14 @@ export const db = {
     },
     delete: async (id) => {
       try {
-        await fetch('/api/appointments', {
+        const r = await fetch('/api/appointments', {
           method: 'DELETE',
           headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
           body: JSON.stringify({ id }),
         });
+        if (!r.ok) throw new Error('Delete failed: ' + r.status);
         return true;
-      } catch { return false; }
+      } catch (e) { console.error('[delete appointment]', e); return false; }
     },
     filter: async () => {
       try {
