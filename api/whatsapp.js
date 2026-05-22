@@ -812,7 +812,7 @@ const fetchIGProfile = async (userId) => {
   try {
     const token = IG_TOKEN || FB_PAGE_TOKEN;
     if (!token) return null;
-    const r = await fetch(`https://graph.instagram.com/v21.0/${userId}?fields=name,username&access_token=${token}`);
+    const r = await fetch(`https://graph.facebook.com/v21.0/${userId}?fields=name,username&access_token=${token}`);
     const d = await r.json();
     if (d.username) return `@${d.username}`;
     if (d.name)     return d.name;

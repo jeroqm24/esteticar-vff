@@ -106,10 +106,15 @@ function ClientCard({ client, apptCount, isSelected, onClick }) {
           <p className="font-body text-xs text-ec-text-muted mt-0.5">{client.phone}</p>
         </div>
         <div className="flex flex-col items-end gap-1.5 flex-shrink-0">
-          {profile && (
+          {profile ? (
             <span className="font-ui text-[10px] px-2 py-0.5 rounded-sm"
               style={{ background: profile.bg, color: profile.color, border: `1px solid ${profile.border}` }}>
               {profile.emoji} {profile.label}
+            </span>
+          ) : (
+            <span className="font-ui text-[10px] px-2 py-0.5 rounded-sm"
+              style={{ background: 'rgba(0,0,0,0.03)', color: '#9CA3AF', border: '1px solid rgba(0,0,0,0.07)' }}>
+              Sin tipo
             </span>
           )}
           <span className="font-ui text-[9px] tracking-[0.1em] uppercase px-2 py-0.5 rounded-sm"
@@ -276,30 +281,6 @@ function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketin
           </div>
         )}
 
-        {/* Mensaje de remarketing */}
-        {profile && client.remarketingStatus !== 'lost' && (
-          <div className="space-y-3">
-            <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase">
-              Mensaje de remarketing ({profile.emoji} {profile.label} · cada {profile.remarketingDays}d)
-            </p>
-            <div className="p-3 bg-ec-cream/60 border border-black/[0.06] rounded-sm">
-              <p className="font-body text-xs text-ec-text-secondary leading-relaxed">{remarketingMsg}</p>
-            </div>
-            <div className="flex gap-2">
-              <CopyBtn text={remarketingMsg} label="Copiar mensaje" />
-              <a href={waLink} target="_blank" rel="noopener noreferrer"
-                className="flex items-center gap-1.5 px-3 py-1.5 font-ui text-[9px] tracking-[0.15em] uppercase text-white rounded-sm transition-all"
-                style={{ background: "linear-gradient(135deg,#25D366,#128C7E)" }}
-                onClick={() => onRemarketing(client.phone)}>
-                <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51a9.09 9.09 0 01-.57-.01c-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-                  <path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.553 4.103 1.523 5.828L.057 23.857a.5.5 0 00.636.607l6.218-1.63A11.953 11.953 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.953 9.953 0 01-5.077-1.384l-.364-.216-3.767.988 1.006-3.665-.236-.377A9.952 9.952 0 012 12c0-5.514 4.486-10 10-10s10 4.486 10 10-4.486 10-10 10z"/>
-                </svg>
-                Enviar por WhatsApp
-              </a>
-            </div>
-          </div>
-        )}
 
         {/* Control del bot */}
         <div className="pt-2 border-t border-black/[0.06]">
@@ -330,77 +311,6 @@ function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketin
               </svg>
               Pausar bot manualmente
             </button>
-          )}
-        </div>
-
-        {/* Campos personalizados */}
-        <div className="pt-2 border-t border-black/[0.06] space-y-2">
-          <div className="flex items-center justify-between">
-            <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase">Campos personalizados</p>
-            {!addingField && (
-              <button onClick={() => setAddingField(true)}
-                className="font-ui text-[9px] tracking-[0.15em] uppercase px-2.5 py-1 border border-ec-gold/30 text-ec-gold hover:bg-ec-gold hover:text-white rounded-sm transition-all">
-                + Añadir
-              </button>
-            )}
-          </div>
-
-          {fields.length === 0 && !addingField && (
-            <p className="font-body text-xs text-ec-text-muted italic">Sin campos. Añade datos adicionales y configura qué debe preguntar el bot.</p>
-          )}
-
-          {fields.map(f => (
-            <div key={f.id} className="flex items-start gap-2 p-2.5 bg-ec-cream/40 border border-black/[0.06] rounded-sm">
-              <div className="flex-1 min-w-0">
-                <p className="font-ui text-[8px] tracking-[0.15em] uppercase text-ec-text-muted">{f.title}</p>
-                <p className="font-body text-sm text-ec-dark mt-0.5 break-words">{f.value || <span className="text-black/30 italic text-xs">Sin valor</span>}</p>
-              </div>
-              <div className="flex items-center gap-1.5 flex-shrink-0 mt-0.5">
-                <button onClick={() => toggleBotAsk(f.id)}
-                  className={`px-2 py-1 font-ui text-[8px] tracking-[0.1em] uppercase rounded-sm border transition-all whitespace-nowrap ${
-                    f.botShouldAsk ? 'bg-ec-gold text-white border-ec-gold' : 'border-black/[0.1] text-ec-text-muted hover:border-ec-gold/30 hover:text-ec-gold'
-                  }`}>
-                  {f.botShouldAsk ? 'Bot pregunta ✓' : 'Bot pregunta'}
-                </button>
-                <button onClick={() => deleteField(f.id)} className="text-black/20 hover:text-red-400 transition-colors text-sm leading-none">✕</button>
-              </div>
-            </div>
-          ))}
-
-          {addingField && (
-            <div className="p-3 bg-white border border-ec-gold/20 rounded-sm space-y-2">
-              <select value={fieldTitle} onChange={e => setFieldTitle(e.target.value)}
-                className="w-full px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm bg-white focus:border-ec-gold focus:outline-none"
-                style={{ fontSize: '16px' }}>
-                <option value="">Seleccionar campo...</option>
-                {FIELD_OPTIONS.map(o => <option key={o} value={o}>{o}</option>)}
-              </select>
-              {isCustom && (
-                <input value={customTitle} onChange={e => setCustomTitle(e.target.value)}
-                  placeholder="Nombre del campo..."
-                  className="w-full px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm focus:border-ec-gold focus:outline-none"
-                  style={{ fontSize: '16px' }} />
-              )}
-              <input value={fieldValue} onChange={e => setFieldValue(e.target.value)}
-                placeholder="Valor (opcional — el bot puede preguntarlo)"
-                className="w-full px-3 py-2 border border-black/[0.1] rounded-sm font-body text-sm focus:border-ec-gold focus:outline-none"
-                style={{ fontSize: '16px' }} />
-              <label className="flex items-center gap-2 cursor-pointer select-none">
-                <input type="checkbox" checked={fieldBotAsk} onChange={e => setFieldBotAsk(e.target.checked)}
-                  className="accent-ec-gold w-4 h-4" />
-                <span className="font-ui text-[9px] tracking-[0.1em] uppercase text-ec-text-muted">Bot debe preguntar este dato</span>
-              </label>
-              <div className="flex gap-2 pt-1">
-                <button onClick={saveField}
-                  className="flex-1 py-2 font-ui text-[9px] tracking-[0.15em] uppercase bg-ec-gold text-white hover:bg-[#e6b800] rounded-sm transition-all">
-                  Guardar
-                </button>
-                <button onClick={() => { setAddingField(false); setFieldTitle(''); setFieldValue(''); setFieldBotAsk(false); setCustomTitle(''); }}
-                  className="flex-1 py-2 font-ui text-[9px] tracking-[0.15em] uppercase border border-black/[0.1] text-ec-text-muted hover:bg-ec-cream rounded-sm transition-all">
-                  Cancelar
-                </button>
-              </div>
-            </div>
           )}
         </div>
 

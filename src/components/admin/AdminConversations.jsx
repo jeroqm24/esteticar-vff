@@ -666,7 +666,26 @@ export default function AdminConversations({ initialPhone }) {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-bold text-[14px] leading-tight truncate">{getDisplayName(selected)}</p>
-                    <p className="text-white/60 text-[11px] mt-0.5">{selectedHistory.length} msgs · {timeAgo(selected.updated_at)}</p>
+                    {(() => {
+                      const lastUserMsg = [...selectedHistory].reverse().find(m => m.role === 'user');
+                      const daysSilent = lastUserMsg?.timestamp
+                        ? Math.floor((Date.now() - new Date(lastUserMsg.timestamp).getTime()) / 86400000)
+                        : null;
+                      return (
+                        <p className="text-white/60 text-[11px] mt-0.5 flex items-center gap-2">
+                          <span>{selectedHistory.length} msgs · {timeAgo(selected.updated_at)}</span>
+                          {daysSilent !== null && (
+                            <span className={`px-1.5 py-0.5 rounded-full text-[9px] font-ui font-semibold ${
+                              daysSilent >= 20 ? 'bg-red-500/80 text-white' :
+                              daysSilent >= 7  ? 'bg-amber-400/80 text-white' :
+                                                 'bg-white/15 text-white/80'
+                            }`}>
+                              {daysSilent === 0 ? 'Hoy' : `${daysSilent}d sin escribir`}
+                            </span>
+                          )}
+                        </p>
+                      );
+                    })()}
                   </div>
                   <button
                     onClick={() => setShowInfo(v => !v)}

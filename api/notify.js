@@ -67,9 +67,8 @@ export default async function handler(req, res) {
                     auth: { user: gmailUser, pass: gmailPass },
                 });
 
-                // Destinatarios: siempre admin + cliente si tiene correo
-                const toList = [adminEmail];
-                if (to && to.includes('@') && to !== adminEmail) toList.push(to);
+                // Si hay destinatario específico, solo a él; si no, al admin
+                const toList = (to && to.includes('@')) ? [to] : [adminEmail];
 
                 await transporter.sendMail({
                     from: `Esteticar Manizales <${gmailUser}>`,
