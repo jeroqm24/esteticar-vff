@@ -116,15 +116,30 @@ export default async function handler(req, res) {
     return res.status(201).json(inserted);
   }
 
-  // DELETE: eliminar cita
+  // DELETE: eliminar cita + cascade a clients (sin tocar conversations)
   if (req.method === 'DELETE') {
-    const { confirmation_code } = req.body || {};
-    if (!confirmation_code) return res.status(400).json({ error: 'Missing confirmation_code' });
-    const { error } = await supabaseAdmin
-      .from('appointments')
-      .delete()
-      .eq('confirmation_code', confirmation_code);
+    const { confirmation_code, id } = req.body || {};
+    if (!confirmation_code && !id) return res.status(400).json({ error: 'Missing id or confirmation_code' });
+
+    // Obtener client_phone antes de borrar
+    let selectQ = supabaseAdmin.from('appointments').select('client_phone');
+    selectQ = id ? selectQ.eq('id', id) : selectQ.eq('confirmation_code', confirmation_code);
+    const { data: appt } = await selectQ.single().catch(() => ({ data: null }));
+    const phone = appt?.client_phone;
+
+    // Borrar esta cita
+    let delQ = supabaseAdmin.from('appointments');
+    const { error } = await (id ? delQ.delete().eq('id', id) : delQ.delete().eq('confirmation_code', confirmation_code));
     if (error) return res.status(500).json({ error: error.message });
+
+    // Cascade: borrar todas las citas + registro de cliente (sin tocar chats)
+    if (phone) {
+      await Promise.all([
+        supabaseAdmin.from('appointments').delete().eq('client_phone', phone),
+        supabaseAdmin.from('clients').delete().eq('phone', phone),
+      ]);
+    }
+
     return res.status(200).json({ ok: true });
   }
 

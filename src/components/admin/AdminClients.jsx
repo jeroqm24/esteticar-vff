@@ -449,7 +449,7 @@ export default function AdminClients() {
     await fetch('/api/conversations', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
-      body: JSON.stringify({ phone }),
+      body: JSON.stringify({ phone, scope: 'clients' }),
     });
     setClients(prev => prev.filter(c => c.phone !== phone));
     if (selected?.phone === phone) setSelected(null);

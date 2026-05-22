@@ -1135,7 +1135,7 @@ const notifyTeam = async (clientPhone, question, clientName, platform) => {
   }
 };
 
-const notifyBooking = async (booking, from, platform, activeDrivers, trasladoFinal) => {
+const notifyBooking = async (booking, from, platform, activeDrivers, trasladoFinal, leadType, remarketingStatus) => {
   if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) return;
   const channel = platform === 'instagram' ? 'Instagram DM' : platform === 'messenger' ? 'Facebook' : 'WhatsApp';
   const isWA    = platform === 'whatsapp';
@@ -1158,10 +1158,15 @@ const notifyBooking = async (booking, from, platform, activeDrivers, trasladoFin
     }
   }
 
-  const hora = booking.time ? `· ${booking.time}` : '';
+  const hora  = booking.time ? `· ${booking.time}` : '';
+  const LEAD_LABELS = { regateador: '🫰 Regateador', analista: '📚 Analista', embalado: '⚡ Embalado', billetudo: '💸 Billetudo' };
+  const STATUS_LABELS = { potencial: '🟡 Potencial', efectivo: '🟢 Efectivo', desinteresado: '🔴 Desinteresado', active: '🟡 Potencial', converted: '🟢 Efectivo', lost: '🔴 Desinteresado' };
+  const leadLine   = leadType          ? `\n🎯 Tipo: ${LEAD_LABELS[leadType] || leadType}` : '';
+  const statusLine = remarketingStatus ? `\n📊 Estado: ${STATUS_LABELS[remarketingStatus] || remarketingStatus}` : '';
   const msg = `🔥 *¡NUEVA CITA CONFIRMADA!*\n\n` +
     `👤 *${booking.clientName || 'Cliente sin nombre'}*\n` +
-    `📱 ${phone} · ${channel}\n` +
+    `📱 ${phone} · ${channel}` +
+    leadLine + statusLine + `\n` +
     `✂️ ${booking.service}\n` +
     `📅 ${booking.date} ${hora}` +
     trasladoLines +
@@ -1623,7 +1628,7 @@ export default async function handler(req, res) {
       ${activeDrivers.length > 0 ? `
       <tr><td colspan="2" style="height:4px"></td></tr>
       <tr>
-        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Tu vehículo será entregado por</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">${/recogida y entrega/i.test(booking.traslado||'') ? 'Tu vehículo será recogido y entregado por' : /recogida/i.test(booking.traslado||'') ? 'Tu vehículo será recogido por' : 'Tu vehículo será entregado por'}</td>
         <td style="padding:14px 16px;background:#FAF8F4;font-size:14px;color:#0A0A0A;font-weight:600;vertical-align:middle">${activeDrivers.join(' o ')}</td>
       </tr>` : ''}` : ''}
     </table>
@@ -1673,7 +1678,7 @@ export default async function handler(req, res) {
 </body></html>`;
 
         // Notificación Telegram al equipo
-        notifyBooking(booking, from, platform, activeDrivers, trasladoFinal).catch(() => {});
+        notifyBooking(booking, from, platform, activeDrivers, trasladoFinal, meta.lead_type || conv.lead_type, meta.remarketing_status || conv.remarketing_status).catch(() => {});
 
         const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
         // Enviar al cliente (si tiene correo)

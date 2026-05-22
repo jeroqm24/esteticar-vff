@@ -111,14 +111,23 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true, sent });
   }
 
-  // ── DELETE: remove conversation + client record ──
+  // ── DELETE: remove records ──
   if (req.method === 'DELETE') {
-    const { phone } = req.body || {};
+    const { phone, scope } = req.body || {};
     if (!phone) return res.status(400).json({ error: 'Missing phone' });
-    await Promise.all([
-      supabaseAdmin.from('conversations').delete().eq('phone', phone),
-      supabaseAdmin.from('clients').delete().eq('phone', phone),
-    ]);
+    if (scope === 'clients') {
+      // Desde vista de clientes: borra clients + citas, conserva chats
+      await Promise.all([
+        supabaseAdmin.from('clients').delete().eq('phone', phone),
+        supabaseAdmin.from('appointments').delete().eq('client_phone', phone),
+      ]);
+    } else {
+      // Desde vista de chats: borra conversation + client
+      await Promise.all([
+        supabaseAdmin.from('conversations').delete().eq('phone', phone),
+        supabaseAdmin.from('clients').delete().eq('phone', phone),
+      ]);
+    }
     return res.status(200).json({ ok: true });
   }
 

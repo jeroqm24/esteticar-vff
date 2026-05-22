@@ -101,7 +101,11 @@ export const db = {
     },
     delete: async (id) => {
       try {
-        await supabase.from('appointments').delete().eq('id', id);
+        await fetch('/api/appointments', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
+          body: JSON.stringify({ id }),
+        });
         return true;
       } catch { return false; }
     },
