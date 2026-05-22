@@ -808,6 +808,27 @@ const showTyping = async (to) => {
   } catch (_) {}
 };
 
+const fetchIGProfile = async (userId) => {
+  try {
+    const token = IG_TOKEN || FB_PAGE_TOKEN;
+    if (!token) return null;
+    const r = await fetch(`https://graph.instagram.com/v21.0/${userId}?fields=name,username&access_token=${token}`);
+    const d = await r.json();
+    if (d.username) return `@${d.username}`;
+    if (d.name)     return d.name;
+    return null;
+  } catch { return null; }
+};
+
+const fetchFBProfile = async (userId) => {
+  try {
+    if (!FB_PAGE_TOKEN) return null;
+    const r = await fetch(`https://graph.facebook.com/v20.0/${userId}?fields=name&access_token=${FB_PAGE_TOKEN}`);
+    const d = await r.json();
+    return d.name || null;
+  } catch { return null; }
+};
+
 const sendInstagramMessage = async (recipientId, text) => {
   try {
     const { data: tokenRow } = await supabaseAdmin
@@ -1261,6 +1282,19 @@ export default async function handler(req, res) {
 
       // Historial + perfil del cliente
       const conv = await getConversation(from);
+
+      // Obtener nombre de perfil de IG/FB la primera vez que escribe el usuario
+      if (!conv.client_name) {
+        let socialName = null;
+        if (platform === 'instagram') socialName = await fetchIGProfile(rawSenderId);
+        else if (platform === 'messenger') socialName = await fetchFBProfile(rawSenderId);
+        if (socialName) {
+          conv.client_name = socialName;
+          supabaseAdmin.from('conversations')
+            .upsert({ phone: from, client_name: socialName, updated_at: new Date().toISOString() }, { onConflict: 'phone' })
+            .then(null, () => {});
+        }
+      }
 
       // Si el bot está pausado, guardar el mensaje sin responder
       if (conv.bot_paused) {
