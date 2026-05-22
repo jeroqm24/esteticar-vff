@@ -121,26 +121,37 @@ export default async function handler(req, res) {
     const { confirmation_code, id } = req.body || {};
     if (!confirmation_code && !id) return res.status(400).json({ error: 'Missing id or confirmation_code' });
 
-    // Obtener client_phone antes de borrar
-    let selectQ = supabaseAdmin.from('appointments').select('client_phone');
-    selectQ = id ? selectQ.eq('id', id) : selectQ.eq('confirmation_code', confirmation_code);
-    const { data: appt } = await selectQ.single().catch(() => ({ data: null }));
-    const phone = appt?.client_phone;
+    try {
+      // Obtener client_phone antes de borrar
+      const field = id ? 'id' : 'confirmation_code';
+      const value = id || confirmation_code;
+      const { data: appt } = await supabaseAdmin
+        .from('appointments')
+        .select('client_phone')
+        .eq(field, value)
+        .maybeSingle();
+      const phone = appt?.client_phone;
 
-    // Borrar esta cita
-    let delQ = supabaseAdmin.from('appointments');
-    const { error } = await (id ? delQ.delete().eq('id', id) : delQ.delete().eq('confirmation_code', confirmation_code));
-    if (error) return res.status(500).json({ error: error.message });
+      // Borrar esta cita
+      const { error } = await supabaseAdmin
+        .from('appointments')
+        .delete()
+        .eq(field, value);
+      if (error) throw error;
 
-    // Cascade: borrar todas las citas + registro de cliente (sin tocar chats)
-    if (phone) {
-      await Promise.all([
-        supabaseAdmin.from('appointments').delete().eq('client_phone', phone),
-        supabaseAdmin.from('clients').delete().eq('phone', phone),
-      ]);
+      // Cascade: borrar todas las citas + registro de cliente (sin tocar chats)
+      if (phone) {
+        await Promise.all([
+          supabaseAdmin.from('appointments').delete().eq('client_phone', phone),
+          supabaseAdmin.from('clients').delete().eq('phone', phone),
+        ]);
+      }
+
+      return res.status(200).json({ ok: true });
+    } catch (e) {
+      console.error('[DELETE appointment]', e);
+      return res.status(500).json({ error: e.message || 'Delete failed' });
     }
-
-    return res.status(200).json({ ok: true });
   }
 
   return res.status(405).json({ error: 'Method not allowed' });

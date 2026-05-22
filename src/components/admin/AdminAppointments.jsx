@@ -241,12 +241,11 @@ export default function AdminAppointments() {
   const handleDelete = async () => {
     if (!deleteTarget) return;
     setDeleting(true);
-    const ok = await db.appointments.delete(deleteTarget.id);
-    if (ok) {
-      if (selected?.id === deleteTarget.id) { setSelected(null); setShowDetail(false); }
-      setDeleteTarget(null);
-      await load();
-    }
+    const targetId = deleteTarget.id;
+    setDeleteTarget(null);
+    await db.appointments.delete(targetId);
+    if (selected?.id === targetId) { setSelected(null); setShowDetail(false); }
+    await load();
     setDeleting(false);
   };
 
