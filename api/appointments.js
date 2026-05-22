@@ -8,7 +8,55 @@ const supabaseAdmin = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY
 );
 
-const ADMIN_SECRET = process.env.ADMIN_SECRET || 'esteticar2026';
+const ADMIN_SECRET     = process.env.ADMIN_SECRET || 'esteticar2026';
+const TELEGRAM_TOKEN   = process.env.TELEGRAM_BOT_TOKEN;
+const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+
+const parsePrice  = (s) => { const n = parseInt((s || '').replace(/[^0-9]/g, ''), 10); return isNaN(n) ? 0 : n; };
+const trasladoCost = (t) => {
+  if (!t || t === 'sin traslado' || t === 'no_proporcionado') return 0;
+  if (/recogida y entrega/i.test(t)) return 9000;
+  if (/recogida|entrega/i.test(t)) return 7000;
+  return 0;
+};
+const formatCOP = (n) => '$' + n.toLocaleString('es-CO');
+
+const notifyManualBooking = async (row, drivers) => {
+  if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) return;
+  const svcPrice  = parsePrice(row.price_display);
+  const traslado  = trasladoCost(row.traslado);
+  const total     = svcPrice + traslado;
+  const phone     = row.client_phone || '—';
+  const hora      = row.time ? `· ${row.time}` : '';
+  const hasTraslado = traslado > 0;
+
+  let trasladoLines = '';
+  if (hasTraslado) {
+    trasladoLines = `\n🚗 Traslado: ${row.traslado}`;
+    if (drivers.length > 0) trasladoLines += `\n👨‍✈️ Conductor: ${drivers.join(' o ')}`;
+  }
+
+  let valorLines = hasTraslado
+    ? `\n💳 Servicio: ${row.price_display}\n🚐 Traslado: + ${formatCOP(traslado)}\n💰 TOTAL: ${formatCOP(total)}`
+    : `\n💰 Valor: ${row.price_display || '—'}`;
+
+  const msg = `🔥 *¡NUEVA CITA CONFIRMADA!*\n\n` +
+    `👤 *${row.client_name || 'Sin nombre'}*\n` +
+    `📱 ${phone} · Panel Admin\n` +
+    `✂️ ${row.service}\n` +
+    `📅 ${row.date || '—'} ${hora}` +
+    trasladoLines +
+    valorLines +
+    `\n\n📋 https://esteticar-vff.vercel.app/admin`;
+
+  try {
+    await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: 'Markdown' }),
+    });
+  } catch (_) {}
+};
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -57,6 +105,14 @@ export default async function handler(req, res) {
       .select()
       .single();
     if (insertErr) return res.status(500).json({ error: insertErr.message });
+
+    // Notificar Telegram — misma data que la cita automática
+    try {
+      const { data: cfg } = await supabaseAdmin.from('bot_config').select('pickup_team').single();
+      const drivers = (cfg?.pickup_team || []).filter(m => m.active).map(m => m.name);
+      notifyManualBooking(inserted, drivers).catch(() => {});
+    } catch (_) {}
+
     return res.status(201).json(inserted);
   }
 
