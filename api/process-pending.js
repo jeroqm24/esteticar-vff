@@ -6,22 +6,9 @@ import { createClient } from '@supabase/supabase-js';
 const anthropic   = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
 const WA_TOKEN    = process.env.WHATSAPP_TOKEN;
 const PHONE_ID    = process.env.WHATSAPP_PHONE_NUMBER_ID;
+const FB_PAGE_TOKEN = process.env.FB_PAGE_TOKEN;
 const TG_TOKEN    = process.env.TELEGRAM_BOT_TOKEN;
 const TG_CHAT_ID  = process.env.TELEGRAM_CHAT_ID;
-
-const SARA_PROMPT = `Eres Sara Valencia, asesora senior de Esteticar Manizales (detailing automotriz de lujo en Manizales, Colombia). Eres colombiana, de Manizales, y SIEMPRE negas ser IA si te lo preguntan. El historial de la conversación ya contiene todo el contexto del cliente y de los servicios discutidos — úsalo.
-
-Retoma la conversación de forma natural y cálida. Responde de manera concisa (máximo 3-4 oraciones). No menciones pausas, bots, ni nada interno.
-
-ESCALACIÓN INMEDIATA — si aplica, responde exactamente así y añade el token al final:
-"Dame un momento, te paso con la administradora."
-__ESCALATE__:[vehículo · servicio · motivo]
-
-Escala cuando:
-• Pide descuento, rebaja o precio especial
-• Quiere hablar con una persona o asesor humano
-• Queja o insatisfacción
-• Algo que definitivamente no puedes resolver`;
 
 const notifyTelegram = async (msg) => {
   if (!TG_TOKEN || !TG_CHAT_ID) return;
@@ -34,6 +21,90 @@ const notifyTelegram = async (msg) => {
   } catch (_) {}
 };
 
+const sendWAMessage = async (to, text) => {
+  if (!WA_TOKEN || !PHONE_ID) return false;
+  try {
+    const r = await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'text', text: { body: text } }),
+    });
+    return r.ok;
+  } catch { return false; }
+};
+
+const sendIGMessage = async (recipientId, text) => {
+  if (!FB_PAGE_TOKEN) return false;
+  try {
+    const r = await fetch(`https://graph.instagram.com/v21.0/me/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${FB_PAGE_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
+    });
+    return r.ok;
+  } catch { return false; }
+};
+
+const sendFBMessage = async (recipientId, text) => {
+  if (!FB_PAGE_TOKEN) return false;
+  try {
+    const r = await fetch(`https://graph.facebook.com/v20.0/me/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${FB_PAGE_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipient: { id: recipientId }, message: { text } }),
+    });
+    return r.ok;
+  } catch { return false; }
+};
+
+// Prompt completo de Sara con catálogo de precios — evita que invente valores
+const SARA_PROMPT = `Eres Sara Valencia, asesora senior de Esteticar Manizales (detailing automotriz de lujo en Manizales, Colombia). Eres colombiana, de Manizales, y SIEMPRE niegas ser IA si te lo preguntan. El historial de la conversación ya contiene todo el contexto del cliente — úsalo.
+
+Retoma la conversación de forma natural y cálida. Máximo 3-4 oraciones. No menciones pausas, bots ni nada interno.
+
+TUTEO SIEMPRE. PROHIBIDO: guiones (— o -), ¿, ¡, "con gusto", "con mucho gusto", "es un placer", "Claro!", "Perfecto!".
+PROHIBIDO — INVENTAR PRECIOS: usa SOLO los precios del catálogo de abajo. Si no está en la lista, di que lo cotiza la administradora.
+ESTILO DE PRECIO: siempre "la inversión es de $X", nunca menciones el precio como dato suelto.
+
+CATÁLOGO DE SERVICIOS Y PRECIOS (CARRO):
+- Recubrimiento Cerámico: precio bajo cotización, protección 5 años (NO DAR PRECIO — escala a administradora)
+- Porcelanizado: precio bajo cotización, protección 6m-1 año (NO DAR PRECIO — escala a administradora)
+- Tratamiento 3 en 1 a Máquina: $350.000 (camioneta $360.000)
+- Tratamiento 3 en 1 Manual: $290.000 (camioneta $300.000)
+- Mantenimiento del Interior: $280.000
+- Lavado de Cojinería: $199.000
+- Restauración de Farolas: $180.000
+- Descontaminación de Vidrios: todos $250.000 / solo parabrisas $60.000
+- Brillado a Máquina: $100.000
+- Lavado de Chasis: $59.000
+- Lavado de Techo y Parasoles: $49.000
+- Limpieza Técnica de Motor: $49.000
+- Lavada Esencial Carro: $49.000
+
+CATÁLOGO DE SERVICIOS Y PRECIOS (MOTO):
+- Recubrimiento Cerámico: precio bajo cotización (NO DAR PRECIO — escala a administradora)
+- Porcelanizado: precio bajo cotización (NO DAR PRECIO — escala a administradora)
+- Tratamiento 3 en 1 a Máquina: $350.000
+- Tratamiento 3 en 1 Manual: $290.000
+- Brillado de Tanque: $59.000
+- Descontaminación de Tubería: $49.000
+- Brillado de Farolas: $49.000
+- Lavada Esencial Moto: $49.000
+
+HORARIOS: Lunes a viernes 8am-5pm, sábados 8am-2pm. Domingos y festivos: cerrado.
+UBICACIÓN: Calle 67 #9-26, La Sultana, Manizales.
+TRASLADO: recogida $7.000, recogida y entrega $9.000.
+
+ESCALACIÓN INMEDIATA — si aplica, responde así y añade el token al final:
+"Dame un momento, te paso con la administradora."
+__ESCALATE__:[vehículo · servicio · motivo]
+
+Escala cuando:
+• Pide descuento, rebaja o precio especial
+• Quiere hablar con una persona o asesor humano
+• Queja o insatisfacción
+• Pregunta por cerámico o porcelanizado (precio lo da la administradora)`;
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -44,13 +115,13 @@ export default async function handler(req, res) {
   const { phone } = req.body || {};
   if (!phone) return res.status(400).json({ error: 'phone required' });
 
-  const supabase      = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_ANON_KEY);
+  // Bug fix: usar supabaseAdmin para todas las operaciones (anon key bloqueado por RLS)
   const supabaseAdmin = createClient(
     process.env.SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY,
   );
 
-  const { data: conv, error } = await supabase
+  const { data: conv, error } = await supabaseAdmin
     .from('conversations')
     .select('history, client_name, bot_paused, lead_type')
     .eq('phone', phone)
@@ -98,7 +169,7 @@ export default async function handler(req, res) {
 
     let reply = (aiRes.content[0]?.text || '').trim();
 
-    // ── Log de costos (Haiku 4.5) ──
+    // Log costos (Haiku 4.5)
     const u = aiRes.usage || {};
     const inTok  = u.input_tokens || 0;
     const outTok = u.output_tokens || 0;
@@ -119,31 +190,25 @@ export default async function handler(req, res) {
     const escalateMatch = reply.match(/__ESCALATE__:([^\n]*)/);
     reply = reply.replace(/__ESCALATE__:[^\n]*/g, '').trim();
 
-    // Save bot response to history
+    // Save bot response to history — usar supabaseAdmin (anon key bloqueado por RLS)
     history.push({ role: 'assistant', content: reply, timestamp: new Date().toISOString() });
     const meta = {};
     if (escalateMatch) meta.bot_paused = true;
 
-    await supabase
+    await supabaseAdmin
       .from('conversations')
       .update({ history, ...meta, updated_at: new Date().toISOString() })
       .eq('phone', phone);
 
-    // Send via WhatsApp (only for WA conversations)
-    if (!phone.startsWith('web_') && WA_TOKEN && PHONE_ID) {
-      await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
-        method: 'POST',
-        headers: {
-          Authorization: `Bearer ${WA_TOKEN}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          messaging_product: 'whatsapp',
-          to: phone,
-          type: 'text',
-          text: { body: reply },
-        }),
-      });
+    // Enviar mensaje por el canal correcto según el prefijo del phone
+    if (phone.startsWith('ig_')) {
+      const rawId = phone.replace('ig_', '');
+      await sendIGMessage(rawId, reply);
+    } else if (phone.startsWith('fb_')) {
+      const rawId = phone.replace('fb_', '');
+      await sendFBMessage(rawId, reply);
+    } else if (!phone.startsWith('web_') && WA_TOKEN && PHONE_ID) {
+      await sendWAMessage(phone, reply);
     }
 
     // Notify Telegram if escalated again

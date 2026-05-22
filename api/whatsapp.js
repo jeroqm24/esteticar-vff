@@ -993,7 +993,8 @@ const buildCalendarUrl = (booking) => {
     const dur = SERVICE_HOURS[booking.service] || 2;
     const pad = n => String(n).padStart(2, '0');
     const start = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(min)}00`;
-    const end   = `${year}${pad(month)}${pad(day)}T${pad(hour + dur)}${pad(min)}00`;
+    const endHour = Math.min(hour + dur, 23);
+    const end   = `${year}${pad(month)}${pad(day)}T${pad(endHour)}${pad(min)}00`;
     return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Cita en Esteticar — ' + booking.service)}&dates=${start}/${end}&details=${encodeURIComponent('Servicio: ' + booking.service + '\nCódigo: ' + booking.confirmationCode + '\nPrecio: ' + booking.priceDisplay)}&location=${encodeURIComponent('Cll 67 #9-26, La Sultana, Manizales')}`;
   } catch { return null; }
 };

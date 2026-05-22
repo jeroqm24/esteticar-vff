@@ -60,13 +60,23 @@ export const db = {
     create: async (data) => {
       try {
         const row = toApptRow(data);
-        const { data: inserted } = await supabase.from('appointments').insert(row).select().single();
-        return inserted ? mapAppt(inserted) : null;
+        const res = await fetch('/api/appointments', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
+          body: JSON.stringify(row),
+        });
+        const inserted = await res.json();
+        return inserted && inserted.id ? mapAppt(inserted) : null;
       } catch { return null; }
     },
     update: async (id, data) => {
       try {
-        await supabase.from('appointments').update(toApptRow(data)).eq('id', id);
+        const row = toApptRow(data);
+        await fetch('/api/appointments', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
+          body: JSON.stringify({ confirmation_code: row.confirmation_code || id, updates: row }),
+        });
         return true;
       } catch { return false; }
     },
@@ -382,7 +392,7 @@ export const check20DayReminders = async () => {
       if (!client.lastDate) continue;
       const lastDate = new Date(client.lastDate);
       const diffDays = Math.floor((now - lastDate) / (1000 * 60 * 60 * 24));
-      if (diffDays >= 30) {
+      if (diffDays >= 20) {
         const subject = `⏰ Recordatorio 20 días — ${client.name} (${diffDays}d)`;
         const whatsappMsg = encodeURIComponent(
           `${getGreeting()}, ${client.name} 👋 Te saluda el equipo de *Esteticar*.\n\nHan pasado ${diffDays} días desde el último tratamiento de tu vehículo — el momento ideal para renovar la protección y mantener ese acabado impecable.\n\n¿Te agendamos esta semana? ✨`
