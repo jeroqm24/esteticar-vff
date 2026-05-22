@@ -71,7 +71,8 @@ CATÁLOGO DE SERVICIOS Y PRECIOS (CARRO):
 - Porcelanizado: precio bajo cotización, protección 6m-1 año (NO DAR PRECIO — escala a administradora)
 - Tratamiento 3 en 1 a Máquina: $350.000 (camioneta $360.000)
 - Tratamiento 3 en 1 Manual: $290.000 (camioneta $300.000)
-- Mantenimiento del Interior: $280.000
+- Mantenimiento Interior Sólo Cojinería: $290.000 · 2 días
+- Mantenimiento Interior Levantamiento del Alfombrado: $350.000 · 2 días
 - Lavado de Cojinería: $199.000
 - Restauración de Farolas: $180.000
 - Descontaminación de Vidrios: todos $250.000 / solo parabrisas $60.000

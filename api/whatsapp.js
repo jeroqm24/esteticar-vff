@@ -196,7 +196,9 @@ const SERVICE_HOURS = {
   'Descontaminación de Vidrios': 2, 'Descontaminacion de Vidrios': 2,
   'Tratamiento 3 en 1 a Máquina': 5, 'Tratamiento 3 en 1 a Maquina': 5,
   'Tratamiento 3 en 1 Manual': 4,
-  'Mantenimiento Interior': 3,
+  'Mantenimiento Interior Sólo Cojinería': 16, 'Mantenimiento Interior Solo Cojineria': 16,
+  'Mantenimiento Interior Levantamiento del Alfombrado': 16, 'Mantenimiento Interior Levantamiento': 16,
+  'Mantenimiento Interior': 16,
   'Lavado de Cojinería': 4, 'Lavado de Cojineria': 4,
   'Restauración de Farolas': 2, 'Restauracion de Farolas': 2,
   'Brillado a Máquina': 3, 'Brillado a Maquina': 3,
@@ -298,7 +300,8 @@ const FALLBACK_SERVICES = [
   { name: "Porcelanizado", price: "Bajo cotización · 2 días · protección 6m-1 año", vehicle: "car" },
   { name: "Tratamiento 3 en 1 a Máquina", price: "$350.000 (camioneta $360.000)", vehicle: "car" },
   { name: "Tratamiento 3 en 1 Manual", price: "$290.000 (camioneta $300.000)", vehicle: "car" },
-  { name: "Mantenimiento del Interior", price: "$280.000", vehicle: "car" },
+  { name: "Mantenimiento Interior Sólo Cojinería", price: "$290.000 · 2 días", vehicle: "car" },
+  { name: "Mantenimiento Interior Levantamiento del Alfombrado", price: "$350.000 · 2 días", vehicle: "car" },
   { name: "Lavado de Cojinería", price: "$199.000", vehicle: "car" },
   { name: "Restauración de Farolas", price: "$180.000", vehicle: "car" },
   { name: "Descontaminación de Vidrios", price: "todos $250.000 · solo parabrisas $60.000", vehicle: "car" },
@@ -614,7 +617,8 @@ Descontaminación de Vidrios (todos)   │ "2 a 3 horas"      │ 3h
 Tratamiento 3 en 1 Manual             │ "4 a 5 horas"      │ 5h
 Tratamiento 3 en 1 a Máquina         │ "5 a 6 horas"      │ 6h
 Lavado de Cojinería                   │ "1 día completo"   │ 8h → pasa al siguiente día hábil
-Mantenimiento Interior                │ "2 días"           │ 16h → pasa dos días hábiles
+Mantenimiento Interior Sólo Cojinería │ "2 días"           │ 16h → pasa dos días hábiles
+Mantenimiento Interior Levantamiento  │ "2 días"           │ 16h → pasa dos días hábiles
 Recubrimiento Cerámico                │ "mínimo 2 días"    │ escala a administradora
 Porcelanizado                         │ "mínimo 2 días"    │ escala a administradora
 
