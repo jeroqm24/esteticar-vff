@@ -458,10 +458,8 @@ export default function AdminAppointments() {
                               {fmtTime(a.time) || "Hora por confirmar"}
                             </span>
                             {a.vehicleType && (
-                              <span className="flex items-center gap-1.5 font-ui text-[11px] tracking-wider text-ec-text-muted">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                                  <rect x="1" y="9" width="22" height="10" rx="2"/><path d="M5 9V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><circle cx="7" cy="19" r="2"/><circle cx="17" cy="19" r="2"/>
-                                </svg>
+                              <span className="flex items-center gap-1 font-ui text-[11px] tracking-wider text-ec-text-muted">
+                                {a.vehicleType === "Moto" || a.vehicleType === "moto" ? "🏍️" : "🚗"}
                                 {a.vehicleType === "car" ? "Carro" : a.vehicleType === "moto" ? "Moto" : a.vehicleType}
                               </span>
                             )}
