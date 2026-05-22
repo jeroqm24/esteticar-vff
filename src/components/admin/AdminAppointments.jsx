@@ -110,14 +110,21 @@ function LeadTypeBadge({ leadType }) {
   );
 }
 
+const normalizeStatus = (s) => {
+  if (!s) return "confirmada";
+  if (s === "cancelada" || s === "cancelled") return "cancelada";
+  return "confirmada";
+};
+
 function StatusBadge({ status }) {
-  const c = STATUS_COLORS[status] || STATUS_COLORS.pending;
+  const ns = normalizeStatus(status);
+  const c = STATUS_COLORS[ns];
   return (
     <span
       className="font-ui text-[9px] tracking-[0.15em] uppercase px-3 py-1.5 rounded-full"
       style={{ background: c.bg, color: c.text, border: `1px solid ${c.border}` }}
     >
-      {STATUS_LABELS[status] || status}
+      {STATUS_LABELS[ns]}
     </span>
   );
 }
@@ -324,11 +331,7 @@ export default function AdminAppointments() {
   const openDetail = (appt) => { setSelected(appt); setShowDetail(true); };
   const closeDetail = () => { setShowDetail(false); };
 
-  const filtered = filter === "all" ? appointments : appointments.filter(a => {
-    if (filter === "confirmada") return a.status === "confirmada" || a.status === "confirmed" || a.status === "completed" || a.status === "in_progress";
-    if (filter === "cancelada")  return a.status === "cancelada"  || a.status === "cancelled";
-    return a.status === filter;
-  });
+  const filtered = filter === "all" ? appointments : appointments.filter(a => normalizeStatus(a.status) === filter);
 
   return (
     <div className="space-y-6">
@@ -362,11 +365,7 @@ export default function AdminAppointments() {
         {STATUS_OPTIONS.map(f => {
           const c = STATUS_COLORS[f];
           const isActive = filter === f;
-          const count = appointments.filter(a =>
-            f === "confirmada" ? (a.status === "confirmada" || a.status === "confirmed" || a.status === "completed" || a.status === "in_progress")
-            : f === "cancelada" ? (a.status === "cancelada" || a.status === "cancelled")
-            : a.status === f
-          ).length;
+          const count = appointments.filter(a => normalizeStatus(a.status) === f).length;
           return (
             <button
               key={f}
@@ -399,7 +398,7 @@ export default function AdminAppointments() {
           ) : (
             <AnimatePresence>
               {filtered.map(a => {
-                const c = STATUS_COLORS[a.status] || STATUS_COLORS.pending;
+                const c = STATUS_COLORS[normalizeStatus(a.status)];
                 const isSelected = selected?.id === a.id && showDetail;
                 return (
                   <motion.div
@@ -536,7 +535,7 @@ export default function AdminAppointments() {
                   <div className="w-10 h-1 bg-black/[0.12] rounded-full" />
                 </div>
                 {/* Top color bar */}
-                <div className="h-2 w-full" style={{ background: (STATUS_COLORS[selected.status] || STATUS_COLORS.pending).bar }} />
+                <div className="h-2 w-full" style={{ background: STATUS_COLORS[normalizeStatus(selected.status)].bar }} />
 
                 <div className="p-6">
                   {/* Header */}
@@ -544,7 +543,7 @@ export default function AdminAppointments() {
                     <div className="flex items-center gap-3">
                       <div
                         className="w-14 h-14 rounded-2xl flex items-center justify-center text-white font-heading text-2xl"
-                        style={{ background: (STATUS_COLORS[selected.status] || STATUS_COLORS.pending).bar }}
+                        style={{ background: STATUS_COLORS[normalizeStatus(selected.status)].bar }}
                       >
                         {(selected.clientName || "?")[0].toUpperCase()}
                       </div>
@@ -650,9 +649,7 @@ export default function AdminAppointments() {
                     <div className="flex gap-2">
                       {STATUS_OPTIONS.map(s => {
                         const c = STATUS_COLORS[s];
-                        const isActive = selected.status === s ||
-                          (s === "confirmada" && ["confirmed","completed","in_progress"].includes(selected.status)) ||
-                          (s === "cancelada"  && selected.status === "cancelled");
+                        const isActive = normalizeStatus(selected.status) === s;
                         return (
                           <button
                             key={s}
