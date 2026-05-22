@@ -121,10 +121,14 @@ const isSameDate = (appt, day) => {
 
 // ─── Status badge ─────────────────────────────────────────────────
 const STATUS_CONFIG = {
-  pending: { label: "Pendiente", color: "#F8C840", bg: "#FFF8E7" },
-  confirmed: { label: "Confirmada", color: "#22c55e", bg: "#f0fdf4" },
-  completed: { label: "Completada", color: "#6366f1", bg: "#eef2ff" },
-  cancelled: { label: "Cancelada", color: "#ef4444", bg: "#fef2f2" },
+  confirmada:  { label: "Confirmada", color: "#22c55e", bg: "#f0fdf4" },
+  cancelada:   { label: "Cancelada",  color: "#ef4444", bg: "#fef2f2" },
+  // legacy
+  pending:     { label: "Confirmada", color: "#22c55e", bg: "#f0fdf4" },
+  confirmed:   { label: "Confirmada", color: "#22c55e", bg: "#f0fdf4" },
+  completed:   { label: "Confirmada", color: "#22c55e", bg: "#f0fdf4" },
+  in_progress: { label: "Confirmada", color: "#22c55e", bg: "#f0fdf4" },
+  cancelled:   { label: "Cancelada",  color: "#ef4444", bg: "#fef2f2" },
 };
 
 // ─── Month calendar grid ──────────────────────────────────────────
@@ -341,7 +345,7 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
                       {appts.map((appt, i) => {
                         const color = getServiceColor(appt.service);
                         const duration = getServiceDuration(appt.service);
-                        const status = STATUS_CONFIG[appt.status] || STATUS_CONFIG.pending;
+                        const status = STATUS_CONFIG[appt.status] || STATUS_CONFIG.confirmada;
 
                         // Traslado detection
                         const trasladoStr = (appt.traslado || '').toLowerCase();
@@ -1008,8 +1012,8 @@ export default function CalendarSection({ isAdmin = false, onOpenChat, openNewOn
     await loadAppointments();
   };
 
-  const todayAppts = appointments.filter(a => isSameDate(a, new Date()) && a.status !== 'cancelada');
-  const pendingAppts = appointments.filter(a => a.status === 'pending');
+  const todayAppts = appointments.filter(a => isSameDate(a, new Date()) && a.status !== 'cancelada' && a.status !== 'cancelled');
+  const confirmedAppts = appointments.filter(a => a.status !== 'cancelada' && a.status !== 'cancelled');
 
   // Bahías ocupadas en este momento (basado en hora actual y duración de servicio)
   const currentHour = new Date().getHours();
@@ -1097,9 +1101,9 @@ export default function CalendarSection({ isAdmin = false, onOpenChat, openNewOn
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {[
           { value: todayAppts.length, occupancy: nowOccupied, label: "Hoy", sublabel: `${MAX_BAYS - nowOccupied} bahía${MAX_BAYS - nowOccupied !== 1 ? "s" : ""} libre${MAX_BAYS - nowOccupied !== 1 ? "s" : ""} ahora` },
-          { value: pendingAppts.length, label: "Pendientes", sublabel: "por confirmar" },
-          { value: appointments.filter(a => a.status === 'confirmed').length, label: "Confirmadas", sublabel: "esta semana" },
-          { value: appointments.filter(a => a.status === 'completed').length, label: "Completadas", sublabel: "histórico" },
+          { value: confirmedAppts.length, label: "Confirmadas", sublabel: "total activas" },
+          { value: appointments.filter(a => a.status === 'cancelada' || a.status === 'cancelled').length, label: "Canceladas", sublabel: "histórico" },
+          { value: appointments.length, label: "Total", sublabel: "todas las citas" },
         ].map((stat, i) => (
           <div key={i} className="bg-white border border-black/[0.06] p-5 rounded-sm">
             <p className="font-heading text-5xl font-light text-ec-gold leading-none">{stat.value}</p>
