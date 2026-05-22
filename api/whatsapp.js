@@ -1638,7 +1638,7 @@ export default async function handler(req, res) {
     <div style="color:#C9A84C;font-size:9px;letter-spacing:4px;font-family:Arial,sans-serif;font-weight:600;text-transform:uppercase">Custodia Vehicular Premium · Manizales</div>
   </td></tr>
   <tr><td style="background:#0A0A0A;padding:0 40px 28px;text-align:center">
-    <div style="display:inline-block;background:#C9A84C;color:#0A0A0A;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:7px 20px;border-radius:2px">Nueva cita · Bot</div>
+    <div style="display:inline-block;background:#C9A84C;color:#0A0A0A;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:7px 20px;border-radius:2px">Nueva cita</div>
   </td></tr>
   <tr><td style="padding:36px 40px 28px">
     <table width="100%" cellpadding="0" cellspacing="0">
