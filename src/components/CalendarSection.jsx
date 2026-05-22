@@ -430,11 +430,8 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
                               </div>
                             </div>
 
-                            {/* Code + status */}
+                            {/* Status */}
                             <div className="flex flex-col items-end gap-2 flex-shrink-0">
-                              <span className="font-mono text-[9px] text-ec-text-muted/60">
-                                {appt.confirmationCode}
-                              </span>
                               {isAdmin && (
                                 <select
                                   value={appt.status === "cancelada" || appt.status === "cancelled" ? "cancelada" : "confirmada"}

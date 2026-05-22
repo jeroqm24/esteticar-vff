@@ -71,11 +71,30 @@ export const db = {
     },
     update: async (id, data) => {
       try {
-        const row = toApptRow(data);
+        // Build only the fields being updated (camelCase → snake_case)
+        const updates = {};
+        if (data.status       !== undefined) updates.status        = data.status;
+        if (data.date         !== undefined) updates.date          = data.date;
+        if (data.time         !== undefined) updates.time          = data.time;
+        if (data.service      !== undefined) updates.service       = data.service;
+        if (data.vehicleType  !== undefined) updates.vehicle_type  = data.vehicleType;
+        if (data.clientName   !== undefined) updates.client_name   = data.clientName;
+        if (data.clientPhone  !== undefined) updates.client_phone  = data.clientPhone;
+        if (data.clientEmail  !== undefined) updates.client_email  = data.clientEmail;
+        if (data.traslado     !== undefined) updates.traslado      = data.traslado;
+        if (data.notes        !== undefined) updates.notes         = data.notes;
+        if (data.totalAmount  !== undefined) updates.total_amount  = data.totalAmount;
+        if (data.discount     !== undefined) updates.discount      = data.discount;
+        if (data.origin       !== undefined) updates.origin        = data.origin;
+        if (data.reminderSent !== undefined) updates.reminder_sent = data.reminderSent;
+        // Also allow direct snake_case keys
+        const SNAKE = ['status','date','time','service','vehicle_type','client_name','client_phone','client_email','traslado','notes','total_amount','discount','origin','reminder_sent','pickup_option','pickup_price','duration_hours'];
+        SNAKE.forEach(k => { if (data[k] !== undefined) updates[k] = data[k]; });
+
         await fetch('/api/appointments', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
-          body: JSON.stringify({ confirmation_code: row.confirmation_code || id, updates: row }),
+          body: JSON.stringify({ id, updates }),
         });
         return true;
       } catch { return false; }
