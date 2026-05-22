@@ -1507,7 +1507,7 @@ export default async function handler(req, res) {
           traslado: trasladoFinal,
           cedula: booking.cedula && booking.cedula !== 'no_proporcionado' ? booking.cedula : null,
           placa: booking.placa && booking.placa !== 'no_proporcionado' ? booking.placa : null,
-          status: 'pending',
+          status: 'confirmada',
           channel: platform,
           origin: originMap[platform] || 'Bot',
           lead_type: meta.lead_type || conv.lead_type || null,

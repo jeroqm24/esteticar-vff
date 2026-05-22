@@ -192,6 +192,10 @@ export default function AdminAppointments() {
     await db.appointments.update(id, { status });
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, status } : a));
     if (selected?.id === id) setSelected(prev => ({ ...prev, status }));
+    if (status === 'confirmada') {
+      const appt = appointments.find(a => a.id === id);
+      if (appt) registerConversion(appt);
+    }
   };
 
   const handleDelete = async () => {
@@ -640,10 +644,10 @@ export default function AdminAppointments() {
                     </div>
                   </div>
 
-                  {/* Change status */}
-                  <div className="mb-6">
-                    <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase mb-3">Estado de la cita</p>
-                    <div className="grid grid-cols-2 gap-2">
+                  {/* Estado de la cita */}
+                  <div className="mb-5">
+                    <p className="font-ui text-[9px] tracking-[0.2em] text-ec-text-muted uppercase mb-2">Estado de la cita</p>
+                    <div className="flex gap-2">
                       {STATUS_OPTIONS.map(s => {
                         const c = STATUS_COLORS[s];
                         const isActive = selected.status === s ||
@@ -653,10 +657,10 @@ export default function AdminAppointments() {
                           <button
                             key={s}
                             onClick={() => updateStatus(selected.id, s)}
-                            className="py-2.5 font-ui text-[9px] tracking-[0.1em] border uppercase rounded-xl transition-all"
+                            className="flex-1 py-2 font-ui text-[9px] tracking-[0.15em] border uppercase rounded-sm transition-all"
                             style={isActive
                               ? { background: c.bar, color: "#fff", borderColor: c.bar }
-                              : { background: c.bg, color: c.text, borderColor: c.border }
+                              : { background: "transparent", color: c.text, borderColor: c.border }
                             }
                           >
                             {STATUS_LABELS[s]}
@@ -666,34 +670,30 @@ export default function AdminAppointments() {
                     </div>
                   </div>
 
-                  {/* Actions */}
-                  <div className="flex flex-col gap-2">
-                    <button
-                      onClick={() => registerConversion(selected)}
-                      disabled={registeringCAPI || capiDone[selected.id]}
-                      className="w-full py-3.5 font-ui text-[10px] tracking-[0.2em] border uppercase flex items-center justify-center gap-2 transition-all rounded-xl"
-                      style={capiDone[selected.id]
-                        ? { background: "#F0FDF4", color: "#16A34A", borderColor: "#86EFAC", cursor: "default" }
-                        : { background: "#0F0F0F", color: "#fff", borderColor: "#0F0F0F", opacity: registeringCAPI ? 0.5 : 1 }
-                      }
-                    >
-                      {capiDone[selected.id] ? "Conversión Registrada ✓" : registeringCAPI ? "Registrando..." : "Registrar como Conversión"}
-                    </button>
+                  {/* Acciones */}
+                  <div className="border-t border-black/[0.06] pt-4 flex flex-col gap-2">
                     <button
                       onClick={() => sendReminderEmail(selected)}
                       disabled={sending || selected.reminderSent}
-                      className="w-full py-3.5 font-ui text-[10px] tracking-[0.2em] border border-ec-gold text-ec-gold uppercase flex items-center justify-center gap-2 hover:bg-ec-gold hover:text-white transition-all disabled:opacity-30 rounded-xl"
+                      className="w-full py-2.5 font-ui text-[9px] tracking-[0.15em] border uppercase flex items-center justify-center gap-2 rounded-sm transition-all disabled:opacity-40"
+                      style={selected.reminderSent
+                        ? { background: "#FFFBF0", color: "#B8860B", borderColor: "#F8C840", cursor: "default" }
+                        : { background: "transparent", color: "#B8860B", borderColor: "#F8C840" }
+                      }
                     >
-                      {selected.reminderSent ? "Recordatorio Enviado ✓" : "Enviar Recordatorio"}
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
+                      </svg>
+                      {selected.reminderSent ? "Recordatorio enviado ✓" : "Enviar recordatorio"}
                     </button>
                     <button
                       onClick={() => setDeleteTarget(selected)}
-                      className="w-full py-3.5 font-ui text-[10px] tracking-[0.2em] border border-red-200 text-red-500 uppercase flex items-center justify-center gap-2 hover:bg-red-500 hover:text-white hover:border-red-500 transition-all rounded-xl"
+                      className="w-full py-2 font-ui text-[9px] tracking-[0.15em] text-red-400 uppercase flex items-center justify-center gap-1.5 hover:text-red-600 transition-colors mt-1"
                     >
-                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
                         <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/>
                       </svg>
-                      Eliminar Cita
+                      Eliminar cita
                     </button>
                   </div>
                 </div>
