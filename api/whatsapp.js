@@ -74,13 +74,13 @@ const getGreeting = () => {
 
 const getTodayStr = () =>
   getColombiaNow().toLocaleDateString('es-CO', {
-    weekday: 'long', day: 'numeric', month: 'long',
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
   });
 
 const getTomorrowStr = () => {
   const d = getColombiaNow();
   d.setDate(d.getDate() + 1);
-  return d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+  return d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 };
 
 // ─── Festivos colombianos 2025-2026 ──────────────────────────────
@@ -184,7 +184,7 @@ const getWeekCalendar = () => {
     date.setDate(base.getDate() + d);
     if (date.getDay() === 0) continue; // sin domingos
     if (isHoliday(date)) continue;    // sin festivos
-    days.push(date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' }));
+    days.push(date.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }));
     if (days.length >= 6) break;
   }
   return days.join(' · ');
@@ -242,7 +242,7 @@ const getAvailabilityInfo = async () => {
       const isSat = dow === 6;
       const dayEnd = isSat ? 14 : 17;
       const dateStr = date.toLocaleDateString('es-CO', {
-        timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long',
+        timeZone: 'America/Bogota', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
       });
       const dayName = dateStr.split(',')[0].toLowerCase();
       const dayAppts = appts.filter(a => a.date?.toLowerCase().includes(dayName));
@@ -1533,6 +1533,10 @@ export default async function handler(req, res) {
         const waUrl = `https://api.whatsapp.com/send/?phone=${waPhone}&text=${waMsg}`;
         const calUrl = buildCalendarUrl(booking);
 
+        // Conductores activos del equipo (para traslados)
+        const emailCfg = await getBotConfig().catch(() => ({}));
+        const activeDrivers = (emailCfg.pickup_team || []).filter(m => m.active).map(m => m.name);
+
         // Email al CLIENTE — confirmación de cita
         const clientEmailHtml = `
 <!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
@@ -1568,7 +1572,13 @@ export default async function handler(req, res) {
       <tr>
         <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Traslado</td>
         <td style="padding:14px 16px;background:#FAF8F4;font-size:14px;color:#555;vertical-align:middle">${booking.traslado}</td>
-      </tr>` : ''}
+      </tr>
+      ${activeDrivers.length > 0 ? `
+      <tr><td colspan="2" style="height:4px"></td></tr>
+      <tr>
+        <td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Tu vehículo será entregado por</td>
+        <td style="padding:14px 16px;background:#FAF8F4;font-size:14px;color:#0A0A0A;font-weight:600;vertical-align:middle">${activeDrivers.join(' o ')}</td>
+      </tr>` : ''}` : ''}
     </table>
   </td></tr>
   <tr><td style="padding:0 40px 36px">
@@ -1648,6 +1658,20 @@ export default async function handler(req, res) {
       <tr><td style="padding:20px 24px;background:#0A0A0A;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Valor</td><td style="padding:20px 24px;background:#0A0A0A;font-size:20px;color:#C9A84C;font-weight:700;font-family:Arial,sans-serif;vertical-align:middle">${booking.priceDisplay}</td></tr>
       `; })()}
     </table>
+  </td></tr>
+  ${activeDrivers.length > 0 && trasladoFinal ? `
+  <tr><td style="padding:0 40px 28px">
+    <div style="padding:16px 20px;border:1px solid #E8E0D0;border-left:3px solid #C9A84C;border-radius:2px;background:#FFFDF9">
+      <div style="font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Posibles conductores para traslado</div>
+      <div style="font-family:Arial,sans-serif;font-size:14px;color:#0A0A0A;font-weight:600">${activeDrivers.join(' · ')}</div>
+    </div>
+  </td></tr>` : ''}
+  <tr><td style="padding:0 40px 28px;text-align:center">
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#999;margin-bottom:12px;letter-spacing:1px;text-transform:uppercase">Ubicación</div>
+    <div style="display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center">
+      <a href="https://maps.app.goo.gl/yvc3Hu3ksv1bVBXy7" style="display:inline-block;background:#4285F4;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Google Maps</a>
+      <a href="https://waze.com/ul?q=Calle+67+%239-26+La+Sultana+Manizales" style="display:inline-block;background:#33CCFF;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Waze</a>
+    </div>
   </td></tr>
   <tr><td style="background:#0A0A0A;padding:20px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#555">Esteticar · Cll 67 #9-26, La Sultana · Manizales</div>
