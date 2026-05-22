@@ -536,10 +536,11 @@ export default function AdminClients() {
   }, [load]);
 
   const deleteClient = async (phone) => {
-    await Promise.all([
-      supabase.from('conversations').delete().eq('phone', phone),
-      supabase.from('clients').delete().eq('phone', phone),
-    ]);
+    await fetch('/api/clients', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
+      body: JSON.stringify({ phone }),
+    });
     setClients(prev => prev.filter(c => c.phone !== phone));
     if (selected?.phone === phone) setSelected(null);
   };
@@ -605,8 +606,9 @@ export default function AdminClients() {
            c.email?.toLowerCase().includes(q) || c.vehiclePlate?.toLowerCase().includes(q);
   });
 
-  const manualCount  = clients.filter(c => c.botPaused).length;
-  const noNameCount  = clients.filter(c => !c.name).length;
+  const manualCount      = clients.filter(c => c.botPaused).length;
+  const noNameCount      = clients.filter(c => !c.name).length;
+  const leadCounts       = clients.reduce((acc, c) => { if (c.leadType) acc[c.leadType] = (acc[c.leadType] || 0) + 1; return acc; }, {});
 
   return (
     <div className="space-y-6">
@@ -636,8 +638,9 @@ export default function AdminClients() {
               filter === f.id ? "bg-ec-gold text-white border-ec-gold" : "bg-white text-ec-text-muted border-black/[0.06] hover:border-ec-gold/30"
             }`}>
             {f.label}
-            {f.id === "manual" && manualCount > 0 && <span className="ml-1.5 bg-orange-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{manualCount}</span>}
-            {f.id === "noname" && noNameCount > 0 && <span className="ml-1.5 bg-gray-400 text-white rounded-full text-[8px] px-1.5 py-0.5">{noNameCount}</span>}
+            {f.id === "manual"     && manualCount > 0          && <span className="ml-1.5 bg-orange-500 text-white rounded-full text-[8px] px-1.5 py-0.5">{manualCount}</span>}
+            {f.id === "noname"     && noNameCount > 0          && <span className="ml-1.5 bg-gray-400 text-white rounded-full text-[8px] px-1.5 py-0.5">{noNameCount}</span>}
+            {!["all","manual","noname"].includes(f.id) && leadCounts[f.id] > 0 && <span className="ml-1.5 bg-ec-gold text-white rounded-full text-[8px] px-1.5 py-0.5">{leadCounts[f.id]}</span>}
           </button>
         ))}
       </div>
