@@ -11,6 +11,39 @@ const fmtTime = (t) => {
   return `${h12}:${String(m || 0).padStart(2, "0")} ${suffix}`;
 };
 
+const SERVICE_DURATIONS = {
+  "Descontaminación de Vidrios (parabrisas)": 1,
+  "Descontaminación de Vidrios": 2,
+  "Tratamiento 3 en 1 a Máquina": 5,
+  "Tratamiento 3 en 1 Manual": 4,
+  "Mantenimiento Interior": 3,
+  "Lavado de Cojinería": 4,
+  "Restauración de Farolas": 2,
+  "Brillado a Máquina": 3,
+  "Recubrimiento Cerámico": 6,
+  "Porcelanizado": 5,
+  "Limpieza Técnica de Motor": 1,
+  "Lavado de Techo": 1,
+  "Lavado de Chasis": 1,
+  "Lavada Esencial": 1,
+  "Brillado de Farolas": 1,
+  "Brillado de Tanque": 1,
+  "Descontaminación de Tubería": 1,
+  default: 2,
+};
+
+const calcEntrega = (appt) => {
+  if (!appt?.time) return null;
+  const [h] = appt.time.split(":").map(Number);
+  if (isNaN(h)) return null;
+  const key = Object.keys(SERVICE_DURATIONS).find(k => appt.service?.includes(k));
+  const dur = SERVICE_DURATIONS[key] || SERVICE_DURATIONS.default;
+  const exitH = Math.min(h + dur, 23);
+  const suffix = exitH < 12 ? "a.m." : "p.m.";
+  const h12 = exitH % 12 || 12;
+  return `~${h12}:00 ${suffix}`;
+};
+
 const STATUS_OPTIONS = ["confirmada", "cancelada"];
 const ORIGIN_OPTIONS = ["Bot", "Instagram", "Facebook", "Referido", "Calle", "Otro"];
 const STATUS_LABELS = {
@@ -595,7 +628,7 @@ export default function AdminAppointments() {
                       { label: "Fecha", value: selected.date, icon: "M3 4h18v18H3zM16 2v4M8 2v4M3 10h18" },
                       { label: "Hora", value: fmtTime(selected.time) || "Por confirmar", icon: "M12 2a10 10 0 1 1 0 20 10 10 0 0 1 0-20M12 6v6l4 2" },
                       { label: "Vehículo", value: selected.vehicleType === "car" ? "Carro" : selected.vehicleType === "moto" ? "Moto" : selected.vehicleType || "—", icon: "M1 9h22M5 9V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3M1 9h22v10a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V9zM7 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4zM17 19a2 2 0 1 0 0-4 2 2 0 0 0 0 4z" },
-                      { label: "Entrega", value: selected.pickupOption || "—", icon: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" },
+                      { label: "Entrega", value: calcEntrega(selected) || selected.pickupOption || "—", icon: "M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" },
                     ].map((item, i) => (
                       <div key={i} className="bg-ec-cream rounded-xl p-3">
                         <p className="font-ui text-[8px] tracking-[0.2em] text-ec-text-muted uppercase mb-1">{item.label}</p>
