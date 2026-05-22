@@ -187,7 +187,7 @@ export default async function handler(req, res) {
   </td></tr>
   <tr><td style="padding:0 40px 36px;text-align:center">
     <a href="https://maps.google.com/?q=Cll+67+9-26+La+Sultana+Manizales" style="display:inline-block;background:#0A0A0A;color:#C9A84C;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:15px 26px;border-radius:50px;border:1.5px solid #C9A84C;margin-right:10px">Google Maps →</a>
-    <a href="https://waze.com/ul?q=Cll+67+%239-26+La+Sultana+Manizales&navigate=yes" style="display:inline-block;background:#0A0A0A;color:#C9A84C;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:15px 26px;border-radius:50px;border:1.5px solid #C9A84C">Waze →</a>
+    <a href="https://waze.com/ul?q=Cll+67+9-26+La+Sultana+Manizales&navigate=yes" style="display:inline-block;background:#0A0A0A;color:#C9A84C;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:15px 26px;border-radius:50px;border:1.5px solid #C9A84C">Waze →</a>
   </td></tr>
   <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
