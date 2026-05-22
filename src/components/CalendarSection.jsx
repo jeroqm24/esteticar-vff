@@ -433,15 +433,13 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
                               </span>
                               {isAdmin && (
                                 <select
-                                  value={appt.status || 'pending'}
+                                  value={appt.status === "cancelada" || appt.status === "cancelled" ? "cancelada" : "confirmada"}
                                   onChange={(e) => onUpdateStatus && onUpdateStatus(appt.id, e.target.value)}
                                   className="font-ui text-[8px] tracking-wider border border-black/[0.06] rounded-sm px-1 py-0.5 bg-white text-ec-text-muted focus:outline-none focus:border-[#F8C840]"
                                   style={{ fontSize: '9px' }}
                                 >
-                                  <option value="pending">Pendiente</option>
-                                  <option value="confirmed">Confirmada</option>
-                                  <option value="completed">Completada</option>
-                                  <option value="cancelled">Cancelada</option>
+                                  <option value="confirmada">Confirmada</option>
+                                  <option value="cancelada">Cancelada</option>
                                 </select>
                               )}
                             </div>
@@ -562,7 +560,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
     service: defaultService,
     vehicleType: "Carro",
     hour: defaultHour || 9,
-    status: "confirmed",
+    status: "confirmada",
     discount: 0,
     manualPrice: "",
     selectedDate: toDateInput(day || new Date()),
@@ -844,9 +842,8 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
               className="font-body text-sm text-ec-dark bg-ec-cream px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer"
               style={{ fontSize: '16px' }}
             >
-              <option value="pending">Pendiente</option>
-              <option value="confirmed">Confirmada</option>
-              <option value="completed">Completada</option>
+              <option value="confirmada">Confirmada</option>
+              <option value="cancelada">Cancelada</option>
             </select>
           </div>
         </div>
