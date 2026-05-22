@@ -1235,8 +1235,8 @@ export default async function handler(req, res) {
       } else if (body.object === 'instagram') {
         const event = body.entry?.[0]?.messaging?.[0];
         if (!event?.message) return res.status(200).send('OK');
-        // Echo = mensaje enviado por la página. Si ya está en history como 'assistant' (enviado por el bot),
-        // es un eco del bot → ignorar para evitar duplicados. Solo guardar si es de admin nativo.
+        // Echo = mensaje enviado por la página. Si ya está en history como 'assistant' (bot),
+        // ignorar para evitar duplicados. Solo guardar si es de admin nativo (texto diferente al del bot).
         if (event.message.is_echo) {
           const clientId = event.recipient?.id;
           const echoText = event.message.text?.trim();
@@ -1244,8 +1244,8 @@ export default async function handler(req, res) {
             const clientPhone = `ig_${clientId}`;
             const { data: echoConv } = await supabaseAdmin.from('conversations').select('history').eq('phone', clientPhone).single();
             const echoHistory = Array.isArray(echoConv?.history) ? echoConv.history : [];
-            // Si los últimos 5 mensajes contienen este texto como 'assistant', es eco del bot → ignorar
-            const recentAssistant = echoHistory.slice(-5).some(m => m.role === 'assistant' && m.content === echoText);
+            // Comparar con cleanReply porque history guarda rawReply (con tags) pero el eco llega sin tags
+            const recentAssistant = echoHistory.slice(-5).some(m => m.role === 'assistant' && cleanReply(m.content) === echoText);
             if (!recentAssistant) {
               echoHistory.push({ role: 'admin', content: echoText, timestamp: new Date().toISOString() });
               await supabaseAdmin.from('conversations').upsert({ phone: clientPhone, history: echoHistory, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
@@ -1277,7 +1277,7 @@ export default async function handler(req, res) {
         const event = body.entry?.[0]?.messaging?.[0];
         if (!event?.message) return res.status(200).send('OK');
         // Echo = mensaje enviado por la página. Si ya está en history como 'assistant' (bot),
-        // es un eco del bot → ignorar para evitar duplicados. Solo guardar si es de admin nativo.
+        // ignorar para evitar duplicados. Solo guardar si es de admin nativo (texto diferente al del bot).
         if (event.message.is_echo) {
           const clientId = event.recipient?.id;
           const echoText = event.message.text?.trim();
@@ -1285,7 +1285,7 @@ export default async function handler(req, res) {
             const clientPhone = `fb_${clientId}`;
             const { data: echoConv } = await supabaseAdmin.from('conversations').select('history').eq('phone', clientPhone).single();
             const echoHistory = Array.isArray(echoConv?.history) ? echoConv.history : [];
-            const recentAssistant = echoHistory.slice(-5).some(m => m.role === 'assistant' && m.content === echoText);
+            const recentAssistant = echoHistory.slice(-5).some(m => m.role === 'assistant' && cleanReply(m.content) === echoText);
             if (!recentAssistant) {
               echoHistory.push({ role: 'admin', content: echoText, timestamp: new Date().toISOString() });
               await supabaseAdmin.from('conversations').upsert({ phone: clientPhone, history: echoHistory, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
