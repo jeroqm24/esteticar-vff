@@ -1659,8 +1659,8 @@ export default async function handler(req, res) {
   <tr><td style="padding:0 40px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#999;margin-bottom:12px;letter-spacing:1px;text-transform:uppercase">Cómo llegar</div>
     <div style="display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center">
-      <a href="https://maps.app.goo.gl/yvc3Hu3ksv1bVBXy7" style="display:inline-block;background:#4285F4;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Google Maps</a>
-      <a href="https://waze.com/ul?q=Calle+67+%239-26+La+Sultana+Manizales" style="display:inline-block;background:#33CCFF;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Waze</a>
+      <a href="https://maps.google.com/?q=Calle+67+9-26,+La+Sultana,+Manizales,+Colombia" style="display:inline-block;background:#4285F4;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Google Maps</a>
+      <a href="https://waze.com/ul?q=Calle+67+9-26+La+Sultana+Manizales&navigate=yes" style="display:inline-block;background:#33CCFF;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Waze</a>
     </div>
   </td></tr>
   <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">

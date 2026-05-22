@@ -255,9 +255,9 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
             stats.recent.map((a) => (
               <div key={a.id} className="px-4 py-4 sm:px-8 sm:py-5 flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-8 hover:bg-ec-cream/50 transition-colors">
                 <div className="flex-1">
-                  <p className="font-heading text-lg text-ec-dark">{a.client_name || "Cliente sin nombre"}</p>
+                  <p className="font-heading text-lg text-ec-dark">{a.clientName || "Cliente sin nombre"}</p>
                   <p className="font-body text-xs mt-1 text-ec-text-muted font-light">
-                    {a.service || "—"}{a.client_email ? ` · ${a.client_email}` : ""}
+                    {a.service || "—"}{a.clientEmail ? ` · ${a.clientEmail}` : ""}
                   </p>
                 </div>
                 <div className="text-right">
