@@ -1135,6 +1135,53 @@ const notifyTeam = async (clientPhone, question, clientName, platform) => {
   }
 };
 
+const notifyBooking = async (booking, from, platform, activeDrivers, trasladoFinal) => {
+  if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) return;
+  const channel = platform === 'instagram' ? 'Instagram DM' : platform === 'messenger' ? 'Facebook' : 'WhatsApp';
+  const isWA    = platform === 'whatsapp';
+  const phone   = isWA ? from : (booking.clientPhone || from);
+  const dash    = `https://esteticar-vff.vercel.app/admin${isWA ? `?conv=${phone}` : ''}`;
+  const t       = calcTotal(booking);
+
+  let valorLines = '';
+  if (t.traslado > 0) {
+    valorLines = `\n💳 Servicio: ${booking.priceDisplay}\n🚐 Traslado: + ${formatCOP(t.traslado)}\n💰 TOTAL: ${formatCOP(t.total)}`;
+  } else {
+    valorLines = `\n💰 Valor: ${booking.priceDisplay}`;
+  }
+
+  let trasladoLines = '';
+  if (trasladoFinal) {
+    trasladoLines = `\n🚗 Traslado: ${trasladoFinal}`;
+    if (activeDrivers.length > 0) {
+      trasladoLines += `\n👨‍✈️ Conductor: ${activeDrivers.join(' o ')}`;
+    }
+  }
+
+  const hora = booking.time ? `· ${booking.time}` : '';
+  const msg = `🔥 *¡NUEVA CITA CONFIRMADA!*\n\n` +
+    `👤 *${booking.clientName || 'Cliente sin nombre'}*\n` +
+    `📱 ${phone} · ${channel}\n` +
+    `✂️ ${booking.service}\n` +
+    `📅 ${booking.date} ${hora}` +
+    trasladoLines +
+    valorLines +
+    `\n\n📋 ${dash}`;
+
+  try {
+    const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: 'Markdown' }),
+    });
+    const json = await res.json();
+    if (!json.ok) console.error('TELEGRAM BOOKING ERROR:', JSON.stringify(json));
+    else console.log('TELEGRAM OK: cita notificada');
+  } catch (e) {
+    console.error('TELEGRAM BOOKING FETCH ERROR:', e.message);
+  }
+};
+
 // ─── Handler principal ────────────────────────────────────────────
 export default async function handler(req, res) {
   if (req.method === 'GET') {
@@ -1625,67 +1672,10 @@ export default async function handler(req, res) {
 </td></tr></table>
 </body></html>`;
 
-        // Email al ADMIN — notificación interna
-        const clientWaUrl = `https://api.whatsapp.com/send/?phone=57${(from || '').replace(/\D/g,'')}&text=${encodeURIComponent(`Hola ${booking.clientName || 'cliente'}, te confirmamos tu cita en Esteticar para el ${booking.date}. Nos alegra tenerte. Cualquier duda aquí estamos.`)}`;
-        const adminEmailHtml = `
-<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#F4F1EC;font-family:Georgia,serif">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#F4F1EC;padding:40px 16px">
-<tr><td align="center">
-<table width="100%" style="max-width:560px;background:#ffffff;border-radius:2px;overflow:hidden;box-shadow:0 4px 32px rgba(0,0,0,0.10)">
-  <tr><td style="background:#0A0A0A;padding:36px 40px;text-align:center;border-bottom:3px solid #C9A84C">
-    <img src="https://esteticar-vff.vercel.app/logo.png" alt="Esteticar" width="120" style="display:block;margin:0 auto 12px;height:auto" />
-    <div style="color:#C9A84C;font-size:9px;letter-spacing:4px;font-family:Arial,sans-serif;font-weight:600;text-transform:uppercase">Custodia Vehicular Premium · Manizales</div>
-  </td></tr>
-  <tr><td style="background:#0A0A0A;padding:0 40px 28px;text-align:center">
-    <div style="display:inline-block;background:#C9A84C;color:#0A0A0A;font-family:Arial,sans-serif;font-size:10px;font-weight:700;letter-spacing:3px;text-transform:uppercase;padding:7px 20px;border-radius:2px">Nueva cita</div>
-  </td></tr>
-  <tr><td style="padding:36px 40px 28px">
-    <table width="100%" cellpadding="0" cellspacing="0">
-      <tr><td width="44%" style="padding:14px 16px;background:#FAF8F4;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Cliente</td><td style="padding:14px 16px;background:#FAF8F4;border-radius:0 2px 2px 0;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${booking.clientName || 'No capturado'}</td></tr>
-      <tr><td colspan="2" style="height:4px"></td></tr>
-      <tr><td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Teléfono</td><td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${platform === 'whatsapp' ? from : (booking.clientPhone || 'N/A')}</td></tr>
-      <tr><td colspan="2" style="height:4px"></td></tr>
-      <tr><td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Servicio</td><td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${booking.service}</td></tr>
-      <tr><td colspan="2" style="height:4px"></td></tr>
-      <tr><td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Fecha</td><td style="padding:14px 16px;background:#FAF8F4;font-size:15px;color:#0A0A0A;font-weight:600;vertical-align:middle">${booking.date}</td></tr>
-      <tr><td colspan="2" style="height:4px"></td></tr>
-      ${(() => { const t = calcTotal(booking); return t.traslado > 0 ? `
-      <tr><td style="padding:14px 16px;background:#FAF8F4;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Traslado</td><td style="padding:14px 16px;background:#FAF8F4;font-size:14px;color:#555;vertical-align:middle">${booking.traslado}</td></tr>
-      <tr><td colspan="2" style="height:4px"></td></tr>
-      <tr><td style="padding:20px 24px;background:#0A0A0A;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Total</td><td style="padding:20px 24px;background:#0A0A0A;font-size:20px;color:#C9A84C;font-weight:700;font-family:Arial,sans-serif;vertical-align:middle">${formatCOP(t.total)} <span style="font-size:12px;color:#666">(servicio ${booking.priceDisplay} + traslado ${formatCOP(t.traslado)})</span></td></tr>
-      ` : `
-      <tr><td style="padding:20px 24px;background:#0A0A0A;border-radius:2px 0 0 2px;font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;font-weight:600;vertical-align:middle">Valor</td><td style="padding:20px 24px;background:#0A0A0A;font-size:20px;color:#C9A84C;font-weight:700;font-family:Arial,sans-serif;vertical-align:middle">${booking.priceDisplay}</td></tr>
-      `; })()}
-    </table>
-  </td></tr>
-  ${activeDrivers.length > 0 && trasladoFinal ? `
-  <tr><td style="padding:0 40px 28px">
-    <div style="padding:16px 20px;border:1px solid #E8E0D0;border-left:3px solid #C9A84C;border-radius:2px;background:#FFFDF9">
-      <div style="font-family:Arial,sans-serif;font-size:10px;color:#A0916E;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Posibles conductores para traslado</div>
-      <div style="font-family:Arial,sans-serif;font-size:14px;color:#0A0A0A;font-weight:600">${activeDrivers.join(' · ')}</div>
-    </div>
-  </td></tr>` : ''}
-  <tr><td style="padding:0 40px 28px;text-align:center">
-    <div style="font-family:Arial,sans-serif;font-size:11px;color:#999;margin-bottom:12px;letter-spacing:1px;text-transform:uppercase">Ubicación</div>
-    <div style="display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center">
-      <a href="https://maps.app.goo.gl/yvc3Hu3ksv1bVBXy7" style="display:inline-block;background:#4285F4;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Google Maps</a>
-      <a href="https://waze.com/ul?q=Calle+67+%239-26+La+Sultana+Manizales" style="display:inline-block;background:#33CCFF;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Waze</a>
-    </div>
-  </td></tr>
-  <tr><td style="background:#0A0A0A;padding:20px 40px;text-align:center">
-    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555">Esteticar · Cll 67 #9-26, La Sultana · Manizales</div>
-  </td></tr>
-</table>
-</td></tr></table>
-</body></html>`;
+        // Notificación Telegram al equipo
+        notifyBooking(booking, from, platform, activeDrivers, trasladoFinal).catch(() => {});
 
         const baseUrl = process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000';
-        // Enviar al admin
-        fetch(`${baseUrl}/api/notify`, {
-          method: 'POST', headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'email', subject: `Nueva cita — ${booking.clientName || 'cliente'} · ${booking.service}`, html: adminEmailHtml }),
-        }).catch(() => {});
         // Enviar al cliente (si tiene correo)
         const clientEmail = booking.clientEmail && booking.clientEmail !== 'no_proporcionado' ? booking.clientEmail : (meta.client_email || null);
         if (clientEmail) {
