@@ -536,7 +536,7 @@ export default function AdminClients() {
   }, [load]);
 
   const deleteClient = async (phone) => {
-    await fetch('/api/clients', {
+    await fetch('/api/conversations', {
       method: 'DELETE',
       headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
       body: JSON.stringify({ phone }),
