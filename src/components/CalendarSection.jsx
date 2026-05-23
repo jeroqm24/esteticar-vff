@@ -599,6 +599,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   const firstBlockedHour = Array.from({ length: newDuration }, (_, i) => form.hour + i)
     .find(h => countAtHour(h) >= MAX_BAYS);
   const isCapacityBlocked = firstBlockedHour !== undefined;
+  const TRUCK_SURCHARGE_SERVICES = ["Tratamiento 3 en 1 Manual", "Tratamiento 3 en 1 a Máquina"];
   const truckExtra = form.vehicleType === "Camioneta" && TRUCK_SURCHARGE_SERVICES.includes(form.service) ? 10000 : 0;
   const basePrice = isCotizacion ? (parseInt(form.manualPrice) || 0) : ((rawPrice || 0) + truckExtra);
   const finalPrice = Math.max(0, basePrice - (Number(form.discount) || 0));
@@ -607,8 +608,6 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   const handleServiceChange = (service) => {
     setForm(f => ({ ...f, service, discount: 0, manualPrice: "", durationHours: "" }));
   };
-
-  const TRUCK_SURCHARGE_SERVICES = ["Tratamiento 3 en 1 Manual", "Tratamiento 3 en 1 a Máquina"];
 
   const handleVehicleChange = (vehicleType) => {
     const services = vehicleType === "Moto" ? MOTO_SERVICES : CAR_SERVICES;
