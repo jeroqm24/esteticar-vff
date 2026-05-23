@@ -599,7 +599,8 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   const firstBlockedHour = Array.from({ length: newDuration }, (_, i) => form.hour + i)
     .find(h => countAtHour(h) >= MAX_BAYS);
   const isCapacityBlocked = firstBlockedHour !== undefined;
-  const basePrice = isCotizacion ? (parseInt(form.manualPrice) || 0) : (rawPrice || 0);
+  const truckExtra = form.vehicleType === "Camioneta" && TRUCK_SURCHARGE_SERVICES.includes(form.service) ? 10000 : 0;
+  const basePrice = isCotizacion ? (parseInt(form.manualPrice) || 0) : ((rawPrice || 0) + truckExtra);
   const finalPrice = Math.max(0, basePrice - (Number(form.discount) || 0));
   const hasDiscount = form.discount > 0;
 
@@ -607,12 +608,14 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
     setForm(f => ({ ...f, service, discount: 0, manualPrice: "", durationHours: "" }));
   };
 
+  const TRUCK_SURCHARGE_SERVICES = ["Tratamiento 3 en 1 Manual", "Tratamiento 3 en 1 a Máquina"];
+
   const handleVehicleChange = (vehicleType) => {
-    const services = vehicleType === "Carro" ? CAR_SERVICES : MOTO_SERVICES;
+    const services = vehicleType === "Moto" ? MOTO_SERVICES : CAR_SERVICES;
     setForm(f => ({ ...f, vehicleType, service: services[0], discount: 0, manualPrice: "" }));
   };
 
-  const allServices = form.vehicleType === "Carro" ? CAR_SERVICES : MOTO_SERVICES;
+  const allServices = form.vehicleType === "Moto" ? MOTO_SERVICES : CAR_SERVICES;
   const isSat = (getDay(selectedDay) + 6) % 7 === 5;
   const hourEnd = isSat ? HOUR_END_SATURDAY : HOUR_END_WEEKDAY;
   const hours = Array.from({ length: hourEnd - HOUR_START }, (_, i) => HOUR_START + i);
@@ -752,6 +755,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                 style={{ fontSize: '16px' }}
               >
                 <option value="Carro">🚗 Carro</option>
+                <option value="Camioneta">🚙 Camioneta</option>
                 <option value="Moto">🏍️ Moto</option>
               </select>
               <select

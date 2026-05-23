@@ -3,8 +3,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SERVICES } from "../lib/constants";
 import { pixelViewContent, pixelContact } from "../lib/pixel";
 
-function ServicePod({ service, index }) {
+function ServicePod({ service, index, isTruck }) {
   const [isHovered, setIsHovered] = useState(false);
+  const effectivePrice = isTruck && service.truckSurcharge ? service.price + service.truckSurcharge : service.price;
+  const effectivePriceDisplay = isTruck && service.truckSurcharge
+    ? `$${effectivePrice.toLocaleString("es-CO")}`
+    : service.priceDisplay;
 
   return (
     <motion.div
@@ -63,6 +67,11 @@ function ServicePod({ service, index }) {
 
             {/* Price — massive display text */}
             <div className="mb-6">
+              {!service.cotizacion && service.truckSurcharge && !isTruck && (
+                <span className="inline-block font-ui text-[9px] tracking-[0.2em] uppercase px-2.5 py-1 rounded-full border border-ec-gold/20 text-ec-gold/60 bg-ec-gold/[0.04] mb-2">
+                  Camioneta · +$10.000
+                </span>
+              )}
               <span
                 className={`font-heading text-4xl sm:text-5xl font-light leading-none transition-all duration-700 ${
                   isHovered
@@ -81,7 +90,7 @@ function ServicePod({ service, index }) {
                     : {}
                 }
               >
-                {service.priceDisplay}
+                {effectivePriceDisplay}
               </span>
             </div>
 
@@ -153,7 +162,7 @@ function ServicePod({ service, index }) {
 }
 
 export default function ServicesSection({ onAddService, onRemoveService, selectedServices, vehicleType, onVehicleTypeChange }) {
-  const filteredServices = SERVICES.filter(s => s.category === vehicleType);
+  const filteredServices = SERVICES.filter(s => s.category === (vehicleType === 'truck' ? 'car' : vehicleType));
 
   return (
     <section id="servicios" className="relative py-40 px-6 overflow-hidden bg-ec-white">
@@ -192,6 +201,7 @@ export default function ServicesSection({ onAddService, onRemoveService, selecte
             <div className="p-1.5 bg-black/[0.04] border border-black/[0.07] rounded-full w-fit shadow-[0_4px_20px_rgba(0,0,0,0.06)]">
               {[
                 { id: "car", label: "CARROS" },
+                { id: "truck", label: "CAMIONETAS" },
                 { id: "moto", label: "MOTOS" },
               ].map((type) => {
                 const isActive = vehicleType === type.id;
@@ -234,6 +244,7 @@ export default function ServicesSection({ onAddService, onRemoveService, selecte
                 key={service.id}
                 service={service}
                 index={i}
+                isTruck={vehicleType === 'truck'}
               />
             ))}
           </AnimatePresence>

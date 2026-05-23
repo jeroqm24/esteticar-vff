@@ -602,6 +602,14 @@ FLUJO OBLIGATORIO:
 • Cuando confirmes la cita, usa el nombre EXACTO: "Mantenimiento Interior Sólo Cojinería" o "Mantenimiento Interior Levantamiento del Alfombrado".
 • Ambos duran 2 días hábiles — explícaselo: "Lo dejas el [día] y lo tienes listo el [día+2 hábiles]."
 
+━━━ TRATAMIENTO 3 EN 1 — PRECIO SEGÚN TIPO DE VEHÍCULO ━━━
+Cuando el cliente pida el Tratamiento 3 en 1 (Manual o a Máquina), si aún no sabes si es carro o camioneta, pregunta: "El vehículo es carro o camioneta?"
+• Carro: Manual $290.000 / Máquina $350.000
+• Camioneta: Manual $300.000 / Máquina $360.000
+Si el cliente ya mencionó que tiene SUV, 4x4, pickup, Hilux, Fortuner, Land Cruiser, RAV4, Tucson, Sportage u otro tipo de camioneta → infiere que es camioneta sin volver a preguntar.
+Usa el precio correcto en la cotización y en el bloque __BOOKING_CONFIRMED__.
+Si es camioneta, en el bloque escribe: VEHICULO: Camioneta
+
 ━━━ RECUBRIMIENTO CERÁMICO Y PORCELANIZADO — FLUJO ESPECIAL ━━━
 Estos dos servicios son PREMIUM y su precio varía según el estado de la pintura, el tamaño del vehículo y el tipo de coating que se aplique. El precio LO DA ÚNICAMENTE LA ADMINISTRADORA.
 
@@ -720,7 +728,7 @@ __BOOKING_CONFIRMED__
 SERVICIO: [nombre exacto]
 PRECIO: [con $ y puntos]
 FECHA: [fecha completa con hora]
-VEHICULO: [Carro o Moto]
+VEHICULO: [Carro, Camioneta o Moto]
 NOMBRE: [nombre completo]
 TELEFONO: [teléfono]
 EMAIL: [correo o "no_proporcionado"]
@@ -901,7 +909,7 @@ const parseBooking = (text) => {
   const vehicleRaw = get('VEHICULO').toLowerCase();
   return {
     service: get('SERVICIO'), priceDisplay: get('PRECIO'), date: get('FECHA'),
-    vehicleType: vehicleRaw === 'moto' ? 'Moto' : 'Carro',
+    vehicleType: vehicleRaw === 'moto' ? 'Moto' : vehicleRaw.includes('camioneta') ? 'Camioneta' : 'Carro',
     clientName: get('NOMBRE'), clientPhone: get('TELEFONO'), clientEmail: get('EMAIL'),
     traslado: get('TRASLADO'), direccion: get('DIRECCION'),
     cedula: get('CEDULA'), placa: get('PLACA'),
@@ -975,7 +983,7 @@ const extractBookingWithHaiku = async (history) => {
       max_tokens: 400,
       system: `Eres un extractor de datos. Del historial extrae los datos de la cita confirmada.
 Responde SOLO con JSON puro, sin markdown, sin explicación:
-{"service":"nombre exacto del servicio","priceDisplay":"$XX.XXX","date":"fecha y hora completa","vehicleType":"Moto o Carro","clientName":"nombre completo o null","clientEmail":"correo o null","traslado":"descripción del traslado o null","direccion":"dirección o null","cedula":"número o null","placa":"placa en mayúsculas o null"}`,
+{"service":"nombre exacto del servicio","priceDisplay":"$XX.XXX","date":"fecha y hora completa","vehicleType":"Moto, Carro o Camioneta","clientName":"nombre completo o null","clientEmail":"correo o null","traslado":"descripción del traslado o null","direccion":"dirección o null","cedula":"número o null","placa":"placa en mayúsculas o null"}`,
       messages: [...msgs, { role: 'user', content: 'Extrae los datos de la cita que acaba de confirmarse en esta conversación.' }],
     });
     logHaikuCost(aiRes.usage, 'haiku_extract_booking');
@@ -988,7 +996,7 @@ Responde SOLO con JSON puro, sin markdown, sin explicación:
       service: d.service || null,
       priceDisplay: d.priceDisplay || null,
       date: d.date || null,
-      vehicleType: /moto/i.test(d.vehicleType || '') ? 'Moto' : 'Carro',
+      vehicleType: /moto/i.test(d.vehicleType || '') ? 'Moto' : /camioneta/i.test(d.vehicleType || '') ? 'Camioneta' : 'Carro',
       clientName: d.clientName || null,
       clientPhone: null,
       clientEmail: d.clientEmail || null,

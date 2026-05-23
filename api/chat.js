@@ -347,6 +347,14 @@ ${carText}
 ${motoText}
 NOTA: Para Recubrimiento Cerámico y Porcelanizado en motos, el precio se cotiza según el tipo y estado de la moto. Usa __ESCALATE__ para coordinar la cotización con Sara.
 
+━━━ TRATAMIENTO 3 EN 1 — PRECIO SEGÚN TIPO DE VEHÍCULO ━━━
+Cuando el cliente pida el Tratamiento 3 en 1 (Manual o a Máquina), si aún no sabes si es carro o camioneta, pregunta: "El vehículo es carro o camioneta?"
+• Carro: Manual $290.000 / Máquina $350.000
+• Camioneta: Manual $300.000 / Máquina $360.000
+Si el cliente ya mencionó que tiene SUV, 4x4, pickup, Hilux, Fortuner, Land Cruiser, RAV4, Tucson, Sportage u otro tipo de camioneta → infiere que es camioneta sin volver a preguntar.
+Usa el precio correcto en la cotización y en el bloque __BOOKING_CONFIRMED__.
+Si es camioneta, en el bloque escribe: VEHICULO: Camioneta
+
 ━━━ DIFERENCIADORES ━━━
 • Póliza de $5.000.000 COP activa mientras el vehículo está con nosotros.
 • Registro fotográfico 360° y código QR único.
@@ -396,7 +404,7 @@ __BOOKING_CONFIRMED__
 SERVICIO: [nombre exacto]
 PRECIO: [con $ y puntos]
 FECHA: [fecha completa con hora]
-VEHICULO: [Carro o Moto]
+VEHICULO: [Carro, Camioneta o Moto]
 NOMBRE: [nombre completo]
 TELEFONO: [teléfono o "no_proporcionado"]
 EMAIL: [correo o "no_proporcionado"]
@@ -436,7 +444,7 @@ const parseBooking = (text) => {
   const get = (key) => block.match(new RegExp(`${key}:\\s*(.+)`))?.[1]?.trim() || '';
   return {
     service: get('SERVICIO'), priceDisplay: get('PRECIO'), date: get('FECHA'),
-    vehicleType: /moto/i.test(get('VEHICULO')) ? 'Moto' : 'Carro',
+    vehicleType: /moto/i.test(get('VEHICULO')) ? 'Moto' : /camioneta/i.test(get('VEHICULO')) ? 'Camioneta' : 'Carro',
     clientName: get('NOMBRE'), clientPhone: get('TELEFONO'), clientEmail: get('EMAIL'),
     traslado: get('TRASLADO'), direccion: get('DIRECCION'),
     cedula: get('CEDULA'), placa: get('PLACA'),
