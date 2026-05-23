@@ -6,7 +6,7 @@ const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
-const REALTIME_WINDOW_MIN = 5; // visitantes activos en los últimos 5 minutos
+const REALTIME_WINDOW_MIN = 2; // visitantes activos en los últimos 2 minutos
 
 function fmt(n) { return (n || 0).toLocaleString("es-CO"); }
 
@@ -116,7 +116,7 @@ export default function AdminAnalytics() {
 
   useEffect(() => {
     loadLive();
-    const interval = setInterval(loadLive, 30_000);
+    const interval = setInterval(loadLive, 10_000);
 
     // Suscripción Realtime para nuevas visitas
     channelRef.current = supabase
@@ -187,7 +187,7 @@ export default function AdminAnalytics() {
             })}
           </div>
         )}
-        <p className="font-ui text-[9px] text-ec-text-muted/60 tracking-wider mt-3">Activos en los últimos {REALTIME_WINDOW_MIN} minutos · actualiza cada 30s</p>
+        <p className="font-ui text-[9px] text-ec-text-muted/60 tracking-wider mt-3">Activos en los últimos {REALTIME_WINDOW_MIN} minutos · actualiza cada 10s</p>
       </div>
 
       {/* Filtro histórico */}
