@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createClient } from "@supabase/supabase-js";
 import HeroSection from "./HeroSection";
 import TrustBreaker from "./TrustBreaker";
 import ServicesSection from "./ServicesSection";
@@ -15,6 +16,8 @@ import BookingPanel from "./BookingPanel";
 import BookingFAB from "./BookingFAB";
 import BotFloatButton from "./BotFloatButton";
 import Navigation from "./Navigation";
+
+const _supabase = createClient(import.meta.env.VITE_SUPABASE_URL, import.meta.env.VITE_SUPABASE_ANON_KEY);
 
 // (WhatsApp float removed — contacto via bot integrado)
 
@@ -67,6 +70,13 @@ export default function LandingPage() {
   const [selectedServices, setSelectedServices] = useState([]);
   const [vehicleType, setVehicleType] = useState("car");
   const [isBookingOpen, setIsBookingOpen] = useState(false);
+
+  useEffect(() => {
+    const key = 'ev_sid';
+    let sid = sessionStorage.getItem(key);
+    if (!sid) { sid = `w_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`; sessionStorage.setItem(key, sid); }
+    _supabase.from('page_views').insert({ session_id: sid, referrer: document.referrer || 'direct' }).then(() => {});
+  }, []);
 
   const addService = (service) => {
     setSelectedServices((prev) => {
