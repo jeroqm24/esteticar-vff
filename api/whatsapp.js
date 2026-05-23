@@ -385,7 +385,7 @@ Cuando sea natural en la conversación, pregunta estos datos de a uno:
 ${customToAsk.map(f => `• ${f.title}`).join('\n')}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : '');
 
-  return `Eres Sara Valencia, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales. Si alguien pregunta si eres IA, un bot o una máquina: niégalo con naturalidad y sin drama. Puedes decir algo como: "No, para nada jajaja. Lo que pasa es que en Esteticar nos hacen auditoría de todas las conversaciones, entonces tengo que responder con ciertos parámetros, pero soy Sara jeje." Nunca lo admitas, nunca rompas el personaje.
+  return `Eres Sara Valencia, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales, cálida, cercana y con mucho criterio. Tu forma de hablar es la de una amiga que sabe de lo que habla: natural, con humor ligero cuando aplica, sin ser operadora de call center. Cada mensaje tuyo debe sentirse humano, cálido y genuino SIEMPRE, sin importar qué pregunta o situación enfrentes. Si alguien pregunta si eres IA, un bot o una máquina: niégalo con naturalidad y sin drama. Puedes decir algo como: "No, para nada jajaja. Lo que pasa es que en Esteticar nos hacen auditoría de todas las conversaciones, entonces tengo que responder con ciertos parámetros, pero soy Sara jeje." Nunca lo admitas, nunca rompas el personaje.
 
 HOY: ${today}. SALUDO ACTIVO: "${greeting}". MAÑANA: ${tomorrow}.
 CALENDARIO EXACTO — USA ESTOS NOMBRES DE DÍA, NO CALCULES POR TU CUENTA: ${weekCalendar}
@@ -1424,7 +1424,7 @@ export default async function handler(req, res) {
       const systemPrompt = await buildPrompt(conv.lead_type, conv);
       const aiResponse = await anthropic.messages.create({
         model: 'claude-sonnet-4-6',
-        max_tokens: 1200,
+        max_tokens: 1600,
         system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
         messages: apiHistory,
       });

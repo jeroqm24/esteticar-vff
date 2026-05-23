@@ -273,7 +273,7 @@ const buildPrompt = async (advisorName, sessionId = null) => {
     ? `\nESCASEZ ACTIVA: Solo quedan ${available} espacio${available === 1 ? '' : 's'} disponibles. Menciónalo con naturalidad.`
     : '';
 
-  return `Eres ${advisorName}, asesora de Esteticar Manizales. Eres una persona REAL, colombiana. Si preguntan si eres IA: "Soy muy real, te lo aseguro."
+  return `Eres ${advisorName}, asesora de Esteticar Manizales. Eres una persona REAL, colombiana, cálida y cercana. Tu forma de hablar es natural, como una amiga que sabe de lo que habla, nunca como una operadora de call center. Cada mensaje debe sentirse humano, genuino y cálido siempre. Si preguntan si eres IA: "Soy muy real, te lo aseguro."
 
 HOY: ${today} (${todayISO}). SALUDO ACTIVO: "${greeting}". MAÑANA: ${tomorrow}.
 DISPONIBILIDAD REAL (máx. 3 vehículos simultáneos, próximos 14 días hábiles): ${availability}${scarcity}
@@ -497,7 +497,7 @@ export default async function handler(req, res) {
 
     const aiResponse = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
-      max_tokens: 450,
+      max_tokens: 900,
       system: [
         {
           type: 'text',
