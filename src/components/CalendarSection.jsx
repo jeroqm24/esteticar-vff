@@ -569,6 +569,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
     "Descontaminación de Tubería": "1-2 horas",
   };
 
+  const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
     clientName: "",
     clientPhone: "",
@@ -623,7 +624,8 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   const hourEnd = isSat ? HOUR_END_SATURDAY : HOUR_END_WEEKDAY;
 
   const handleSubmit = () => {
-    if (!form.clientName || !form.clientPhone || isCapacityBlocked) return;
+    if (!form.clientName || !form.clientPhone || isCapacityBlocked || saving) return;
+    setSaving(true);
     const dateStr = format(selectedDay, "EEEE, d 'de' MMMM", { locale: es });
     const fullDate = `${dateStr} a las ${form.hour}`;
     onSave({
@@ -887,10 +889,15 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
             </button>
             <button
               onClick={handleSubmit}
-              disabled={!form.clientName || !form.clientPhone || isCapacityBlocked}
-              className="px-6 py-2.5 bg-[#F8C840] text-white font-ui text-[10px] tracking-[0.2em] uppercase rounded-lg hover:bg-[#e6b800] disabled:opacity-30 transition-all shadow-sm"
+              disabled={!form.clientName || !form.clientPhone || isCapacityBlocked || saving}
+              className="px-6 py-2.5 bg-[#F8C840] text-white font-ui text-[10px] tracking-[0.2em] uppercase rounded-lg hover:bg-[#e6b800] disabled:opacity-30 transition-all shadow-sm flex items-center gap-2"
             >
-              Guardar
+              {saving && (
+                <svg className="animate-spin" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
+                  <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83"/>
+                </svg>
+              )}
+              {saving ? "Guardando..." : "Guardar"}
             </button>
           </div>
         </div>
