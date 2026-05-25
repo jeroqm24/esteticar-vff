@@ -696,16 +696,29 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                 className="font-body text-sm text-ec-dark bg-ec-cream hover:bg-[#F8C840]/10 px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer transition-colors"
                 style={{ fontSize: '16px' }}
               />
-              <input
-                type="time"
-                step="900"
-                value={form.hour}
-                min={`${String(HOUR_START).padStart(2,'0')}:00`}
-                max={`${String(hourEnd).padStart(2,'0')}:00`}
-                onChange={e => setForm(f => ({ ...f, hour: e.target.value }))}
-                className="font-body text-sm text-ec-dark bg-ec-cream hover:bg-[#F8C840]/10 px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer transition-colors"
-                style={{ fontSize: '16px' }}
-              />
+              <div className="flex items-center bg-ec-cream rounded-lg overflow-hidden" style={{ boxShadow: '0 0 0 0px transparent' }}>
+                <select
+                  value={form.hour.split(':')[0]}
+                  onChange={e => setForm(f => ({ ...f, hour: `${e.target.value}:${f.hour.split(':')[1] || '00'}` }))}
+                  className="font-body text-sm text-ec-dark bg-transparent pl-3 pr-1 py-1.5 border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer rounded-l-lg"
+                  style={{ fontSize: '16px' }}
+                >
+                  {Array.from({ length: hourEnd - HOUR_START }, (_, i) => HOUR_START + i).map(h => (
+                    <option key={h} value={String(h).padStart(2, '0')}>{String(h).padStart(2, '0')}</option>
+                  ))}
+                </select>
+                <span className="font-body text-sm text-ec-text-muted select-none px-0.5">:</span>
+                <select
+                  value={form.hour.split(':')[1] || '00'}
+                  onChange={e => setForm(f => ({ ...f, hour: `${f.hour.split(':')[0]}:${e.target.value}` }))}
+                  className="font-body text-sm text-ec-dark bg-transparent pl-1 pr-3 py-1.5 border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer rounded-r-lg"
+                  style={{ fontSize: '16px' }}
+                >
+                  {['00', '15', '30', '45'].map(m => (
+                    <option key={m} value={m}>{m}</option>
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
