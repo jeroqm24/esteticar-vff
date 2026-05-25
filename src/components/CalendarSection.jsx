@@ -68,25 +68,30 @@ const getServiceDuration = (service) => {
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────
-const parseAppointmentHour = (appt) => {
+// Returns integer hour for display grouping in timeline
+const parseAppointmentHour = (appt) => Math.floor(parseAppointmentTime(appt));
+
+// Returns fractional hour (e.g. 8.25 for 8:15) for capacity calculations
+const parseAppointmentTime = (appt) => {
   const src = appt.date || '';
-  // Match hour:min followed by optional am/pm indicator
   const match = src.match(/(\d{1,2}):(\d{2})\s*(a\.?m\.?|p\.?m\.?)?/i);
   if (match) {
     let h = parseInt(match[1]);
+    const m = parseInt(match[2]) || 0;
     const period = (match[3] || '').toLowerCase().replace(/\./g, '');
     if (period === 'pm' && h < 12) h += 12;
     if (period === 'am' && h === 12) h = 0;
-    return h;
+    return h + m / 60;
   }
   if (appt.time) {
     const t = appt.time.match(/(\d{1,2}):(\d{2})\s*(a\.?m\.?|p\.?m\.?)?/i);
     if (t) {
       let h = parseInt(t[1]);
+      const m = parseInt(t[2]) || 0;
       const period = (t[3] || '').toLowerCase().replace(/\./g, '');
       if (period === 'pm' && h < 12) h += 12;
       if (period === 'am' && h === 12) h = 0;
-      return h;
+      return h + m / 60;
     }
     const bare = appt.time.match(/(\d{1,2})/);
     if (bare) return parseInt(bare[1]);
@@ -154,9 +159,9 @@ function MonthGrid({ currentMonth, selectedDay, appointments, onSelectDay }) {
     const endH = sat ? HOUR_END_SATURDAY : HOUR_END_WEEKDAY;
     for (let h = HOUR_START; h < endH; h++) {
       const concurrent = dayAppts.filter(a => {
-        const start = parseAppointmentHour(a);
+        const start = parseAppointmentTime(a);
         const dur = getServiceDuration(a.service);
-        return h >= start && h < start + dur;
+        return start < h + 1 && start + dur > h;
       }).length;
       if (concurrent < MAX_BAYS) return false;
     }
@@ -241,7 +246,7 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
   // Group appointments by START hour (for rendering)
   const apptsByHour = {};
   dayAppts.forEach(a => {
-    const h = parseAppointmentHour(a);
+    const h = Math.floor(parseAppointmentTime(a));
     if (!apptsByHour[h]) apptsByHour[h] = [];
     apptsByHour[h].push(a);
   });
@@ -250,9 +255,9 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
   // (includes carry-overs from earlier hours based on service duration)
   const getActiveCountAtHour = (hour) =>
     dayAppts.filter(a => {
-      const start = parseAppointmentHour(a);
+      const start = parseAppointmentTime(a);
       const dur = getServiceDuration(a.service);
-      return hour >= start && hour < start + dur;
+      return start < hour + 1 && start + dur > hour;
     }).length;
 
   const peakConcurrent = hours.reduce((max, h) => Math.max(max, getActiveCountAtHour(h)), 0);
@@ -360,7 +365,7 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
                         // Timeline calculation
                         const entryH = parseAppointmentHour(appt);
                         const exitH = entryH + duration;
-                        const fmtH = (h) => `${Math.floor(h)}:${(h % 1) * 60 === 0 ? '00' : '30'}`;
+                        const fmtH = (h) => { const hh = Math.floor(h); const mm = Math.round((h - hh) * 60); return `${hh}:${String(mm).padStart(2,'0')}`; };
 
                         return (
                           <motion.div
@@ -569,7 +574,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
     clientPhone: "",
     service: defaultService,
     vehicleType: "Carro",
-    hour: defaultHour || 9,
+    hour: defaultHour ? `${String(defaultHour).padStart(2,'0')}:00` : "09:00",
     status: "confirmada",
     discount: 0,
     manualPrice: "",
@@ -584,21 +589,20 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   const isVariableDuration = form.service?.includes("Recubrimiento") || form.service?.includes("Porcelanizado");
 
   // Capacity enforcement
-  const countAtHour = (hour) => {
+  const newStart = (() => { const [h, m] = (form.hour || '09:00').split(':').map(Number); return h + (m || 0) / 60; })();
+  const newDuration = getServiceDuration(form.service);
+  const isCapacityBlocked = (() => {
     const dayAppts = appointments.filter(a => {
       const apptDate = parseAppointmentDate(a);
       return isSameDay(apptDate, selectedDay) && a.status !== 'cancelada';
     });
-    return dayAppts.filter(a => {
-      const start = parseAppointmentHour(a);
-      const dur = getServiceDuration(a.service);
-      return hour >= start && hour < start + dur;
+    const concurrent = dayAppts.filter(a => {
+      const aStart = parseAppointmentTime(a);
+      const aDur = getServiceDuration(a.service);
+      return newStart < aStart + aDur && aStart < newStart + newDuration;
     }).length;
-  };
-  const newDuration = getServiceDuration(form.service);
-  const firstBlockedHour = Array.from({ length: newDuration }, (_, i) => form.hour + i)
-    .find(h => countAtHour(h) >= MAX_BAYS);
-  const isCapacityBlocked = firstBlockedHour !== undefined;
+    return concurrent >= MAX_BAYS;
+  })();
   const TRUCK_SURCHARGE_SERVICES = ["Tratamiento 3 en 1 Manual", "Tratamiento 3 en 1 a Máquina"];
   const truckExtra = form.vehicleType === "Camioneta" && TRUCK_SURCHARGE_SERVICES.includes(form.service) ? 10000 : 0;
   const basePrice = isCotizacion ? (parseInt(form.manualPrice) || 0) : ((rawPrice || 0) + truckExtra);
@@ -617,12 +621,11 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   const allServices = form.vehicleType === "Moto" ? MOTO_SERVICES : CAR_SERVICES;
   const isSat = (getDay(selectedDay) + 6) % 7 === 5;
   const hourEnd = isSat ? HOUR_END_SATURDAY : HOUR_END_WEEKDAY;
-  const hours = Array.from({ length: hourEnd - HOUR_START }, (_, i) => HOUR_START + i);
 
   const handleSubmit = () => {
     if (!form.clientName || !form.clientPhone || isCapacityBlocked) return;
     const dateStr = format(selectedDay, "EEEE, d 'de' MMMM", { locale: es });
-    const fullDate = `${dateStr} a las ${form.hour}:00`;
+    const fullDate = `${dateStr} a las ${form.hour}`;
     onSave({
       clientName: form.clientName,
       clientPhone: form.clientPhone,
@@ -631,7 +634,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
       hour: form.hour,
       status: form.status,
       date: fullDate,
-      time: `${form.hour}:00`,
+      time: form.hour,
       priceDisplay: (isCotizacion && !basePrice) ? "Por cotización" : formatCOP(finalPrice),
       discount: form.discount,
       traslado: form.traslado || null,
@@ -693,22 +696,16 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                 className="font-body text-sm text-ec-dark bg-ec-cream hover:bg-[#F8C840]/10 px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer transition-colors"
                 style={{ fontSize: '16px' }}
               />
-              <select
+              <input
+                type="time"
+                step="900"
                 value={form.hour}
-                onChange={e => setForm({ ...form, hour: parseInt(e.target.value) })}
+                min={`${String(HOUR_START).padStart(2,'0')}:00`}
+                max={`${String(hourEnd).padStart(2,'0')}:00`}
+                onChange={e => setForm(f => ({ ...f, hour: e.target.value }))}
                 className="font-body text-sm text-ec-dark bg-ec-cream hover:bg-[#F8C840]/10 px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer transition-colors"
                 style={{ fontSize: '16px' }}
-              >
-                {hours.map(h => {
-                  const cnt = countAtHour(h);
-                  const full = cnt >= MAX_BAYS;
-                  return (
-                    <option key={h} value={h}>
-                      {h}:00{cnt > 0 ? ` · ${cnt}/${MAX_BAYS} bahías` : ''}{full ? ' — LLENO' : ''}
-                    </option>
-                  );
-                })}
-              </select>
+              />
             </div>
           </div>
 
@@ -865,7 +862,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
         <div className="px-4 sm:px-6 pb-5">
           {isCapacityBlocked && (
             <p className="font-ui text-[9px] tracking-[0.15em] uppercase text-red-500 text-right mb-2">
-              Bahías llenas a las {firstBlockedHour}:00 — elige otro horario
+              Bahías llenas en ese horario — elige otra hora
             </p>
           )}
           <div className="flex justify-end gap-2">
