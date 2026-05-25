@@ -604,6 +604,19 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
     }).length;
     return concurrent >= MAX_BAYS;
   })();
+
+  const bayCountAtTime = (() => {
+    const dayAppts = appointments.filter(a => {
+      const apptDate = parseAppointmentDate(a);
+      return isSameDay(apptDate, selectedDay) && a.status !== 'cancelada';
+    });
+    return dayAppts.filter(a => {
+      const aStart = parseAppointmentTime(a);
+      const aDur = getServiceDuration(a.service);
+      return newStart < aStart + aDur && aStart < newStart + newDuration;
+    }).length;
+  })();
+
   const TRUCK_SURCHARGE_SERVICES = ["Tratamiento 3 en 1 Manual", "Tratamiento 3 en 1 a Máquina"];
   const truckExtra = form.vehicleType === "Camioneta" && TRUCK_SURCHARGE_SERVICES.includes(form.service) ? 10000 : 0;
   const basePrice = isCotizacion ? (parseInt(form.manualPrice) || 0) : ((rawPrice || 0) + truckExtra);
@@ -698,28 +711,50 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                 className="font-body text-sm text-ec-dark bg-ec-cream hover:bg-[#F8C840]/10 px-3 py-1.5 rounded-lg border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer transition-colors"
                 style={{ fontSize: '16px' }}
               />
-              <div className="flex items-center bg-ec-cream rounded-lg overflow-hidden" style={{ boxShadow: '0 0 0 0px transparent' }}>
-                <select
-                  value={form.hour.split(':')[0]}
-                  onChange={e => setForm(f => ({ ...f, hour: `${e.target.value}:${f.hour.split(':')[1] || '00'}` }))}
-                  className="font-body text-sm text-ec-dark bg-transparent pl-3 pr-1 py-1.5 border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer rounded-l-lg"
-                  style={{ fontSize: '16px' }}
-                >
-                  {Array.from({ length: hourEnd - HOUR_START }, (_, i) => HOUR_START + i).map(h => (
-                    <option key={h} value={String(h).padStart(2, '0')}>{String(h).padStart(2, '0')}</option>
-                  ))}
-                </select>
-                <span className="font-body text-sm text-ec-text-muted select-none px-0.5">:</span>
-                <select
-                  value={form.hour.split(':')[1] || '00'}
-                  onChange={e => setForm(f => ({ ...f, hour: `${f.hour.split(':')[0]}:${e.target.value}` }))}
-                  className="font-body text-sm text-ec-dark bg-transparent pl-1 pr-3 py-1.5 border-0 focus:outline-none focus:ring-2 focus:ring-[#F8C840]/40 cursor-pointer rounded-r-lg"
-                  style={{ fontSize: '16px' }}
-                >
-                  {['00', '15', '30', '45'].map(m => (
-                    <option key={m} value={m}>{m}</option>
-                  ))}
-                </select>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex items-center bg-ec-cream rounded-lg overflow-hidden">
+                  <select
+                    value={form.hour.split(':')[0]}
+                    onChange={e => setForm(f => ({ ...f, hour: `${e.target.value}:${f.hour.split(':')[1] || '00'}` }))}
+                    className="font-body text-sm text-ec-dark bg-transparent pl-3 pr-1 py-1.5 border-0 focus:outline-none cursor-pointer rounded-l-lg"
+                    style={{ fontSize: '16px' }}
+                  >
+                    {Array.from({ length: hourEnd - HOUR_START }, (_, i) => HOUR_START + i).map(h => (
+                      <option key={h} value={String(h).padStart(2, '0')}>{String(h).padStart(2, '0')}</option>
+                    ))}
+                  </select>
+                  <span className="font-body text-sm text-ec-text-muted select-none px-0.5">:</span>
+                  <select
+                    value={form.hour.split(':')[1] || '00'}
+                    onChange={e => setForm(f => ({ ...f, hour: `${f.hour.split(':')[0]}:${e.target.value}` }))}
+                    className="font-body text-sm text-ec-dark bg-transparent pl-1 pr-3 py-1.5 border-0 focus:outline-none cursor-pointer rounded-r-lg"
+                    style={{ fontSize: '16px' }}
+                  >
+                    {['00', '15', '30', '45'].map(m => (
+                      <option key={m} value={m}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                {/* Indicador de bahías */}
+                <div className="flex items-center gap-1.5">
+                  <div className="flex gap-0.5">
+                    {Array.from({ length: MAX_BAYS }).map((_, i) => (
+                      <div
+                        key={i}
+                        className={`w-2 h-2 rounded-full transition-colors ${
+                          i < bayCountAtTime
+                            ? bayCountAtTime >= MAX_BAYS ? 'bg-red-400' : 'bg-[#F8C840]'
+                            : 'bg-black/[0.08]'
+                        }`}
+                      />
+                    ))}
+                  </div>
+                  <span className={`font-ui text-[9px] tracking-[0.1em] ${
+                    bayCountAtTime >= MAX_BAYS ? 'text-red-400' : 'text-ec-text-muted'
+                  }`}>
+                    {bayCountAtTime}/{MAX_BAYS}{bayCountAtTime >= MAX_BAYS ? ' — LLENO' : ''}
+                  </span>
+                </div>
               </div>
             </div>
           </div>
