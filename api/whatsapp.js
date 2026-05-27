@@ -1022,12 +1022,9 @@ Responde SOLO con JSON puro, sin markdown, sin explicación:
 const cleanReply = (text) => text
   .replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, '')
   .replace(/__CANCEL_BOOKING__/g, '')
-  .replace(/_{1,2}ESCALATE_{1,2}:[^\n]*/g, '')
-  .replace(/_{1,2}NAME_{1,2}:[^\n]*/g, '')
-  .replace(/_{1,2}EMAIL_{1,2}:[^\n]*/g, '')
-  .replace(/_{1,2}LEAD_TYPE_{1,2}:[^\n]*/g, '')
-  .replace(/_{1,2}LEAD_STATUS_{1,2}:[^\n]*/g, '')
-  .replace(/_{1,2}OBJECTION_{1,2}:[^\n]*/g, '')
+  .split('\n')
+  .filter(line => !/_*(LEAD_TYPE|LEAD_STATUS|ESCALATE|NAME|EMAIL|OBJECTION)_*\s*:/i.test(line))
+  .join('\n')
   .trim();
 
 const buildCalendarUrl = (booking) => {
