@@ -346,6 +346,7 @@ export default function AdminConversations({ initialPhone }) {
   const [resolving, setResolving] = useState(false);
   const bottomRef = useRef(null);
   const replyRef = useRef(null);
+  const sendingRef = useRef(false);
 
   const handleResolved = async () => {
     if (!selected || resolving) return;
@@ -453,10 +454,11 @@ export default function AdminConversations({ initialPhone }) {
   };
 
   const handleSend = async () => {
-    if (!replyText.trim() || !selected || sending) return;
+    if (!replyText.trim() || !selected || sendingRef.current) return;
+    sendingRef.current = true;
+    setSending(true);
     const text = replyText.trim();
     setReplyText("");
-    setSending(true);
     setShowCanned(false);
 
     // Optimistically add to UI
@@ -466,6 +468,7 @@ export default function AdminConversations({ initialPhone }) {
     setConversations(prev => prev.map(c => c.phone === selected.phone ? { ...c, history: newHistory, updated_at: new Date().toISOString() } : c));
 
     await db.conversations.sendMessage(selected.phone, text);
+    sendingRef.current = false;
     setSending(false);
     setTimeout(() => replyRef.current?.focus(), 100);
   };
