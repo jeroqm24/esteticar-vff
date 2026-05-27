@@ -1438,7 +1438,7 @@ export default async function handler(req, res) {
       const cacheRead     = u.cache_read_input_tokens || 0;
       const cacheCreation = u.cache_creation_input_tokens || 0;
       const costUsd =
-        ((inputTokens - cacheRead - cacheCreation) * 3 / 1_000_000) +
+        (inputTokens * 3 / 1_000_000) +
         (cacheCreation * 3.75 / 1_000_000) +
         (cacheRead * 0.30 / 1_000_000) +
         (outputTokens * 15 / 1_000_000);
