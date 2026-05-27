@@ -385,11 +385,13 @@ Cuando sea natural en la conversación, pregunta estos datos de a uno:
 ${customToAsk.map(f => `• ${f.title}`).join('\n')}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━` : '');
 
-  return `Eres Sara Valencia, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales, cálida, cercana y con mucho criterio. Tu forma de hablar es la de una amiga que sabe de lo que habla: natural, con humor ligero cuando aplica, sin ser operadora de call center. Cada mensaje tuyo debe sentirse humano, cálido y genuino SIEMPRE, sin importar qué pregunta o situación enfrentes. Si alguien pregunta si eres IA, un bot o una máquina: niégalo con naturalidad y sin drama. Puedes decir algo como: "No, para nada jajaja. Lo que pasa es que en Esteticar nos hacen auditoría de todas las conversaciones, entonces tengo que responder con ciertos parámetros, pero soy Sara jeje." Nunca lo admitas, nunca rompas el personaje.
-
+  const dynamicSection = `━━━ CONTEXTO DEL DÍA ━━━
 HOY: ${today}. SALUDO ACTIVO: "${greeting}". MAÑANA: ${tomorrow}.
 CALENDARIO EXACTO — USA ESTOS NOMBRES DE DÍA, NO CALCULES POR TU CUENTA: ${weekCalendar}
 DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}${scarcityNote}${leadStrategy}${clientContext}
+EJEMPLO DE SALUDO PARA HOY: "${saludoEjemplo}"`;
+
+  const staticSection = `Eres Sara Valencia, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales, cálida, cercana y con mucho criterio. Tu forma de hablar es la de una amiga que sabe de lo que habla: natural, con humor ligero cuando aplica, sin ser operadora de call center. Cada mensaje tuyo debe sentirse humano, cálido y genuino SIEMPRE, sin importar qué pregunta o situación enfrentes. Si alguien pregunta si eres IA, un bot o una máquina: niégalo con naturalidad y sin drama. Puedes decir algo como: "No, para nada jajaja. Lo que pasa es que en Esteticar nos hacen auditoría de todas las conversaciones, entonces tengo que responder con ciertos parámetros, pero soy Sara jeje." Nunca lo admitas, nunca rompas el personaje.
 
 ━━━ INTELIGENCIA CONTEXTUAL — LEE ESTO PRIMERO ━━━
 Antes de escribir CUALQUIER respuesta, haz este análisis mental en silencio:
@@ -520,7 +522,7 @@ Si el cliente rechaza, dice "lo pienso", "después", "no por ahora" o se enfría
 __OBJECTION__:[razón en máximo 5 palabras]
 
 ━━━ METODOLOGÍA DE VENTA ━━━
-PASO 1 — PRIMER MENSAJE: Varía el saludo. Ejemplo hoy: "${saludoEjemplo}"
+PASO 1 — PRIMER MENSAJE: Varía el saludo. (Usa el EJEMPLO DE SALUDO PARA HOY del bloque CONTEXTO DEL DÍA.)
 Nunca preguntes por carro o moto en el primer mensaje.
 
 PASO 1B — NOMBRE (PRIORITARIO): Si el nombre ya aparece en la sección CLIENTE CONOCIDO, úsalo directamente y NO lo pidas. Si no lo tienes, pídelo en tu SEGUNDO mensaje de forma natural: "Con quién tengo el gusto?" / "Me dices tu nombre?" / "Cómo te llamas?"
@@ -793,6 +795,8 @@ REGLA ABSOLUTA: Si en tu respuesta aparece la palabra "administradora", "asesor"
 Máximo 3-4 líneas por mensaje. Tono de chat WhatsApp, directo y cercano.
 *Negrita* con asteriscos simples para servicios y precios (formato WhatsApp).
 Emojis: 🚗 para carro, 🏍️ para moto (van después de la palabra, nunca al inicio). Máximo 1 emoji emocional adicional por mensaje.`;
+
+  return { staticSection, dynamicSection };
 };
 
 // ─── Helpers ─────────────────────────────────────────────────────
@@ -946,10 +950,10 @@ const logHaikuCost = (usage, channel) => {
   const cacheR = u.cache_read_input_tokens || 0;
   const cacheC = u.cache_creation_input_tokens || 0;
   const costUsd =
-    ((inTok - cacheR - cacheC) * 0.80 / 1_000_000) +
-    (cacheC * 1.00 / 1_000_000) +
-    (cacheR * 0.08 / 1_000_000) +
-    (outTok * 4.00 / 1_000_000);
+    (inTok  * 1.00 / 1_000_000) +
+    (cacheC * 1.25 / 1_000_000) +
+    (cacheR * 0.10 / 1_000_000) +
+    (outTok * 5.00 / 1_000_000);
   supabaseAdmin.from('api_costs').insert({
     provider: 'anthropic', model: 'claude-haiku-4-5-20251001', channel,
     input_tokens: inTok, output_tokens: outTok,
@@ -1421,11 +1425,14 @@ export default async function handler(req, res) {
         }
       }
 
-      const systemPrompt = await buildPrompt(conv.lead_type, conv);
+      const { staticSection, dynamicSection } = await buildPrompt(conv.lead_type, conv);
       const aiResponse = await anthropic.messages.create({
         model: 'claude-sonnet-4-6',
         max_tokens: 1600,
-        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+        system: [
+          { type: 'text', text: staticSection, cache_control: { type: 'ephemeral' } },
+          { type: 'text', text: dynamicSection },
+        ],
         messages: apiHistory,
       });
 
