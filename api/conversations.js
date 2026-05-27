@@ -26,12 +26,15 @@ const sendWAMessage = async (to, text) => {
 };
 
 const sendIGMessage = async (recipientId, text) => {
-  if (!FB_PAGE_TOKEN) return false;
   try {
-    // Obtener el token de Instagram desde Supabase
-    const igDb = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY);
-    const { data } = await igDb.from('ig_tokens').select('access_token').order('created_at', { ascending: false }).limit(1).single();
-    const token = data?.access_token || FB_PAGE_TOKEN;
+    const { data } = await supabaseAdmin
+      .from('ig_tokens')
+      .select('access_token')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .single();
+    const token = data?.access_token;
+    if (!token) return false;
     const r = await fetch(`https://graph.instagram.com/v21.0/me/messages`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
