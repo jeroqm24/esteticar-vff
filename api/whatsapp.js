@@ -1425,7 +1425,7 @@ export default async function handler(req, res) {
       const aiResponse = await anthropic.messages.create({
         model: 'claude-sonnet-4-6',
         max_tokens: 1600,
-        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral' } }],
+        system: [{ type: 'text', text: systemPrompt, cache_control: { type: 'ephemeral', ttl: '1h' } }],
         messages: apiHistory,
       });
 
