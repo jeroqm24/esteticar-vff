@@ -1022,9 +1022,12 @@ Responde SOLO con JSON puro, sin markdown, sin explicación:
 const cleanReply = (text) => text
   .replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, '')
   .replace(/__CANCEL_BOOKING__/g, '')
+  // Eliminar líneas que son solo un tag (caso normal)
   .split('\n')
   .filter(line => !/_*(LEAD_TYPE|LEAD_STATUS|ESCALATE|NAME|EMAIL|OBJECTION)_*\s*:/i.test(line))
   .join('\n')
+  // Eliminar tags inline en caso de que el modelo los ponga en medio de texto
+  .replace(/_*(LEAD_TYPE|LEAD_STATUS|ESCALATE|NAME|EMAIL|OBJECTION)_*\s*:[^\n]*/gi, '')
   .trim();
 
 const buildCalendarUrl = (booking) => {
