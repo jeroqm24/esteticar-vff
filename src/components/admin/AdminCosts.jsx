@@ -31,20 +31,37 @@ function StatCard({ label, value, sub, color }) {
   );
 }
 
+const todayISO = () => new Date().toLocaleDateString("en-CA");
+
 export default function AdminCosts() {
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [range, setRange] = useState(7);
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
+  const [useCustom, setUseCustom] = useState(false);
+
+  const applyCustom = () => {
+    if (customFrom && customTo) setUseCustom(true);
+  };
 
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const since = new Date();
-      since.setDate(since.getDate() - range);
+      let since, until;
+      if (useCustom && customFrom && customTo) {
+        since = new Date(customFrom + "T00:00:00");
+        until = new Date(customTo + "T23:59:59");
+      } else {
+        since = new Date();
+        since.setDate(since.getDate() - range);
+        until = new Date();
+      }
       const { data } = await supabase
         .from("api_costs")
         .select("*")
         .gte("created_at", since.toISOString())
+        .lte("created_at", until.toISOString())
         .order("created_at", { ascending: false });
       setRows(data || []);
       setLoading(false);
@@ -52,7 +69,7 @@ export default function AdminCosts() {
     load();
     const id = setInterval(load, 60000);
     return () => clearInterval(id);
-  }, [range]);
+  }, [range, useCustom, customFrom, customTo]);
 
   // Agrupar por día
   const byDay = rows.reduce((acc, r) => {
@@ -86,13 +103,28 @@ export default function AdminCosts() {
           <h2 className="font-heading text-2xl font-light text-ec-dark">Costos de API</h2>
           <p className="font-body text-sm text-ec-text-muted mt-1">Gasto real por llamadas a Claude y Whisper</p>
         </div>
-        <div className="flex gap-2">
-          {[7, 14, 30].map(d => (
-            <button key={d} onClick={() => setRange(d)}
-              className={`font-ui text-[10px] tracking-[0.2em] uppercase px-4 py-2 rounded-sm transition-all ${range === d ? "bg-ec-gold text-white" : "bg-white border border-black/[0.08] text-ec-text-muted hover:border-ec-gold"}`}>
-              {d}d
+        <div className="flex flex-wrap items-center gap-2">
+          {[1, 7, 14, 30].map(d => (
+            <button key={d} onClick={() => { setRange(d); setUseCustom(false); }}
+              className={`font-ui text-[10px] tracking-[0.2em] uppercase px-4 py-2 rounded-sm transition-all ${!useCustom && range === d ? "bg-ec-gold text-white" : "bg-white border border-black/[0.08] text-ec-text-muted hover:border-ec-gold"}`}>
+              {d === 1 ? "HOY" : `${d}D`}
             </button>
           ))}
+          <div className="flex items-center gap-1.5 ml-1">
+            <input type="date" value={customFrom} max={todayISO()}
+              onChange={e => { setCustomFrom(e.target.value); setUseCustom(false); }}
+              className={`font-body text-xs px-2 py-1.5 rounded-sm border transition-all focus:outline-none focus:border-ec-gold ${useCustom ? "border-ec-gold" : "border-black/[0.08]"}`}
+              style={{ fontSize: "12px" }} />
+            <span className="font-body text-xs text-ec-text-muted">—</span>
+            <input type="date" value={customTo} max={todayISO()}
+              onChange={e => { setCustomTo(e.target.value); setUseCustom(false); }}
+              className={`font-body text-xs px-2 py-1.5 rounded-sm border transition-all focus:outline-none focus:border-ec-gold ${useCustom ? "border-ec-gold" : "border-black/[0.08]"}`}
+              style={{ fontSize: "12px" }} />
+            <button onClick={applyCustom} disabled={!customFrom || !customTo}
+              className="font-ui text-[10px] tracking-[0.2em] uppercase px-3 py-2 rounded-sm transition-all bg-ec-dark text-white disabled:opacity-30 hover:bg-ec-gold">
+              IR
+            </button>
+          </div>
         </div>
       </div>
 
