@@ -14,6 +14,10 @@ jobs:
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
             -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
             -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/clients?limit=1")
+            -H "x-client-info: keepalive" \
+            "${{ secrets.SUPABASE_URL }}/rest/v1/clients?select=phone&limit=1")
           echo "Supabase ping status: $STATUS"
-          [ "$STATUS" = "200" ] || exit 1
+          if [ "$STATUS" != "200" ] && [ "$STATUS" != "206" ]; then
+            echo "Ping failed with status $STATUS"
+            exit 1
+          fi
