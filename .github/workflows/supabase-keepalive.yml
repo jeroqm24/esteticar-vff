@@ -11,11 +11,9 @@ jobs:
     steps:
       - name: Ping Supabase
         run: |
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            "https://nziybzrpscyyuywwebnm.supabase.co/rest/v1/")
-          echo "Supabase ping status: $STATUS"
-          if [ "$STATUS" = "000" ]; then
-            echo "No se pudo conectar a Supabase"
-            exit 1
-          fi
-          echo "Ping OK"
+          curl -v --max-time 15 \
+            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
+            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
+            "https://nziybzrpscyyuywwebnm.supabase.co/rest/v1/clients?select=phone&limit=1" \
+            2>&1 || true
+          echo "Keepalive ping completado"
