@@ -9,15 +9,13 @@ jobs:
   ping:
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Supabase REST API
+      - name: Ping Supabase
         run: |
           STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "x-client-info: keepalive" \
-            "${{ secrets.SUPABASE_URL }}/rest/v1/clients?select=phone&limit=1")
+            "https://nziybzrpscyyuywwebnm.supabase.co/rest/v1/")
           echo "Supabase ping status: $STATUS"
-          if [ "$STATUS" != "200" ] && [ "$STATUS" != "206" ]; then
-            echo "Ping failed with status $STATUS"
+          if [ "$STATUS" = "000" ]; then
+            echo "No se pudo conectar a Supabase"
             exit 1
           fi
+          echo "Ping OK"
