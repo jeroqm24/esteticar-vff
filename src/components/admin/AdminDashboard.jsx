@@ -9,6 +9,7 @@ import AdminCancellations from "./AdminCancellations";
 import AdminCosts from "./AdminCosts";
 import AdminConfig from "./AdminConfig";
 import AdminLeads from "./AdminLeads";
+import AdminBirthdays from "./AdminBirthdays";
 import AdminAnalytics from "./AdminAnalytics";
 import CalendarSection from "../CalendarSection";
 import { BRAND } from "../../lib/constants";
@@ -94,6 +95,7 @@ const TABS = [
   { id: "calendar", label: "Calendario", icon: "calendar" },
   { id: "finanzas", label: "Finanzas", icon: "finanzas" },
   { id: "conversations", label: "Chats", icon: "chat" },
+  { id: "birthdays", label: "Cumpleaños", icon: "birthday" },
   { id: "cancellations", label: "Cancelaciones", icon: "cancel" },
   { id: "costs", label: "Costos API", icon: "costs" },
   { id: "analytics", label: "Analítica", icon: "analytics" },
@@ -158,6 +160,12 @@ const TabIcon = ({ type, size = 20 }) => {
         <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
       </svg>
     ),
+    birthday: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+        <path d="M12 3 C12 3 11 1.5 12 1 C13 0.5 13 2 13 2"/>
+      </svg>
+    ),
   };
   return icons[type] || null;
 };
@@ -184,7 +192,7 @@ export default function AdminDashboard({ onClose }) {
   const shortNavLabel = {
     stats: "Panel", appointments: "Citas", clients: "Clientes",
     leads: "Pipeline", calendar: "Agenda", finanzas: "Finanzas",
-    conversations: "Chats", cancellations: "Cancel.", costs: "API", analytics: "Web", config: "Config.",
+    conversations: "Chats", birthdays: "Cumple.", cancellations: "Cancel.", costs: "API", analytics: "Web", config: "Config.",
   };
 
   return (
@@ -286,6 +294,7 @@ export default function AdminDashboard({ onClose }) {
                     {activeTab === "leads" && <AdminLeads />}
                     {activeTab === "calendar" && <CalendarSection isAdmin={true} openNewOnMount={openNewAppt} />}
                     {activeTab === "finanzas" && <AdminFinanzas />}
+                    {activeTab === "birthdays" && <AdminBirthdays />}
                     {activeTab === "cancellations" && <AdminCancellations onCountChange={setCancellationCount} />}
                     {activeTab === "costs" && <AdminCosts />}
                     {activeTab === "analytics" && <AdminAnalytics />}
