@@ -19,7 +19,8 @@
       "Bash(node -e \"const texts = ['Hola, acabo de ver la página de Esteticar y me gustaría conocer más sobre sus tratamientos premium. Me pueden asesorar?','Hola, acabo de seleccionar mis servicios en la página de Esteticar. Quiero confirmar mi reserva y coordinar los detalles. Me pueden ayudar?','Hola, acabo de revisar la garantia de custodia de \\\\$5.000.000 COP en la pagina de Esteticar y me genera mucha confianza. Me gustaria agendar una cita. Que disponibilidad tienen esta semana?']; texts.forEach\\(\\(t,i\\)=>console.log\\(i+1,/[\\\\u{1F000}-\\\\u{1FFFF}]/u.test\\(t\\)?'TIENE EMOJI':'sin emojis',t.substring\\(0,50\\)\\)\\);\")",
       "Bash(grep -v \"node_modules\\\\|//.*esteticar2026\\\\|WHATSAPP_VERIFY\\\\|verify_token\\\\|VERIFY_TOKEN\")",
       "Bash(node --input-type=module)",
-      "Bash(claude login:*)"
+      "Bash(claude login:*)",
+      "WebSearch"
     ]
   }
 }
