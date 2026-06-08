@@ -8,7 +8,18 @@
       "Bash(git add *)",
       "Bash(git commit -m ' *)",
       "Bash(git push *)",
-      "Bash(git checkout *)"
+      "Bash(git checkout *)",
+      "WebFetch(domain:developers.facebook.com)",
+      "Bash(curl -s \"https://graph.instagram.com/access_token?grant_type=ig_exchange_token&client_secret=61a5f36df87b566f3e3f267a6798ed58&access_token=IGAAX9bCfFTFZABZAGFGNE1VR2tDWUtLUlJEek9DanY5MlpiR2ZA1aTJoNV9vYlZACelZAMOTJidXZACZA3h0T3N4dEFyTWlvZAldSY1V0Q1N4TUl3LTlzanZAMTk12TXVZARnVpcHF2d29WMklfdVpsdWd3WFpGUkR1UDJlZAkE3b1JJUi1mNAZDZD\")",
+      "Bash(git commit *)",
+      "Bash(del \"c:\\\\Users\\\\grupo.marketing\\\\Esteticar VFF\\\\api\\\\ig-auth.js\" \"c:\\\\Users\\\\grupo.marketing\\\\Esteticar VFF\\\\api\\\\ig-callback.js\" \"c:\\\\Users\\\\grupo.marketing\\\\Esteticar VFF\\\\api\\\\ig-refresh.js\")",
+      "Bash(npx vite *)",
+      "Bash(grep -v \"^.*//.*supabase\\\\|console\\\\|log\\\\|error\")",
+      "Bash(grep -v \"//.*emoji\")",
+      "Bash(node -e \"const texts = ['Hola, acabo de ver la página de Esteticar y me gustaría conocer más sobre sus tratamientos premium. Me pueden asesorar?','Hola, acabo de seleccionar mis servicios en la página de Esteticar. Quiero confirmar mi reserva y coordinar los detalles. Me pueden ayudar?','Hola, acabo de revisar la garantia de custodia de \\\\$5.000.000 COP en la pagina de Esteticar y me genera mucha confianza. Me gustaria agendar una cita. Que disponibilidad tienen esta semana?']; texts.forEach\\(\\(t,i\\)=>console.log\\(i+1,/[\\\\u{1F000}-\\\\u{1FFFF}]/u.test\\(t\\)?'TIENE EMOJI':'sin emojis',t.substring\\(0,50\\)\\)\\);\")",
+      "Bash(grep -v \"node_modules\\\\|//.*esteticar2026\\\\|WHATSAPP_VERIFY\\\\|verify_token\\\\|VERIFY_TOKEN\")",
+      "Bash(node --input-type=module)",
+      "Bash(claude login:*)"
     ]
   }
 }

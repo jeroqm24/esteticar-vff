@@ -85,7 +85,7 @@ export default async function handler(req, res) {
   if (req.method === 'PATCH') {
     const { id, confirmation_code, updates } = req.body || {};
     if ((!id && !confirmation_code) || !updates) return res.status(400).json({ error: 'Missing fields' });
-    const ALLOWED = ['status', 'date', 'time', 'services', 'notes', 'traslado', 'pickup_option', 'pickup_price', 'total_amount', 'discount', 'client_name', 'client_phone', 'client_email', 'vehicle_type', 'vehicle_plate', 'duration_hours', 'origin', 'reminder_sent'];
+    const ALLOWED = ['status', 'date', 'time', 'services', 'notes', 'traslado', 'pickup_option', 'pickup_price', 'total_amount', 'discount', 'client_name', 'client_phone', 'client_email', 'client_birthday', 'vehicle_type', 'vehicle_plate', 'duration_hours', 'origin', 'reminder_sent'];
     const safe = Object.fromEntries(Object.entries(updates).filter(([k]) => ALLOWED.includes(k)));
     if (Object.keys(safe).length === 0) return res.status(400).json({ error: 'No valid fields' });
     let query = supabaseAdmin.from('appointments').update({ ...safe, updated_at: new Date().toISOString() });

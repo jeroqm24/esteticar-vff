@@ -573,6 +573,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   const [form, setForm] = useState({
     clientName: "",
     clientPhone: "",
+    clientBirthday: "",
     service: defaultService,
     vehicleType: "Carro",
     hour: defaultHour ? `${String(defaultHour).padStart(2,'0')}:00` : "09:00",
@@ -652,6 +653,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
       time: form.hour,
       priceDisplay: (isCotizacion && !basePrice) ? "Por cotización" : formatCOP(finalPrice),
       discount: form.discount,
+      clientBirthday: form.clientBirthday || null,
       traslado: form.traslado || null,
       duration_hours: isVariableDuration ? (parseInt(form.durationHours) || null) : null,
       confirmationCode: `EST-M${Math.floor(Math.random() * 9000) + 1000}`,
@@ -768,6 +770,21 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
               value={form.clientPhone}
               onChange={e => setForm({ ...form, clientPhone: e.target.value })}
               placeholder="Teléfono del cliente"
+              className={inputCls}
+              style={{ fontSize: '16px' }}
+            />
+          </div>
+
+          {/* Birthday row */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <input
+              type="text"
+              value={form.clientBirthday}
+              onChange={e => setForm({ ...form, clientBirthday: e.target.value })}
+              placeholder="Fecha de cumpleaños (ej: 15 de marzo)"
               className={inputCls}
               style={{ fontSize: '16px' }}
             />

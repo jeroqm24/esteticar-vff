@@ -554,6 +554,22 @@ PASO 3 — RECOMENDACIÓN SEGÚN PERFIL (aplica SOLO después de diagnosticar):
 
 ⬜ Si NO has detectado perfil aún: Presenta el *Tratamiento 3 en 1* ($290.000–$350.000) como el servicio estrella — completo, en un solo día, con resultado visible garantizado. Si el cliente muestra interés en protección a largo plazo, sube a Porcelanizado o Cerámico. Si reacciona al precio, baja a Brillado a Máquina ($100.000).
 
+━━━ REGLA DE CIERRE CON LAVADA ESENCIAL — OBLIGATORIO ━━━
+REGLA CRÍTICA: Cada vez que presentes un servicio o respondas una pregunta sobre cualquier tratamiento, SIEMPRE termina tu respuesta mencionando la *Lavada Esencial* como una excelente opción accesible. No importa el servicio del que estés hablando. Aplica siempre, sin excepción.
+
+Cómo presentarla: después de explicar el servicio principal, agrega naturalmente algo como:
+"Y si quieres una excelente opción para mantenerlo impecable entre tratamientos, también está la *Lavada Esencial* por $49.000: incluye aspirada completa, lavado profundo exterior e interior básico, y el vehículo queda impecable. Genera un resultado muy bonito sin necesidad de dejarlo más de 1-2 horas. Si en algún momento necesitas algo más específico para una zona del vehículo, ahí sí entramos con los tratamientos especializados."
+
+TONO OBLIGATORIO: Preséntala siempre como un servicio premium y de calidad, nunca como algo básico o de menor categoría. Es un servicio completo, detallado y de excelentes resultados — simplemente más rápido y accesible.
+
+EXCEPCIONES — NO la ofrezcas en estos tres casos:
+
+1. EL CLIENTE YA TIENE CITA CONFIRMADA: Si en este mismo mensaje acabas de emitir un bloque __BOOKING_CONFIRMED__, no la agregues. La cita ya está cerrada. Meterla ahí genera confusión y ruido innecesario.
+
+2. EL CLIENTE ES BILLETUDO Y ESTÁ EN CONVERSACIÓN DE CERÁMICO O PORCELANIZADO: Si el perfil detectado es BILLETUDO y la conversación gira en torno a Recubrimiento Cerámico o Porcelanizado, no mezcles. Un cliente que está evaluando un servicio de $2.400.000 no necesita que le menciones uno de $49.000 — rompe el posicionamiento premium y puede hacerte perder la venta grande.
+
+3. YA LA MENCIONASTE ANTES EN ESTA CONVERSACIÓN: Si en algún mensaje anterior de este chat ya ofreciste la Lavada Esencial, no la repitas. Decirla una vez es estrategia de ventas. Repetirla en cada mensaje se vuelve insistencia y el cliente lo percibe como presión.
+
 PASO 4 — CIERRE — FECHA Y HORA (DECISIÓN DEL CLIENTE):
 REGLA ABSOLUTA: La fecha y hora la elige el cliente, no tú. NUNCA propongas un día específico.
 Pregunta siempre: "Qué día te queda mejor?" o "Qué día tienes disponible esta semana?"
@@ -718,6 +734,11 @@ Estos 6 datos son SIEMPRE necesarios para toda cita. Si el cliente los mencionó
 
 PROHIBIDO PEDIR: placa y cédula. Si el cliente los menciona espontáneamente, captúralos. Nunca los solicites.
 REGLA CORREO: Único dato que siempre debes haber preguntado. Si no quiere darlo: __EMAIL__:no_proporcionado y confirma.
+
+REGLA ABSOLUTA DE CUMPLEAÑOS: ÚNICAMENTE cuando ya hayas emitido el bloque __BOOKING_CONFIRMED__ (la cita ya está confirmada), en tu SIGUIENTE mensaje pregunta la fecha de cumpleaños de forma natural: "Por cierto, me regalas tu fecha de cumpleaños? Para tenerla en tu ficha." Si el cliente la da, incluye al final del mensaje:
+__BIRTHDAY__:[fecha de cumpleaños]
+Si dice que no quiere darla o se muestra indiferente, no insistas — escribe __BIRTHDAY__:no_proporcionado y sigue con la conversación.
+IMPORTANTE: Solo pregunta el cumpleaños UNA SOLA VEZ por conversación, y SOLO después de confirmar una cita.
 REGLA NATURAL: Agrupa preguntas cuando sea posible. Si ya tienes vehículo y falta la fecha, solo pregunta la fecha. Nunca hagas sentir al cliente que está llenando un formulario.
 
 ━━━ TRASLADO ━━━
@@ -1461,6 +1482,7 @@ export default async function handler(req, res) {
       // Extraer marcadores
       const nameMatch       = rawReply.match(/__NAME__:([^\n]+)/);
       const emailMatch      = rawReply.match(/__EMAIL__:([^\n]+)/);
+      const birthdayMatch   = rawReply.match(/__BIRTHDAY__:([^\n]+)/);
       const leadMatch       = rawReply.match(/__LEAD_TYPE__:([^\n]+)/);
       const leadStatusMatch = rawReply.match(/__LEAD_STATUS__:([^\n]+)/);
       const objMatch        = rawReply.match(/__OBJECTION__:([^\n]+)/);
@@ -1540,6 +1562,30 @@ export default async function handler(req, res) {
         if (booking.direccion && booking.direccion !== 'no_aplica' && booking.direccion !== 'no_proporcionado') meta.direccion = booking.direccion;
         meta.last_visit_date = new Date().toISOString();
         meta.remarketing_status = 'efectivo';
+      }
+
+      // Capturar cumpleaños — actualiza la cita más reciente del cliente
+      if (birthdayMatch) {
+        const bday = birthdayMatch[1].trim();
+        if (bday && bday !== 'no_proporcionado') {
+          meta.client_birthday = bday;
+          (async () => {
+            try {
+              const { data: appts } = await supabaseAdmin
+                .from('appointments')
+                .select('id')
+                .eq('client_phone', from)
+                .order('created_date', { ascending: false })
+                .limit(1);
+              if (appts?.[0]?.id) {
+                await supabaseAdmin
+                  .from('appointments')
+                  .update({ client_birthday: bday })
+                  .eq('id', appts[0].id);
+              }
+            } catch (_) {}
+          })();
+        }
       }
 
       // Pausar bot automáticamente cuando escala a Sara

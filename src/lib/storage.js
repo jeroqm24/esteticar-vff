@@ -27,6 +27,7 @@ const mapAppt = (r) => ({
   id: r.id, service: r.service, vehicleType: r.vehicle_type,
   date: r.date, time: r.time, priceDisplay: r.price_display, confirmationCode: r.confirmation_code,
   clientName: r.client_name, clientPhone: r.client_phone, clientEmail: r.client_email,
+  clientBirthday: r.client_birthday || null,
   traslado: r.traslado, cedula: r.cedula, placa: r.placa,
   status: r.status, channel: r.channel, created_date: r.created_date,
   services: r.services || [], totalAmount: r.total_amount || 0,
@@ -39,6 +40,7 @@ const toApptRow = (d) => ({
   id: d.id, service: d.service, vehicle_type: d.vehicleType,
   date: d.date, time: d.time, price_display: d.priceDisplay, confirmation_code: d.confirmationCode,
   client_name: d.clientName, client_phone: d.clientPhone, client_email: d.clientEmail,
+  client_birthday: d.clientBirthday || null,
   traslado: d.traslado, cedula: d.cedula, placa: d.placa,
   status: d.status || 'pending', channel: d.channel || 'manual',
   created_date: d.created_date || new Date().toISOString(),
@@ -88,7 +90,7 @@ export const db = {
         if (data.origin       !== undefined) updates.origin        = data.origin;
         if (data.reminderSent !== undefined) updates.reminder_sent = data.reminderSent;
         // Also allow direct snake_case keys
-        const SNAKE = ['status','date','time','service','vehicle_type','client_name','client_phone','client_email','traslado','notes','total_amount','discount','origin','reminder_sent','pickup_option','pickup_price','duration_hours'];
+        const SNAKE = ['status','date','time','service','vehicle_type','client_name','client_phone','client_email','client_birthday','traslado','notes','total_amount','discount','origin','reminder_sent','pickup_option','pickup_price','duration_hours'];
         SNAKE.forEach(k => { if (data[k] !== undefined) updates[k] = data[k]; });
 
         await fetch('/api/appointments', {
