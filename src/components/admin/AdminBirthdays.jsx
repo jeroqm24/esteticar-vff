@@ -52,8 +52,10 @@ const urgencyColor = (days) => {
 export default function AdminBirthdays() {
   const [rows, setRows]     = useState([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all"); // all | soon | month
+  const [search, setSearch]       = useState("");
+  const [filter, setFilter]       = useState("all"); // all | soon | month | custom
+  const [fromMonth, setFromMonth] = useState("");
+  const [toMonth, setToMonth]     = useState("");
 
   useEffect(() => { load(); }, []);
 
@@ -103,6 +105,13 @@ export default function AdminBirthdays() {
     }
     if (filter === "soon")  return r.days !== null && r.days <= 30;
     if (filter === "month") return r.parsed?.month === currentMonth;
+    if (filter === "custom" && (fromMonth || toMonth)) {
+      const m = r.parsed?.month;
+      if (!m) return false;
+      if (fromMonth && toMonth) return m >= parseInt(fromMonth) && m <= parseInt(toMonth);
+      if (fromMonth) return m >= parseInt(fromMonth);
+      if (toMonth)   return m <= parseInt(toMonth);
+    }
     return true;
   });
 
@@ -120,27 +129,68 @@ export default function AdminBirthdays() {
         </div>
 
         {/* Chips de filtro */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {[
-            { id: "all",   label: "Todos",             count: rows.length },
-            { id: "soon",  label: "Próximos 30 días",  count: soonCount },
-            { id: "month", label: "Este mes",           count: monthCount },
-          ].map(f => (
-            <button
-              key={f.id}
-              onClick={() => setFilter(f.id)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-ui text-[10px] tracking-[0.15em] uppercase transition-all ${
-                filter === f.id
-                  ? "bg-ec-gold text-white shadow-sm"
-                  : "bg-white text-ec-text-muted border border-black/[0.08] hover:border-ec-gold/40"
-              }`}
-            >
-              {f.label}
-              <span className={`text-[9px] font-bold ${filter === f.id ? "opacity-80" : "opacity-60"}`}>
-                {f.count}
-              </span>
-            </button>
-          ))}
+        <div className="flex flex-col items-end gap-2">
+          <div className="flex items-center gap-2 flex-wrap justify-end">
+            {[
+              { id: "all",    label: "Todos",            count: rows.length },
+              { id: "soon",   label: "Próximos 30 días", count: soonCount },
+              { id: "month",  label: "Este mes",          count: monthCount },
+              { id: "custom", label: "Personalizado",     count: null },
+            ].map(f => (
+              <button
+                key={f.id}
+                onClick={() => setFilter(f.id)}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full font-ui text-[10px] tracking-[0.15em] uppercase transition-all ${
+                  filter === f.id
+                    ? "bg-ec-gold text-white shadow-sm"
+                    : "bg-white text-ec-text-muted border border-black/[0.08] hover:border-ec-gold/40"
+                }`}
+              >
+                {f.label}
+                {f.count !== null && (
+                  <span className={`text-[9px] font-bold ${filter === f.id ? "opacity-80" : "opacity-60"}`}>
+                    {f.count}
+                  </span>
+                )}
+              </button>
+            ))}
+          </div>
+
+          {/* Selectores de mes — solo cuando filtro personalizado activo */}
+          {filter === "custom" && (
+            <div className="flex items-center gap-2 flex-wrap justify-end">
+              <span className="font-ui text-[9px] tracking-[0.15em] text-ec-text-muted uppercase">Desde</span>
+              <select
+                value={fromMonth}
+                onChange={e => setFromMonth(e.target.value)}
+                className="bg-white border border-black/[0.08] rounded-lg px-3 py-1.5 font-body text-sm text-ec-dark focus:outline-none focus:border-ec-gold/50 transition-colors"
+              >
+                <option value="">Cualquiera</option>
+                {MONTHS_ES.map((m, i) => (
+                  <option key={i} value={i + 1}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>
+                ))}
+              </select>
+              <span className="font-ui text-[9px] tracking-[0.15em] text-ec-text-muted uppercase">Hasta</span>
+              <select
+                value={toMonth}
+                onChange={e => setToMonth(e.target.value)}
+                className="bg-white border border-black/[0.08] rounded-lg px-3 py-1.5 font-body text-sm text-ec-dark focus:outline-none focus:border-ec-gold/50 transition-colors"
+              >
+                <option value="">Cualquiera</option>
+                {MONTHS_ES.map((m, i) => (
+                  <option key={i} value={i + 1}>{m.charAt(0).toUpperCase() + m.slice(1)}</option>
+                ))}
+              </select>
+              {(fromMonth || toMonth) && (
+                <button
+                  onClick={() => { setFromMonth(""); setToMonth(""); }}
+                  className="font-ui text-[9px] tracking-[0.15em] text-ec-text-muted uppercase hover:text-red-500 transition-colors"
+                >
+                  Limpiar
+                </button>
+              )}
+            </div>
+          )}
         </div>
       </div>
 
