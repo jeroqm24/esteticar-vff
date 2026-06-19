@@ -3,7 +3,7 @@ name: Supabase Keepalive
 on:
   schedule:
     - cron: '0 9 * * 1,4'  # Lunes y jueves a las 9:00 UTC
-  workflow_dispatch:        # Permite ejecutarlo manualmente si es necesario
+  workflow_dispatch:
 
 jobs:
   ping:
@@ -11,9 +11,8 @@ jobs:
     steps:
       - name: Ping Supabase
         run: |
-          curl -v --max-time 15 \
-            -H "apikey: ${{ secrets.SUPABASE_ANON_KEY }}" \
-            -H "Authorization: Bearer ${{ secrets.SUPABASE_ANON_KEY }}" \
-            "https://nziybzrpscyyuywwebnm.supabase.co/rest/v1/clients?select=phone&limit=1" \
-            2>&1 || true
-          echo "Keepalive ping completado"
+          curl -sf --max-time 15 \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcXRrcGlka2h0aXd6enV0dGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzQ0NDgsImV4cCI6MjA5MzE1MDQ0OH0.YE9SO9FzOhmXwQY-4Kx2wnocX6Oln0uaeAA4-fE8MhI" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcXRrcGlka2h0aXd6enV0dGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzQ0NDgsImV4cCI6MjA5MzE1MDQ0OH0.YE9SO9FzOhmXwQY-4Kx2wnocX6Oln0uaeAA4-fE8MhI" \
+            "https://tpqtkpidkhtiwzzuttjt.supabase.co/rest/v1/appointments?select=id&limit=1" \
+            && echo "Keepalive OK" || echo "Keepalive FAILED"
