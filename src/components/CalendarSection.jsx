@@ -654,7 +654,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
         time: form.hour,
         priceDisplay: (isCotizacion && !basePrice) ? "Por cotización" : formatCOP(finalPrice),
         discount: form.discount,
-        clientBirthday: form.clientBirthday || null,
+        clientBirthday: form.clientBirthday?.trim().length > 1 ? form.clientBirthday.trim() : null,
         traslado: form.traslado || null,
         duration_hours: isVariableDuration ? (parseInt(form.durationHours) || null) : null,
         confirmationCode: `EST-M${Math.floor(Math.random() * 9000) + 1000}`,

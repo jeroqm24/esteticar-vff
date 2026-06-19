@@ -51,7 +51,7 @@ const toApptRow = (d) => {
     created_date: d.created_date || new Date().toISOString(),
   };
   if (d.clientEmail) row.client_email = d.clientEmail;
-  if (d.clientBirthday) row.client_birthday = d.clientBirthday;
+  if (d.clientBirthday && String(d.clientBirthday).trim().length > 2) row.client_birthday = String(d.clientBirthday).trim();
   if (d.traslado) row.traslado = d.traslado;
   if (d.cedula) row.cedula = d.cedula;
   if (d.placa) row.placa = d.placa;

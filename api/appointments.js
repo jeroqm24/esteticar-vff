@@ -101,6 +101,7 @@ export default async function handler(req, res) {
     if (!body.service) return res.status(400).json({ error: 'Missing service' });
     const ALLOWED_INSERT = ['service','vehicle_type','date','time','price_display','confirmation_code','client_name','client_phone','client_email','client_birthday','traslado','cedula','placa','status','channel','created_date','origin','lead_type','reminder_sent','pickup_option','pickup_price','total_amount','discount','duration_hours','services','notes'];
     const row = Object.fromEntries(Object.entries(body).filter(([k, v]) => ALLOWED_INSERT.includes(k) && v != null));
+    if (row.client_birthday && String(row.client_birthday).trim().length < 3) delete row.client_birthday;
     const { data: inserted, error: insertErr } = await supabaseAdmin
       .from('appointments')
       .insert(row)
