@@ -1089,8 +1089,8 @@ export default function CalendarSection({ isAdmin = false, onOpenChat, openNewOn
       }
       await loadAppointments();
       setShowAddModal(false);
-    } catch {
-      alert('Error al guardar la cita. Intenta de nuevo.');
+    } catch (e) {
+      alert('Error al guardar la cita: ' + (e.message || 'desconocido'));
     }
   };
 

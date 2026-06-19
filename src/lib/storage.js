@@ -79,9 +79,13 @@ export const db = {
           headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
           body: JSON.stringify(row),
         });
-        const inserted = await res.json();
-        return inserted && inserted.id ? mapAppt(inserted) : null;
-      } catch { return null; }
+        const body = await res.json();
+        if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+        return body && body.id ? mapAppt(body) : null;
+      } catch (e) {
+        console.error('[create appointment]', e);
+        throw e;
+      }
     },
     update: async (id, data) => {
       try {
