@@ -36,17 +36,29 @@ const mapAppt = (r) => ({
   leadType: r.lead_type || null,
 });
 
-const toApptRow = (d) => ({
-  id: d.id, service: d.service, vehicle_type: d.vehicleType,
-  date: d.date, time: d.time, price_display: d.priceDisplay, confirmation_code: d.confirmationCode,
-  client_name: d.clientName, client_phone: d.clientPhone, client_email: d.clientEmail,
-  client_birthday: d.clientBirthday || null,
-  traslado: d.traslado, cedula: d.cedula, placa: d.placa,
-  status: d.status || 'pending', channel: d.channel || 'manual',
-  created_date: d.created_date || new Date().toISOString(),
-  origin: d.origin || null,
-  lead_type: d.leadType || null,
-});
+const toApptRow = (d) => {
+  const row = {
+    service: d.service,
+    vehicle_type: d.vehicleType,
+    date: d.date,
+    time: d.time,
+    price_display: d.priceDisplay,
+    confirmation_code: d.confirmationCode,
+    client_name: d.clientName,
+    client_phone: d.clientPhone,
+    status: d.status || 'pending',
+    channel: d.channel || 'manual',
+    created_date: d.created_date || new Date().toISOString(),
+  };
+  if (d.clientEmail) row.client_email = d.clientEmail;
+  if (d.clientBirthday) row.client_birthday = d.clientBirthday;
+  if (d.traslado) row.traslado = d.traslado;
+  if (d.cedula) row.cedula = d.cedula;
+  if (d.placa) row.placa = d.placa;
+  if (d.origin) row.origin = d.origin;
+  if (d.leadType) row.lead_type = d.leadType;
+  return row;
+};
 
 // ═══════════════════════════════════════════════════════════════════
 // DB SUPABASE

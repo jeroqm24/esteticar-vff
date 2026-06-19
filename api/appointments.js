@@ -97,14 +97,19 @@ export default async function handler(req, res) {
 
   // POST: crear cita nueva desde el panel admin
   if (req.method === 'POST') {
-    const row = req.body;
-    if (!row || !row.service) return res.status(400).json({ error: 'Missing service' });
+    const body = req.body || {};
+    if (!body.service) return res.status(400).json({ error: 'Missing service' });
+    const ALLOWED_INSERT = ['service','vehicle_type','date','time','price_display','confirmation_code','client_name','client_phone','client_email','client_birthday','traslado','cedula','placa','status','channel','created_date','origin','lead_type','reminder_sent','pickup_option','pickup_price','total_amount','discount','duration_hours','services','notes'];
+    const row = Object.fromEntries(Object.entries(body).filter(([k, v]) => ALLOWED_INSERT.includes(k) && v != null));
     const { data: inserted, error: insertErr } = await supabaseAdmin
       .from('appointments')
       .insert(row)
       .select()
       .single();
-    if (insertErr) return res.status(500).json({ error: insertErr.message });
+    if (insertErr) {
+      console.error('APPT INSERT ERROR:', JSON.stringify(insertErr), 'ROW:', JSON.stringify(row));
+      return res.status(500).json({ error: insertErr.message });
+    }
 
     // Notificar Telegram — await para que Vercel no corte la función antes de que el fetch complete
     try {

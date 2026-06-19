@@ -637,30 +637,33 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   const isSat = (getDay(selectedDay) + 6) % 7 === 5;
   const hourEnd = isSat ? HOUR_END_SATURDAY : HOUR_END_WEEKDAY;
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.clientName || !form.clientPhone || isCapacityBlocked || saving) return;
     setSaving(true);
     const dateStr = format(selectedDay, "EEEE, d 'de' MMMM", { locale: es });
     const fullDate = `${dateStr} a las ${form.hour}`;
-    onSave({
-      clientName: form.clientName,
-      clientPhone: form.clientPhone,
-      service: form.service,
-      vehicleType: form.vehicleType,
-      hour: form.hour,
-      status: form.status,
-      date: fullDate,
-      time: form.hour,
-      priceDisplay: (isCotizacion && !basePrice) ? "Por cotización" : formatCOP(finalPrice),
-      discount: form.discount,
-      clientBirthday: form.clientBirthday || null,
-      traslado: form.traslado || null,
-      duration_hours: isVariableDuration ? (parseInt(form.durationHours) || null) : null,
-      confirmationCode: `EST-M${Math.floor(Math.random() * 9000) + 1000}`,
-      channel: "manual",
-      id: Math.random().toString(36).substr(2, 9),
-      created_date: new Date().toISOString(),
-    });
+    try {
+      await onSave({
+        clientName: form.clientName,
+        clientPhone: form.clientPhone,
+        service: form.service,
+        vehicleType: form.vehicleType,
+        hour: form.hour,
+        status: form.status,
+        date: fullDate,
+        time: form.hour,
+        priceDisplay: (isCotizacion && !basePrice) ? "Por cotización" : formatCOP(finalPrice),
+        discount: form.discount,
+        clientBirthday: form.clientBirthday || null,
+        traslado: form.traslado || null,
+        duration_hours: isVariableDuration ? (parseInt(form.durationHours) || null) : null,
+        confirmationCode: `EST-M${Math.floor(Math.random() * 9000) + 1000}`,
+        channel: "manual",
+        created_date: new Date().toISOString(),
+      });
+    } catch {
+      setSaving(false);
+    }
   };
 
   const inputCls = "w-full bg-transparent border-0 border-b border-black/[0.1] py-2 font-body text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors placeholder-black/25";
@@ -1079,10 +1082,16 @@ export default function CalendarSection({ isAdmin = false, onOpenChat, openNewOn
 
   const handleSaveAppointment = async (data) => {
     try {
-      await db.appointments.create(data);
+      const result = await db.appointments.create(data);
+      if (!result) {
+        alert('No se pudo guardar la cita. Intenta de nuevo.');
+        return;
+      }
       await loadAppointments();
-    } catch { }
-    setShowAddModal(false);
+      setShowAddModal(false);
+    } catch {
+      alert('Error al guardar la cita. Intenta de nuevo.');
+    }
   };
 
   const handleUpdateStatus = async (id, status) => {
