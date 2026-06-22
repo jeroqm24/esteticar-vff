@@ -504,11 +504,11 @@ const SERVICE_PRICES = {
   "Descontaminación de Vidrios (parabrisas)": 60000,
   "Restauración de Farolas": 180000,
   "Lavado de Cojinería": 199000,
-  "Mantenimiento Interior Sólo Cojinería": 290000,
-  "Mantenimiento Interior Levantamiento del Alfombrado": 350000,
-  "Mantenimiento Interior": 280000,
-  "Tratamiento 3 en 1 Manual": 290000,
-  "Tratamiento 3 en 1 a Máquina": 350000,
+  "Mantenimiento Interior Sólo Cojinería": 300000,
+  "Mantenimiento Interior Levantamiento del Alfombrado": 360000,
+  "Mantenimiento Interior": 300000,
+  "Tratamiento 3 en 1 Manual": 300000,
+  "Tratamiento 3 en 1 a Máquina": 380000,
   "Limpieza Técnica de Motor": 49000,
   "Recubrimiento Cerámico": null,
   "Porcelanizado": null,
@@ -543,6 +543,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   ];
   const MOTO_SERVICES = [
     "Lavada Esencial Moto", "Brillado de Farolas", "Brillado de Tanque", "Descontaminación de Tubería",
+    "Limpieza Técnica de Motor", "Recubrimiento Cerámico", "Porcelanizado",
   ];
 
   const defaultService = "Lavada Esencial Carro";
@@ -618,8 +619,14 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
     }).length;
   })();
 
-  const TRUCK_SURCHARGE_SERVICES = ["Tratamiento 3 en 1 Manual", "Tratamiento 3 en 1 a Máquina"];
-  const truckExtra = form.vehicleType === "Camioneta" && TRUCK_SURCHARGE_SERVICES.includes(form.service) ? 10000 : 0;
+  const TRUCK_SURCHARGE = {
+    "Tratamiento 3 en 1 Manual": 10000,
+    "Tratamiento 3 en 1 a Máquina": 10000,
+    "Mantenimiento Interior Sólo Cojinería": 30000,
+    "Mantenimiento Interior Levantamiento del Alfombrado": 30000,
+    "Mantenimiento Interior": 30000,
+  };
+  const truckExtra = form.vehicleType === "Camioneta" ? (TRUCK_SURCHARGE[form.service] || 0) : 0;
   const basePrice = isCotizacion ? (parseInt(form.manualPrice) || 0) : ((rawPrice || 0) + truckExtra);
   const finalPrice = Math.max(0, basePrice - (Number(form.discount) || 0));
   const hasDiscount = form.discount > 0;

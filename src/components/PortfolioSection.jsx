@@ -43,7 +43,10 @@ export default function PortfolioSection() {
         if (!data) return;
         const cfg = JSON.parse(data.value || "{}");
         if (cfg.portfolio_url) setPortfolioUrl(cfg.portfolio_url);
-        if (cfg.portfolio_services?.length > 0) setServices(cfg.portfolio_services);
+        if (cfg.portfolio_services?.length > 0) {
+          const names = cfg.portfolio_services.map(s => typeof s === 'string' ? s : s.name).filter(Boolean);
+          if (names.length > 0) setServices(names);
+        }
       } catch { }
     };
     loadConfig();

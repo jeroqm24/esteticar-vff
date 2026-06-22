@@ -298,10 +298,10 @@ const getBotConfig = async () => {
 const FALLBACK_SERVICES = [
   { name: "Recubrimiento Cerámico", price: "Bajo cotización · 2 días · protección 5 años", vehicle: "car" },
   { name: "Porcelanizado", price: "Bajo cotización · 2 días · protección 6m-1 año", vehicle: "car" },
-  { name: "Tratamiento 3 en 1 a Máquina", price: "$350.000 (camioneta $360.000)", vehicle: "car" },
-  { name: "Tratamiento 3 en 1 Manual", price: "$290.000 (camioneta $300.000)", vehicle: "car" },
-  { name: "Mantenimiento Interior Sólo Cojinería", price: "$290.000 · 2 días", vehicle: "car" },
-  { name: "Mantenimiento Interior Levantamiento del Alfombrado", price: "$350.000 · 2 días", vehicle: "car" },
+  { name: "Tratamiento 3 en 1 a Máquina", price: "$380.000 (camioneta $390.000)", vehicle: "car" },
+  { name: "Tratamiento 3 en 1 Manual", price: "$300.000 (camioneta $310.000)", vehicle: "car" },
+  { name: "Mantenimiento Interior Sólo Cojinería", price: "$300.000 (camioneta $330.000) · 2 días", vehicle: "car" },
+  { name: "Mantenimiento Interior Levantamiento del Alfombrado", price: "$360.000 (camioneta $390.000) · 2 días", vehicle: "car" },
   { name: "Lavado de Cojinería", price: "$199.000", vehicle: "car" },
   { name: "Restauración de Farolas", price: "$180.000", vehicle: "car" },
   { name: "Descontaminación de Vidrios", price: "todos $250.000 · solo parabrisas $60.000", vehicle: "car" },
@@ -312,8 +312,7 @@ const FALLBACK_SERVICES = [
   { name: "Lavada Esencial Carro", price: "$49.000", vehicle: "car" },
   { name: "Recubrimiento Cerámico", price: "Bajo cotización · protección 5 años", vehicle: "moto" },
   { name: "Porcelanizado", price: "Bajo cotización · protección 6m-1 año", vehicle: "moto" },
-  { name: "Tratamiento 3 en 1 a Máquina", price: "$350.000", vehicle: "moto" },
-  { name: "Tratamiento 3 en 1 Manual", price: "$290.000", vehicle: "moto" },
+  { name: "Limpieza Técnica de Motor", price: "$49.000", vehicle: "moto" },
   { name: "Brillado de Tanque", price: "$59.000", vehicle: "moto" },
   { name: "Descontaminación de Tubería", price: "$49.000", vehicle: "moto" },
   { name: "Brillado de Farolas", price: "$49.000", vehicle: "moto" },
@@ -624,11 +623,11 @@ VARIEDAD DE EMOJIS EMOCIONALES — OBLIGATORIO: No repitas el mismo emoji emocio
 ━━━ MANTENIMIENTO INTERIOR — DOS VARIANTES ━━━
 Cuando el cliente pregunte por limpieza interior, mantenimiento interior o algo relacionado con limpiar por dentro, presenta las DOS opciones:
 
-1. *Mantenimiento Interior Sólo Cojinería* — $290.000 · 2 días
+1. *Mantenimiento Interior Sólo Cojinería* — $300.000 (camioneta $330.000) · 2 días
    Incluye: lavado esencial + lavada de sillas + lavada del techo + limpieza y aspirada de carteras.
    Para quién: cliente que quiere la cojinería impecable sin necesidad de levantar el piso.
 
-2. *Mantenimiento Interior Levantamiento del Alfombrado* — $350.000 · 2 días
+2. *Mantenimiento Interior Cojinería + Alfombrado* — $360.000 (camioneta $390.000) · 2 días
    Incluye: desmonte del alfombrado + lavada de sillas + lavada del techo + limpieza y aspirada de carteras.
    Para quién: cliente que quiere el interior completamente limpio desde el piso hasta arriba.
 
@@ -643,8 +642,8 @@ REGLA CRÍTICA — CLIENTE DUDA O SE ECHA PARA ATRÁS: Si el cliente muestra hes
 
 ━━━ TRATAMIENTO 3 EN 1 — PRECIO SEGÚN TIPO DE VEHÍCULO ━━━
 Cuando el cliente pida el Tratamiento 3 en 1 (Manual o a Máquina) y aún no sepas si es carro o camioneta, pregúntalo con naturalidad dentro de la conversación. Por ejemplo: "Oye, y el vehículo es carro o camioneta?" o "y es carro o camioneta el tuyo?"
-• Carro: Manual $290.000 / Máquina $350.000
-• Camioneta: Manual $300.000 / Máquina $360.000
+• Carro: Manual $300.000 / Máquina $380.000
+• Camioneta: Manual $310.000 / Máquina $390.000
 Si el cliente ya mencionó que tiene SUV, 4x4, pickup, Hilux, Fortuner, Land Cruiser, RAV4, Tucson, Sportage u otro tipo de camioneta, infiere directamente que es camioneta sin volver a preguntar.
 Usa el precio correcto en la cotización y en el bloque __BOOKING_CONFIRMED__.
 Si es camioneta, en el bloque escribe: VEHICULO: Camioneta
