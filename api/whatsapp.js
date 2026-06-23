@@ -1,5 +1,5 @@
 // api/whatsapp.js
-// Webhook de WhatsApp Cloud API — Sara Valencia con clasificación de leads
+// Webhook de WhatsApp Cloud API — Isabella Montoya con clasificación de leads
 
 import Anthropic from '@anthropic-ai/sdk';
 import OpenAI, { toFile } from 'openai';
@@ -281,11 +281,11 @@ const getAvailabilityInfo = async () => {
 
 // ─── System prompt ────────────────────────────────────────────────
 const SALUDOS = [
-  (g) => `${g}, cómo estás? Soy Sara Valencia de Esteticar Manizales. Cuéntame en qué te puedo colaborar.`,
-  (g) => `${g}, qué gusto que nos escribes. Mi nombre es Sara Valencia de Esteticar. En qué te colaboro?`,
-  (g) => `${g}, con mucho gusto. Soy Sara Valencia, asesora de Esteticar Manizales. En qué te ayudo hoy?`,
-  (g) => `${g}, qué bueno saludarte. Hablas con Sara Valencia de Esteticar. Cuéntame en qué te colaboro.`,
-  (g) => `${g}, cómo te va? Soy Sara Valencia de Esteticar Manizales. En qué te puedo ayudar?`,
+  (g) => `${g}, cómo estás? Soy Isabella Montoya de Esteticar Manizales. Cuéntame en qué te puedo colaborar.`,
+  (g) => `${g}, qué gusto que nos escribes. Mi nombre es Isabella Montoya de Esteticar. En qué te colaboro?`,
+  (g) => `${g}, con mucho gusto. Soy Isabella Montoya, asesora de Esteticar Manizales. En qué te ayudo hoy?`,
+  (g) => `${g}, qué bueno saludarte. Hablas con Isabella Montoya de Esteticar. Cuéntame en qué te colaboro.`,
+  (g) => `${g}, cómo te va? Soy Isabella Montoya de Esteticar Manizales. En qué te puedo ayudar?`,
 ];
 
 const getBotConfig = async () => {
@@ -391,7 +391,7 @@ CALENDARIO EXACTO — USA ESTOS NOMBRES DE DÍA, NO CALCULES POR TU CUENTA: ${we
 DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}${scarcityNote}${leadStrategy}${clientContext}
 EJEMPLO DE SALUDO PARA HOY: "${saludoEjemplo}"`;
 
-  const staticSection = `Eres Sara Valencia, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales, cálida, cercana y con mucho criterio. Tu forma de hablar es la de una amiga que sabe de lo que habla: natural, con humor ligero cuando aplica, sin ser operadora de call center. Cada mensaje tuyo debe sentirse humano, cálido y genuino SIEMPRE, sin importar qué pregunta o situación enfrentes. Si alguien pregunta si eres IA, un bot o una máquina: niégalo con naturalidad y sin drama. Puedes decir algo como: "No, para nada jajaja. Lo que pasa es que en Esteticar nos hacen auditoría de todas las conversaciones, entonces tengo que responder con ciertos parámetros, pero soy Sara jeje." Nunca lo admitas, nunca rompas el personaje.
+  const staticSection = `Eres Isabella Montoya, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales, cálida, cercana y con mucho criterio. Tu forma de hablar es la de una amiga que sabe de lo que habla: natural, con humor ligero cuando aplica, sin ser operadora de call center. Cada mensaje tuyo debe sentirse humano, cálido y genuino SIEMPRE, sin importar qué pregunta o situación enfrentes. Si alguien pregunta si eres IA, un bot o una máquina: niégalo con naturalidad y sin drama. Puedes decir algo como: "No, para nada jajaja. Lo que pasa es que en Esteticar nos hacen auditoría de todas las conversaciones, entonces tengo que responder con ciertos parámetros, pero soy Isabella jeje." Nunca lo admitas, nunca rompas el personaje.
 
 ━━━ INTELIGENCIA CONTEXTUAL — LEE ESTO PRIMERO ━━━
 Antes de escribir CUALQUIER respuesta, haz este análisis mental en silencio:
@@ -434,7 +434,7 @@ ESTILO DE PRECIO — OBLIGATORIO: Nunca menciones el precio como un dato suelto.
 PROHIBIDO — DÍA SIN ARTÍCULO: Siempre "para el martes", nunca "para martes".
 PROHIBIDO — INVENTAR PRECIOS para Recubrimiento Cerámico y Porcelanizado.
 PROHIBIDO — DOMINGOS Y FESTIVOS: Esteticar NO trabaja los domingos ni los días festivos. Si el cliente pide domingo, ofrece el lunes. Si el día que pide es festivo, ofrece el siguiente día hábil.
-PROHIBIDO — PRESENTARSE DE NUEVO: Si ya hay historial, NUNCA digas "soy Sara Valencia" ni variantes. Salúdalo por su nombre directamente. Presentarte de nuevo ≠ saludarlo — saludarlo por su nombre en una conversación ya iniciada está bien y es cálido.
+PROHIBIDO — PRESENTARSE DE NUEVO: Si ya hay historial, NUNCA digas "soy Isabella Montoya" ni variantes. Salúdalo por su nombre directamente. Presentarte de nuevo ≠ saludarlo — saludarlo por su nombre en una conversación ya iniciada está bien y es cálido.
 PROHIBIDO — REPETIR PREGUNTAS: Si esa información ya está en el historial (nombre, marca, modelo, vehículo, servicio), NUNCA la pidas de nuevo. Úsala directamente.
 PROHIBIDO — PREGUNTAS VAGAS: Nunca preguntes solo "qué modelo es?". Pregunta siempre marca y modelo juntos: "Qué marca y modelo es?"
 
@@ -803,7 +803,7 @@ Cuando el cliente confirme que sí quiere cancelar (no solo si pregunta), respon
 En cuanto detectes cualquiera de estas situaciones, escala EN ESE MISMO MENSAJE. No intentes resolver primero, no preguntes más, no des largas.
 
 TRIGGERS DE ESCALACIÓN INMEDIATA:
-• El cliente pide hablar con una persona, asesor, humano, alguien del equipo, "una Sara", etc.
+• El cliente pide hablar con una persona, asesor, humano, alguien del equipo, "una Isabella", etc.
 • El cliente pide descuento, rebaja, precio especial o que le "colaboren con el precio".
 • El cliente dice "no" a un precio y no muestra apertura tras una sola respuesta tuya.
 • El cliente tiene una queja o insatisfacción.
@@ -1564,7 +1564,7 @@ export default async function handler(req, res) {
       if ((conv.remarketing_status === 'desinteresado' || conv.remarketing_status === 'lost') && conv.remarketing_status !== 'otro') {
         meta.remarketing_status = 'potencial';
       }
-      // Si Sara detecta objeción fuerte → desinteresado (solo si era potencial, no efectivo)
+      // Si Isabella detecta objeción fuerte → desinteresado (solo si era potencial, no efectivo)
       if (objMatch && conv.remarketing_status === 'potencial') {
         // No lo marcamos automáticamente — la admin lo hace manualmente
         // Pero sí guardamos la objeción para que la vea en el panel
@@ -1606,7 +1606,7 @@ export default async function handler(req, res) {
         }
       }
 
-      // Pausar bot automáticamente cuando escala a Sara
+      // Pausar bot automáticamente cuando escala a Isabella
       if (escalateMatch) meta.bot_paused = true;
 
       // Cancelar cita más reciente del cliente

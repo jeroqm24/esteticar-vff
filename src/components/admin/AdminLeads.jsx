@@ -65,7 +65,7 @@ function getPreview(history) {
   const last = [...history].reverse().find(m => m.role === "user" || m.role === "assistant");
   if (!last) return "Sin mensajes";
   const text = cleanMsg(last.content || "");
-  return (last.role === "user" ? "" : "Sara: ") + text.slice(0, 80) + (text.length > 80 ? "…" : "");
+  return (last.role === "user" ? "" : "Isabella: ") + text.slice(0, 80) + (text.length > 80 ? "…" : "");
 }
 
 function downloadConversation(conv) {
@@ -85,7 +85,7 @@ function downloadConversation(conv) {
       lines.push(`[REMARKETING · ${m.timestamp ? new Date(m.timestamp).toLocaleString("es-CO") : ""}]`);
       lines.push(m.content || "");
     } else {
-      const who = m.role === "user" ? name : m.role === "admin" ? "Admin" : "Sara";
+      const who = m.role === "user" ? name : m.role === "admin" ? "Admin" : "Isabella";
       const ts = m.timestamp ? new Date(m.timestamp).toLocaleString("es-CO") : "";
       lines.push(`[${who} · ${ts}]`);
       lines.push(cleanMsg(m.content || ""));
@@ -113,7 +113,7 @@ function downloadAll(convs, label) {
       if (m.role === "remarketing") {
         lines.push(`[REMARKETING] ${cleanMsg(m.content || "")}`);
       } else {
-        const who = m.role === "user" ? name : m.role === "admin" ? "Admin" : "Sara";
+        const who = m.role === "user" ? name : m.role === "admin" ? "Admin" : "Isabella";
         lines.push(`[${who}] ${cleanMsg(m.content || "")}`);
       }
     });
@@ -555,7 +555,7 @@ export default function AdminLeads() {
             {search ? "Sin resultados" : "Sin leads en esta categoría"}
           </p>
           <p className="font-body text-sm text-ec-text-muted">
-            {search ? "Intenta con otro término." : "Los leads aparecen automáticamente cuando Sara clasifica una conversación."}
+            {search ? "Intenta con otro término." : "Los leads aparecen automáticamente cuando Isabella clasifica una conversación."}
           </p>
         </div>
       ) : (

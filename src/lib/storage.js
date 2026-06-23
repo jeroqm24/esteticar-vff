@@ -529,7 +529,7 @@ export const getGreeting = () => {
 export const generateEscalationURL = (userQuestion) => {
   const g = getGreeting().toLowerCase();
   const msg = encodeURIComponent(
-    `Hola Sara, ${g}. Un cliente en la web nos esta preguntando: "${userQuestion}". Te lo paso para que lo puedas atender personalmente.`
+    `Hola Isabella, ${g}. Un cliente en la web nos esta preguntando: "${userQuestion}". Te lo paso para que lo puedas atender personalmente.`
   );
   return `https://wa.me/573156071041?text=${msg}`;
 };
@@ -540,7 +540,7 @@ export const resetConversationState = () => {};
 // AI ENGINE — proxy a /api/chat (clave Anthropic 100% server-side)
 // ═══════════════════════════════════════════════════════════════════
 export const ai = {
-  invoke: async (userMessage, advisorName = 'Sara') => {
+  invoke: async (userMessage, advisorName = 'Isabella') => {
     const history = getMessages();
     const sessionId = getSessionId();
     const res = await fetch('/api/chat', {

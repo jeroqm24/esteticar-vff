@@ -20,7 +20,13 @@
       "Bash(grep -v \"node_modules\\\\|//.*esteticar2026\\\\|WHATSAPP_VERIFY\\\\|verify_token\\\\|VERIFY_TOKEN\")",
       "Bash(node --input-type=module)",
       "Bash(claude login:*)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(domain:esteticar-vff.vercel.app)",
+      "Bash(curl -s 'https://tpqtkpidkhtiwzzuttjt.supabase.co/rest/v1/bot_config?key=eq.default&select=value' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcXRrcGlka2h0aXd6enV0dGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzQ0NDgsImV4cCI6MjA5MzE1MDQ0OH0.YE9SO9FzOhmXwQY-4Kx2wnocX6Oln0uaeAA4-fE8MhI' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcXRrcGlka2h0aXd6enV0dGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzQ0NDgsImV4cCI6MjA5MzE1MDQ0OH0.YE9SO9FzOhmXwQY-4Kx2wnocX6Oln0uaeAA4-fE8MhI')",
+      "Bash(python -c ' *)",
+      "WebFetch(domain:heyzine.com)",
+      "Bash(node -e \"import\\('./api/whatsapp.js'\\).catch\\(e => console.error\\('SYNTAX ERROR:', e.message\\)\\)\")",
+      "Bash(node -e ' *)"
     ]
   }
 }

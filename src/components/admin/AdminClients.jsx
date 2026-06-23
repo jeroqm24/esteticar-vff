@@ -8,25 +8,25 @@ const LEAD_PROFILES = {
     emoji: "🫰", label: "El Regateador", color: "#dc2626",
     bg: "rgba(220,38,38,0.07)", border: "rgba(220,38,38,0.2)",
     remarketingDays: 3,
-    message: (name) => `Hola ${name || ""}👋 Te saluda Sara de Esteticar. Tenemos una *Lavada Esencial* en $49.000 que deja el carro impecable, y esta semana hay espacio disponible. A qué hora te queda bien?`,
+    message: (name) => `Hola ${name || ""}👋 Te saluda Isabella de Esteticar. Tenemos una *Lavada Esencial* en $49.000 que deja el carro impecable, y esta semana hay espacio disponible. A qué hora te queda bien?`,
   },
   analista: {
     emoji: "📚", label: "El Analista", color: "#7c3aed",
     bg: "rgba(124,58,237,0.07)", border: "rgba(124,58,237,0.2)",
     remarketingDays: 5,
-    message: (name) => `Hola ${name || ""}, soy Sara de Esteticar. Quería contarte que el *Tratamiento 3 en 1* que mencionamos incluye lavada, descontaminación y brillado profesional. El resultado sorprende. Tenemos disponibilidad esta semana. A qué hora te queda bien?`,
+    message: (name) => `Hola ${name || ""}, soy Isabella de Esteticar. Quería contarte que el *Tratamiento 3 en 1* que mencionamos incluye lavada, descontaminación y brillado profesional. El resultado sorprende. Tenemos disponibilidad esta semana. A qué hora te queda bien?`,
   },
   embalado: {
     emoji: "⚡", label: "El Embalado", color: "#d97706",
     bg: "rgba(217,119,6,0.07)", border: "rgba(217,119,6,0.2)",
     remarketingDays: 1,
-    message: (name) => `Hola ${name || ""}, soy Sara de Esteticar. Sé que necesitabas solución para tu carro. Tenemos espacio esta semana y te podemos atender rápido. A qué hora te queda bien?`,
+    message: (name) => `Hola ${name || ""}, soy Isabella de Esteticar. Sé que necesitabas solución para tu carro. Tenemos espacio esta semana y te podemos atender rápido. A qué hora te queda bien?`,
   },
   billetudo: {
     emoji: "💸", label: "El Billetudo", color: "#B8860B",
     bg: "rgba(184,134,11,0.07)", border: "rgba(184,134,11,0.25)",
     remarketingDays: 7,
-    message: (name) => `Hola ${name || ""}, soy Sara de Esteticar. Para un vehículo como el tuyo el *Recubrimiento Cerámico* es la inversión que marca la diferencia: protección de 5 años, brillo de concesionario. Esta semana tenemos agenda para una visita de diagnóstico sin costo. Te interesa?`,
+    message: (name) => `Hola ${name || ""}, soy Isabella de Esteticar. Para un vehículo como el tuyo el *Recubrimiento Cerámico* es la inversión que marca la diferencia: protección de 5 años, brillo de concesionario. Esta semana tenemos agenda para una visita de diagnóstico sin costo. Te interesa?`,
   },
 };
 
@@ -155,7 +155,7 @@ function ClientCard({ client, apptCount, isSelected, onClick }) {
         <div className="mt-2.5 px-3 py-2 bg-orange-50 border border-orange-200 rounded-sm flex items-center gap-2">
           <span className="w-2 h-2 rounded-full bg-orange-400 animate-pulse flex-shrink-0" />
           <p className="font-ui text-[9px] text-orange-700 tracking-[0.1em] uppercase">
-            Sara está atendiendo manualmente
+            Isabella está atendiendo manualmente
           </p>
         </div>
       )}
@@ -290,7 +290,7 @@ function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketin
                 <span className="w-2.5 h-2.5 rounded-full bg-orange-400 animate-pulse flex-shrink-0" />
                 <div>
                   <p className="font-ui text-[10px] tracking-[0.15em] text-orange-700 uppercase font-bold">Bot pausado</p>
-                  <p className="font-body text-xs text-orange-600 mt-0.5">Sara está atendiendo manualmente a este cliente.</p>
+                  <p className="font-body text-xs text-orange-600 mt-0.5">Isabella está atendiendo manualmente a este cliente.</p>
                 </div>
               </div>
               <button
@@ -299,7 +299,7 @@ function ClientDetail({ client, apptCount, onClose, onUpdateStatus, onRemarketin
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                   <polygon points="5 3 19 12 5 21 5 3"/>
                 </svg>
-                Reactivar bot (Sara)
+                Reactivar bot (Isabella)
               </button>
             </div>
           ) : (

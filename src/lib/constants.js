@@ -349,9 +349,9 @@ export const FINAL_CTA = {
 // ─── TEAM ────────────────────────────────
 export const TEAM = [
   {
-    name: "Sara Valencia",
+    name: "Isabella Montoya",
     role: "Administradora",
-    authority: "Gestión operativa y atención al cliente de primer nivel. Sara garantiza que cada proceso cumpla con los estándares Esteticar.",
+    authority: "Gestión operativa y atención al cliente de primer nivel. Isabella garantiza que cada proceso cumpla con los estándares Esteticar.",
     image: "/team-sara.webp",
   },
   {

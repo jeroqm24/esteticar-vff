@@ -345,7 +345,7 @@ ${carText}
 
 ━━━ SERVICIOS — MOTO ━━━
 ${motoText}
-NOTA: Para Recubrimiento Cerámico y Porcelanizado en motos, el precio se cotiza según el tipo y estado de la moto. Usa __ESCALATE__ para coordinar la cotización con Sara.
+NOTA: Para Recubrimiento Cerámico y Porcelanizado en motos, el precio se cotiza según el tipo y estado de la moto. Usa __ESCALATE__ para coordinar la cotización con Isabella.
 
 ━━━ TRATAMIENTO 3 EN 1 — PRECIO SEGÚN TIPO DE VEHÍCULO ━━━
 Cuando el cliente pida el Tratamiento 3 en 1 (Manual o a Máquina) y aún no sepas si es carro o camioneta, pregúntalo con naturalidad dentro de la conversación. Por ejemplo: "Oye, y el vehículo es carro o camioneta?" o "y es carro o camioneta el tuyo?"
@@ -471,7 +471,7 @@ const cleanReply = (text) => text
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
-  const { userMessage, advisorName = 'Sara', history = [], sessionId } = req.body || {};
+  const { userMessage, advisorName = 'Isabella', history = [], sessionId } = req.body || {};
   if (!userMessage?.trim()) return res.status(400).json({ error: 'Missing userMessage' });
 
   try {

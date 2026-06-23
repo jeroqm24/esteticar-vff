@@ -194,7 +194,7 @@ function MessageBubble({ msg }) {
       <div className="max-w-[75%] px-3 py-2 rounded-2xl rounded-br-sm text-[13px] leading-relaxed bg-[#D9FDD3] text-[#111B21]">
         {clean}
         <div className="text-[10px] mt-0.5 text-right text-[#8696A0]">
-          {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }) : ""} · Sara
+          {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }) : ""} · Isabella
         </div>
       </div>
     </div>
@@ -772,7 +772,7 @@ export default function AdminConversations({ initialPhone }) {
               {selected.bot_paused && (
                 <div className="bg-orange-50 border-b border-orange-200 px-4 py-2 flex items-center gap-2 flex-shrink-0">
                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#ea580c" strokeWidth="2"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
-                  <p className="font-ui text-[11px] text-orange-700">Bot pausado — estás en control. Los mensajes de Sara no se enviarán hasta que lo reanudes.</p>
+                  <p className="font-ui text-[11px] text-orange-700">Bot pausado — estás en control. Los mensajes de Isabella no se enviarán hasta que lo reanudes.</p>
                 </div>
               )}
 
