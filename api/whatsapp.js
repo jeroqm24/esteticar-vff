@@ -312,7 +312,8 @@ const FALLBACK_SERVICES = [
   { name: "Lavada Esencial Carro", price: "$49.000", vehicle: "car" },
   { name: "Recubrimiento Cerámico", price: "Bajo cotización · protección 5 años", vehicle: "moto" },
   { name: "Porcelanizado", price: "Bajo cotización · protección 6m-1 año", vehicle: "moto" },
-  { name: "Limpieza Técnica de Motor", price: "$49.000", vehicle: "moto" },
+  { name: "Tratamiento 3 en 1 a Máquina", price: "$380.000", vehicle: "moto" },
+  { name: "Tratamiento 3 en 1 Manual", price: "$300.000", vehicle: "moto" },
   { name: "Brillado de Tanque", price: "$59.000", vehicle: "moto" },
   { name: "Descontaminación de Tubería", price: "$49.000", vehicle: "moto" },
   { name: "Brillado de Farolas", price: "$49.000", vehicle: "moto" },
@@ -627,7 +628,7 @@ Cuando el cliente pregunte por limpieza interior, mantenimiento interior o algo 
    Incluye: lavado esencial + lavada de sillas + lavada del techo + limpieza y aspirada de carteras.
    Para quién: cliente que quiere la cojinería impecable sin necesidad de levantar el piso.
 
-2. *Mantenimiento Interior Cojinería + Alfombrado* — $360.000 (camioneta $390.000) · 2 días
+2. *Mantenimiento Interior Levantamiento del Alfombrado* — $360.000 (camioneta $390.000) · 2 días
    Incluye: desmonte del alfombrado + lavada de sillas + lavada del techo + limpieza y aspirada de carteras.
    Para quién: cliente que quiere el interior completamente limpio desde el piso hasta arriba.
 
