@@ -83,15 +83,38 @@ export default async function handler(req, res) {
   if (error) return res.status(500).json({ error: error.message });
   if (!convs?.length) return res.status(200).json({ sent: 0, slot });
 
+  // Obtener teléfonos con cita confirmada para excluirlos
+  const { data: bookedAppts } = await supabaseAdmin
+    .from('appointments')
+    .select('client_phone')
+    .eq('status', 'confirmada');
+  const bookedPhones = new Set((bookedAppts || []).map(a => a.client_phone).filter(Boolean));
+
   const now = Date.now();
   let sent = 0;
+  const MAX_REMARKETING = 2;
 
   // ── Enviar remarketing ──────────────────────────────────────────
   for (const conv of convs) {
     // Solo WhatsApp real
     if (!conv.phone || conv.phone.startsWith('web_') || conv.phone.startsWith('ig_') || conv.phone.startsWith('fb_')) continue;
 
+    // No enviar si ya tiene cita confirmada
+    if (bookedPhones.has(conv.phone)) {
+      await supabaseAdmin.from('conversations').update({ remarketing_status: 'efectivo' }).eq('phone', conv.phone);
+      console.log('REMARKETING SKIP (tiene cita):', conv.phone);
+      continue;
+    }
+
     const history = Array.isArray(conv.history) ? conv.history : [];
+
+    // Máximo 2 remarketings por cliente
+    const remarketingCount = history.filter(m => m.role === 'remarketing').length;
+    if (remarketingCount >= MAX_REMARKETING) {
+      await supabaseAdmin.from('conversations').update({ remarketing_status: 'desinteresado' }).eq('phone', conv.phone);
+      console.log('REMARKETING LIMIT (2 enviados):', conv.phone);
+      continue;
+    }
 
     // No reenviar si ya se mandó un remarketing hace menos de 22h
     const lastRemark = [...history].reverse().find(m => m.role === 'remarketing');
@@ -114,7 +137,7 @@ export default async function handler(req, res) {
         .update({ history: newHistory })
         .eq('phone', conv.phone);
       sent++;
-      console.log('REMARKETING OK:', conv.phone, slot);
+      console.log('REMARKETING OK:', conv.phone, slot, `(${remarketingCount + 1}/${MAX_REMARKETING})`);
     }
   }
 
