@@ -12,7 +12,7 @@ jobs:
       - name: Ping Supabase
         run: |
           curl -sf --max-time 15 \
-            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcXRrcGlka2h0aXd6enV0dGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzQ0NDgsImV4cCI6MjA5MzE1MDQ0OH0.YE9SO9FzOhmXwQY-4Kx2wnocX6Oln0uaeAA4-fE8MhI" \
-            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcXRrcGlka2h0aXd6enV0dGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzQ0NDgsImV4cCI6MjA5MzE1MDQ0OH0.YE9SO9FzOhmXwQY-4Kx2wnocX6Oln0uaeAA4-fE8MhI" \
-            "https://tpqtkpidkhtiwzzuttjt.supabase.co/rest/v1/appointments?select=id&limit=1" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56aXlienJwc2N5eXV5d3dlYm5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MjA3MjQsImV4cCI6MjA5MTA5NjcyNH0.6D2YppUBvPM3azV7XCwNMy5om_pBf8MXAthd6hWQlLo" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im56aXlienJwc2N5eXV5d3dlYm5tIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MjA3MjQsImV4cCI6MjA5MTA5NjcyNH0.6D2YppUBvPM3azV7XCwNMy5om_pBf8MXAthd6hWQlLo" \
+            "https://nziybzrpscyyuywwebnm.supabase.co/rest/v1/appointments?select=id&limit=1" \
             && echo "Keepalive OK" || echo "Keepalive FAILED"
