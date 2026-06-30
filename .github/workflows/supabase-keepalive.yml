@@ -2,7 +2,7 @@ name: Supabase Keepalive
 
 on:
   schedule:
-    - cron: '0 9 * * 1,4'  # Lunes y jueves a las 9:00 UTC
+    - cron: '17 13 * * *'  # Todos los días a las 13:17 UTC (fuera de hora en punto, evita que GitHub la descarte por alta carga)
   workflow_dispatch:
 
 jobs:
