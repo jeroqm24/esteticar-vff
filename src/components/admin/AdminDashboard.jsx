@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import AdminStats from "./AdminStats";
 import AdminAppointments from "./AdminAppointments";
@@ -13,26 +13,21 @@ import AdminBirthdays from "./AdminBirthdays";
 import AdminAnalytics from "./AdminAnalytics";
 import CalendarSection from "../CalendarSection";
 import { BRAND } from "../../lib/constants";
-import { supabase } from "../../lib/supabase";
+
+const ADMIN_PASSWORD = "Esteticar11.";
 
 function AdminLogin({ onSuccess }) {
-  const [email, setEmail] = useState("");
   const [pwd, setPwd] = useState("");
   const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-    setError("");
-    const { error: authError } = await supabase.auth.signInWithPassword({ email: email.trim(), password: pwd });
-    setLoading(false);
-    if (authError) {
-      setError("Correo o contraseña incorrectos");
-      setPwd("");
-    } else {
+    if (pwd === ADMIN_PASSWORD) {
       onSuccess();
+    } else {
+      setError("Contraseña incorrecta");
+      setPwd("");
     }
   };
 
@@ -48,23 +43,13 @@ function AdminLogin({ onSuccess }) {
           <h1 className="font-heading text-3xl text-ec-dark font-light">Esteticar</h1>
         </div>
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
-          {/* font-size mínimo 16px para evitar auto-zoom de iOS Safari */}
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => { setEmail(e.target.value); setError(""); }}
-            placeholder="Correo"
-            autoFocus
-            required
-            className="w-full px-4 py-3 border border-black/[0.1] rounded-sm font-body bg-ec-cream focus:border-ec-gold focus:outline-none"
-            style={{ fontSize: '16px' }}
-          />
           <div className="relative">
             <input
               type={showPwd ? "text" : "password"}
               value={pwd}
               onChange={(e) => { setPwd(e.target.value); setError(""); }}
               placeholder="Contraseña"
+              autoFocus
               required
               className="w-full px-4 py-3 pr-12 border border-black/[0.1] rounded-sm font-body bg-ec-cream focus:border-ec-gold focus:outline-none"
               style={{ fontSize: '16px' }}
@@ -92,8 +77,8 @@ function AdminLogin({ onSuccess }) {
           {error && (
             <p className="text-red-500 text-xs font-body text-center">{error}</p>
           )}
-          <button type="submit" disabled={loading} className="btn-gold w-full py-3 rounded-sm text-[11px] disabled:opacity-60">
-            {loading ? "ENTRANDO..." : "ENTRAR"}
+          <button type="submit" className="btn-gold w-full py-3 rounded-sm text-[11px]">
+            ENTRAR
           </button>
         </form>
       </motion.div>
@@ -188,26 +173,9 @@ export default function AdminDashboard({ onClose }) {
   const convParam = new URLSearchParams(window.location.search).get("conv");
   const [activeTab, setActiveTab] = useState(convParam ? "conversations" : "stats");
   const [authed, setAuthed] = useState(false);
-  const [authLoading, setAuthLoading] = useState(true);
   const [openNewAppt, setOpenNewAppt] = useState(false);
   const [cancellationCount, setCancellationCount] = useState(0);
   const [initialPhone] = useState(convParam);
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      setAuthed(!!data.session);
-      setAuthLoading(false);
-    });
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setAuthed(!!session);
-    });
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    onClose();
-  };
 
   const navigateTo = (tab, newAppt = false) => {
     setActiveTab(tab);
@@ -218,11 +186,6 @@ export default function AdminDashboard({ onClose }) {
     }
   };
 
-  if (authLoading) return (
-    <div className="min-h-screen bg-ec-cream flex items-center justify-center">
-      <div className="w-6 h-6 border-2 border-ec-gold border-t-transparent rounded-full animate-spin" />
-    </div>
-  );
   if (!authed) return <AdminLogin onSuccess={() => setAuthed(true)} />;
 
   const shortNavLabel = {
@@ -285,7 +248,7 @@ export default function AdminDashboard({ onClose }) {
             ← Volver al sitio
           </button>
           <button
-            onClick={handleSignOut}
+            onClick={onClose}
             className="w-full flex items-center gap-3 px-5 py-3 text-red-400/60 hover:text-red-500 hover:bg-red-50 transition-all font-ui text-[10px] tracking-[0.2em] uppercase rounded-sm"
           >
             ✕ Cerrar sesión
