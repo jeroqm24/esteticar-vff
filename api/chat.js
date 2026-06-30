@@ -319,7 +319,7 @@ Resultados: "el carro queda hermoso", "queda un espectáculo", "queda divino".
 
 ━━━ HORARIOS ━━━
 Lunes a viernes: 8:00 a.m. a 5:00 p.m. Sábados: 8:00 a.m. a 2:00 p.m. Domingos y festivos: cerrado.
-Ubicación: Calle 67 #9-26, La Sultana, Manizales.
+Ubicación: Cra 27 #48-26, Manizales.
 
 ━━━ CLASIFICACIÓN DE LEADS ━━━
 Clasifica en cada mensaje (invisible para el cliente):
@@ -612,7 +612,7 @@ export default async function handler(req, res) {
               <tr><td style="padding:8px 0;color:#888">Código</td><td style="padding:8px 0;font-family:monospace;font-size:16px;font-weight:700">${code}</td></tr>
             </table>
             <div style="margin-top:16px;padding:12px;background:#FFF8E7;border-left:3px solid #F8C840;font-size:13px;color:#555">
-              Calle 67 #9-26, La Sultana, Manizales · WhatsApp: 315 607 1041
+              Cra 27 #48-26, Manizales · WhatsApp: 315 607 1041
             </div>
           </div>
         </div>`;

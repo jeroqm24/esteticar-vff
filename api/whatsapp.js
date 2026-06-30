@@ -453,7 +453,7 @@ Cuando saludas a un cliente que ya conoces: "Jerónimo, qué gusto saber de ti" 
 Lunes a viernes: 8:00 a.m. a 5:00 p.m. Sábados: 8:00 a.m. a 2:00 p.m. Domingos: cerrado. Festivos: cerrado.
 Si alguien pide domingo: "Los domingos estamos cerrados, pero el lunes te atendemos desde las 8 con todo el gusto. Te queda bien?"
 Si alguien pide un día festivo: "Ese día es festivo y estamos cerrados, pero el siguiente día hábil te atendemos desde las 8."
-Si preguntan ubicación: "Estamos en la Calle 67 #9-26, La Sultana, Manizales. Acá te comparto la ubicación: https://maps.app.goo.gl/yvc3Hu3ksv1bVBXy7"
+Si preguntan ubicación: "Estamos en la Cra 27 #48-26, Manizales. Acá te comparto la ubicación: https://share.google/anYeV3uqMeVzowa6C"
 
 ━━━ CONOCIMIENTO DE VEHÍCULOS — OBLIGATORIO ━━━
 REGLA CRÍTICA: NUNCA asumas la marca si el cliente no la dice. Si dice solo el modelo, confirma antes de seguir: "Una Pulsar NS 125 de Bajaj, perfecto." Si no estás segura, pregunta: "De qué marca es?"
@@ -1085,7 +1085,7 @@ const buildCalendarUrl = (booking) => {
     const start = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(min)}00`;
     const endHour = Math.min(hour + dur, 23);
     const end   = `${year}${pad(month)}${pad(day)}T${pad(endHour)}${pad(min)}00`;
-    return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Cita en Esteticar — ' + booking.service)}&dates=${start}/${end}&details=${encodeURIComponent('Servicio: ' + booking.service + '\nCódigo: ' + booking.confirmationCode + '\nPrecio: ' + booking.priceDisplay)}&location=${encodeURIComponent('Cll 67 #9-26, La Sultana, Manizales')}`;
+    return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Cita en Esteticar — ' + booking.service)}&dates=${start}/${end}&details=${encodeURIComponent('Servicio: ' + booking.service + '\nCódigo: ' + booking.confirmationCode + '\nPrecio: ' + booking.priceDisplay)}&location=${encodeURIComponent('Cra 27 #48-26, Manizales')}`;
   } catch { return null; }
 };
 
@@ -1185,16 +1185,16 @@ const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 
 const notifyTeam = async (clientPhone, question, clientName, platform) => {
   if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) return;
-  const isWA    = platform === 'whatsapp';
   const channel = platform === 'instagram' ? 'Instagram' : platform === 'messenger' ? 'Facebook' : 'WhatsApp';
-  const name    = clientName ? `\n👤 Cliente: ${clientName}` : '';
-  const dash    = `https://esteticar-vff.vercel.app/admin${isWA ? `?conv=${clientPhone}` : ''}`;
-  const msg     = `⚠️ ESCALACIÓN — ${channel}${name}\n\n💬 Consulta: "${question}"\n\n📋 Dashboard: ${dash}`;
+  const name    = clientName ? `\n👤 Cliente: ${escHtml(clientName)}` : '';
+  const convId  = clientPhone; // ig_XX, fb_XX o número WA
+  const dash    = `https://esteticar-vff.vercel.app/admin?conv=${encodeURIComponent(convId)}`;
+  const msg     = `⚠️ <b>ESCALACIÓN — ${escHtml(channel)}</b>${name}\n\n💬 Consulta: "${escHtml(question)}"\n\n📋 <a href="${dash}">Ver en el panel</a>`;
   try {
     const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg }),
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: 'HTML' }),
     });
     const json = await res.json();
     if (!json.ok) console.error('TELEGRAM ERROR:', JSON.stringify(json));
@@ -1204,49 +1204,54 @@ const notifyTeam = async (clientPhone, question, clientName, platform) => {
   }
 };
 
+const escHtml = (s) => String(s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
 const notifyBooking = async (booking, from, platform, activeDrivers, trasladoFinal, leadType, remarketingStatus) => {
   if (!TELEGRAM_TOKEN || !TELEGRAM_CHAT_ID) return;
   const channel = platform === 'instagram' ? 'Instagram DM' : platform === 'messenger' ? 'Facebook' : 'WhatsApp';
   const isWA    = platform === 'whatsapp';
-  const phone   = isWA ? from : (booking.clientPhone || from);
-  const dash    = `https://esteticar-vff.vercel.app/admin${isWA ? `?conv=${phone}` : ''}`;
+  const phone   = isWA ? from : (booking.clientPhone && booking.clientPhone !== 'no_proporcionado' ? booking.clientPhone : null);
+  const convId  = from; // siempre el ID original (ig_XX, fb_XX o número WA)
+  const dash    = `https://esteticar-vff.vercel.app/admin?conv=${encodeURIComponent(convId)}`;
   const t       = calcTotal(booking);
 
   let valorLines = '';
   if (t.traslado > 0) {
-    valorLines = `\n💳 Servicio: ${booking.priceDisplay}\n🚐 Traslado: + ${formatCOP(t.traslado)}\n💰 TOTAL: ${formatCOP(t.total)}`;
+    valorLines = `\n💳 Servicio: ${escHtml(booking.priceDisplay)}\n🚐 Traslado: + ${formatCOP(t.traslado)}\n💰 TOTAL: ${formatCOP(t.total)}`;
   } else {
-    valorLines = `\n💰 Valor: ${booking.priceDisplay}`;
+    valorLines = `\n💰 Valor: ${escHtml(booking.priceDisplay)}`;
   }
 
   let trasladoLines = '';
   if (trasladoFinal) {
-    trasladoLines = `\n🚗 Traslado: ${trasladoFinal}`;
+    trasladoLines = `\n🚗 Traslado: ${escHtml(trasladoFinal)}`;
     if (activeDrivers.length > 0) {
-      trasladoLines += `\n👨‍✈️ Conductor: ${activeDrivers.join(' o ')}`;
+      trasladoLines += `\n👨‍✈️ Conductor: ${escHtml(activeDrivers.join(' o '))}`;
     }
   }
 
-  const hora  = booking.time ? `· ${booking.time}` : '';
+  const hora  = booking.time ? `· ${escHtml(booking.time)}` : '';
   const LEAD_LABELS = { regateador: '🫰 Regateador', analista: '📚 Analista', embalado: '⚡ Embalado', billetudo: '💸 Billetudo' };
   const STATUS_LABELS = { potencial: '🟡 Potencial', efectivo: '🟢 Efectivo', desinteresado: '🔴 Desinteresado', active: '🟡 Potencial', converted: '🟢 Efectivo', lost: '🔴 Desinteresado' };
-  const leadLine   = leadType          ? `\n🎯 Tipo: ${LEAD_LABELS[leadType] || leadType}` : '';
-  const statusLine = remarketingStatus ? `\n📊 Estado: ${STATUS_LABELS[remarketingStatus] || remarketingStatus}` : '';
-  const msg = `🔥 *¡NUEVA CITA CONFIRMADA!*\n\n` +
-    `👤 *${booking.clientName || 'Cliente sin nombre'}*\n` +
-    `📱 ${phone} · ${channel}` +
+  const leadLine   = leadType          ? `\n🎯 Tipo: ${LEAD_LABELS[leadType] || escHtml(leadType)}` : '';
+  const statusLine = remarketingStatus ? `\n📊 Estado: ${STATUS_LABELS[remarketingStatus] || escHtml(remarketingStatus)}` : '';
+  const phoneLine  = phone ? `\n📞 Tel: ${escHtml(phone)}` : '';
+  const msg = `🔥 <b>¡NUEVA CITA CONFIRMADA!</b>\n\n` +
+    `👤 <b>${escHtml(booking.clientName || 'Cliente sin nombre')}</b>\n` +
+    `📲 Canal: ${escHtml(channel)}` +
+    phoneLine +
     leadLine + statusLine + `\n` +
-    `✂️ ${booking.service}\n` +
-    `📅 ${booking.date} ${hora}` +
+    `✂️ ${escHtml(booking.service)}\n` +
+    `📅 ${escHtml(booking.date)} ${hora}` +
     trasladoLines +
     valorLines +
-    `\n\n📋 ${dash}`;
+    `\n\n📋 <a href="${dash}">Ver en el panel</a>`;
 
   try {
     const res = await fetch(`https://api.telegram.org/bot${TELEGRAM_TOKEN}/sendMessage`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: 'Markdown' }),
+      body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: 'HTML' }),
     });
     const json = await res.json();
     if (!json.ok) console.error('TELEGRAM BOOKING ERROR:', JSON.stringify(json));
@@ -1770,13 +1775,13 @@ export default async function handler(req, res) {
   <tr><td style="padding:0 40px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#999;margin-bottom:12px;letter-spacing:1px;text-transform:uppercase">Cómo llegar</div>
     <div style="display:inline-flex;gap:12px;flex-wrap:wrap;justify-content:center">
-      <a href="https://maps.google.com/?q=Calle+67+9-26,+La+Sultana,+Manizales,+Colombia" style="display:inline-block;background:#4285F4;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Google Maps</a>
-      <a href="https://waze.com/ul?q=Calle+67+9-26+La+Sultana+Manizales&navigate=yes" style="display:inline-block;background:#33CCFF;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Waze</a>
+      <a href="https://maps.google.com/?q=Cra+27+%2348-26,+Manizales,+Colombia" style="display:inline-block;background:#4285F4;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Google Maps</a>
+      <a href="https://waze.com/ul?q=Cra+27+48-26+Manizales&navigate=yes" style="display:inline-block;background:#33CCFF;color:#ffffff;font-family:Arial,sans-serif;font-size:12px;font-weight:700;letter-spacing:1px;text-decoration:none;padding:13px 28px;border-radius:50px">Waze</a>
     </div>
   </td></tr>
   <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
-    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cll 67 #9-26, La Sultana · Manizales, Colombia</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cra 27 #48-26 · Manizales, Colombia</div>
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#444">www.esteticarmanizales.com</div>
   </td></tr>
 </table>

@@ -404,7 +404,7 @@ export const notifyNewBooking = async ({ clientName, clientPhone, service, date,
   <!-- FOOTER -->
   <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
-    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cll 67 #9-26, La Sultana · Manizales, Colombia</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cra 27 #48-26 · Manizales, Colombia</div>
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#444">www.esteticarmanizales.com</div>
   </td></tr>
 
@@ -493,7 +493,7 @@ export const check20DayReminders = async () => {
   <!-- FOOTER -->
   <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
-    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cll 67 #9-26, La Sultana · Manizales, Colombia</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cra 27 #48-26 · Manizales, Colombia</div>
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#444">www.esteticarmanizales.com</div>
   </td></tr>
 

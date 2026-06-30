@@ -5,8 +5,8 @@
 export const BRAND = {
   name: "Esteticar",
   tagline: "Custodia Vehicular Premium",
-  location: "Calle 67 #9-26, La Sultana, Manizales",
-  address: "Calle 67 #9-26, La Sultana, Manizales",
+  location: "Cra 27 #48-26, Manizales",
+  address: "Cra 27 #48-26, Manizales",
   whatsapp: "+57 315 607 1041",
   whatsappUrl: "https://wa.me/573156071041",
   instagram: "@esteticar_manizales",

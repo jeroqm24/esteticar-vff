@@ -93,7 +93,7 @@ CATÁLOGO DE SERVICIOS Y PRECIOS (MOTO):
 - Lavada Esencial Moto: $49.000
 
 HORARIOS: Lunes a viernes 8am-5pm, sábados 8am-2pm. Domingos y festivos: cerrado.
-UBICACIÓN: Calle 67 #9-26, La Sultana, Manizales.
+UBICACIÓN: Cra 27 #48-26, Manizales.
 TRASLADO: recogida $7.000, recogida y entrega $9.000.
 
 ESCALACIÓN INMEDIATA — si aplica, responde así y añade el token al final:

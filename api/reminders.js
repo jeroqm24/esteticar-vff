@@ -76,7 +76,7 @@ const sendTextReminder = async (to, clientName, service, hora) => {
     `Hola ${clientName || 'cliente'} 👋 Te recordamos que mañana tienes tu cita en *Esteticar Manizales*.\n\n` +
     `*Servicio:* ${service}\n` +
     `*Hora:* ${hora}\n\n` +
-    `Estamos en Calle 67 #9-26, La Sultana. Si necesitas cambiar algo, responde este mensaje.`;
+    `Estamos en Cra 27 #48-26. Si necesitas cambiar algo, responde este mensaje.`;
 
   const res = await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
     method: 'POST',
@@ -186,12 +186,12 @@ export default async function handler(req, res) {
     <a href="${reminderWaUrl}" style="display:inline-block;background:#25D366;color:#ffffff;font-family:Arial,sans-serif;font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-decoration:none;padding:17px 40px;border-radius:50px">Escríbenos por WhatsApp →</a>
   </td></tr>
   <tr><td style="padding:0 40px 36px;text-align:center">
-    <a href="https://maps.google.com/?q=Cll+67+9-26+La+Sultana+Manizales" style="display:inline-block;background:#0A0A0A;color:#C9A84C;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:15px 26px;border-radius:50px;border:1.5px solid #C9A84C;margin-right:10px">Google Maps →</a>
-    <a href="https://waze.com/ul?q=Cll+67+9-26+La+Sultana+Manizales&navigate=yes" style="display:inline-block;background:#0A0A0A;color:#C9A84C;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:15px 26px;border-radius:50px;border:1.5px solid #C9A84C">Waze →</a>
+    <a href="https://maps.google.com/?q=Cra+27+48-26+Manizales" style="display:inline-block;background:#0A0A0A;color:#C9A84C;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:15px 26px;border-radius:50px;border:1.5px solid #C9A84C;margin-right:10px">Google Maps →</a>
+    <a href="https://waze.com/ul?q=Cra+27+48-26+Manizales&navigate=yes" style="display:inline-block;background:#0A0A0A;color:#C9A84C;font-family:Arial,sans-serif;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:15px 26px;border-radius:50px;border:1.5px solid #C9A84C">Waze →</a>
   </td></tr>
   <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
-    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cll 67 #9-26, La Sultana · Manizales, Colombia</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cra 27 #48-26 · Manizales, Colombia</div>
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#444">www.esteticarmanizales.com</div>
   </td></tr>
 </table>
