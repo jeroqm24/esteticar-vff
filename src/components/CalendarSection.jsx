@@ -863,7 +863,15 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
           {/* Extra services row */}
           <div className="py-3 border-b border-black/[0.05]">
             {(form.extraServices || []).map((es, i) => (
-              <div key={i} className="flex items-center gap-2 mb-2">
+              <div key={i} className="mb-3">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="font-ui text-[10px] tracking-[0.12em] uppercase text-black/40">Servicio adicional</span>
+                  <button
+                    type="button"
+                    onClick={e => { e.preventDefault(); e.stopPropagation(); setForm(f => ({ ...f, extraServices: f.extraServices.filter((_, j) => j !== i) })); }}
+                    className="font-ui text-[11px] text-red-400 active:text-red-600 underline px-1 py-1"
+                  >Quitar</button>
+                </div>
                 <select
                   value={es}
                   onChange={e => {
@@ -871,18 +879,13 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                     updated[i] = e.target.value;
                     setForm(f => ({ ...f, extraServices: updated }));
                   }}
-                  className="flex-1 font-body text-sm text-ec-dark bg-transparent border-0 border-b border-black/[0.1] focus:outline-none focus:border-[#F8C840] transition-colors cursor-pointer"
+                  className="w-full font-body text-sm text-ec-dark bg-transparent border-0 border-b border-black/[0.1] focus:outline-none focus:border-[#F8C840] transition-colors cursor-pointer"
                   style={{ fontSize: '16px' }}
                 >
                   {allServices.filter(s => s !== form.service && !(form.extraServices || []).some((x, j) => j !== i && x === s)).map(s => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
-                <button
-                  type="button"
-                  onClick={e => { e.preventDefault(); e.stopPropagation(); setForm(f => ({ ...f, extraServices: f.extraServices.filter((_, j) => j !== i) })); }}
-                  className="w-8 h-8 flex items-center justify-center rounded-full text-red-400 hover:bg-red-50 active:bg-red-100 transition-colors flex-shrink-0 text-base"
-                >✕</button>
               </div>
             ))}
             <button
