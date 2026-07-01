@@ -110,7 +110,7 @@ export const db = {
         if (data.origin       !== undefined) updates.origin        = data.origin;
         if (data.reminderSent !== undefined) updates.reminder_sent = data.reminderSent;
         // Also allow direct snake_case keys
-        const SNAKE = ['status','date','time','service','vehicle_type','client_name','client_phone','client_email','client_birthday','traslado','notes','total_amount','discount','origin','reminder_sent','pickup_option','pickup_price','duration_hours'];
+        const SNAKE = ['status','date','time','service','vehicle_type','client_name','client_phone','client_email','client_birthday','traslado','notes','total_amount','discount','origin','reminder_sent','pickup_option','pickup_price','duration_hours','price_display'];
         SNAKE.forEach(k => { if (data[k] !== undefined) updates[k] = data[k]; });
 
         await fetch('/api/appointments', {

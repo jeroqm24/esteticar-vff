@@ -209,6 +209,243 @@ function ConfirmDeleteModal({ name, onConfirm, onCancel, loading }) {
   );
 }
 
+const VEHICLE_OPTIONS = ["Carro", "Camioneta", "Moto"];
+const TRASLADO_OPTIONS = [
+  { value: "", label: "Sin traslado" },
+  { value: "Solo recogida", label: "Solo recogida · $7.000" },
+  { value: "Solo entrega", label: "Solo entrega · $7.000" },
+  { value: "Recogida y entrega", label: "Recogida y entrega · $9.000" },
+];
+const HOUR_START = 8;
+const HOUR_END = 18;
+
+function EditAppointmentModal({ appt, onClose, onSave }) {
+  const [form, setForm] = useState({
+    clientName: appt.clientName || "",
+    clientPhone: appt.clientPhone || "",
+    clientEmail: appt.clientEmail || "",
+    service: appt.service || "",
+    vehicleType: appt.vehicleType || "Carro",
+    date: appt.date || "",
+    time: appt.time || "09:00",
+    traslado: appt.traslado || "",
+    notes: appt.notes || "",
+    priceDisplay: appt.priceDisplay || "",
+  });
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (!form.clientName.trim()) return;
+    setSaving(true);
+    await onSave(form);
+    setSaving(false);
+  };
+
+  const inputCls = "w-full bg-transparent border-0 border-b border-black/[0.1] py-2 font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors placeholder-black/25";
+  const selectCls = "w-full bg-transparent border-0 border-b border-black/[0.1] py-2 font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors";
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[700] bg-black/40 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <motion.div
+        initial={{ scale: 0.96, y: 16 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.96, y: 16 }}
+        transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
+        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden"
+        onClick={e => e.stopPropagation()}
+      >
+        <div className="h-2 bg-[#F8C840]" />
+        <div className="px-6 pt-5 pb-4 flex items-center justify-between gap-4">
+          <h3 className="font-heading text-xl text-ec-dark">Editar cita</h3>
+          <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-full text-ec-text-muted hover:bg-ec-cream hover:text-ec-dark transition-all text-lg">✕</button>
+        </div>
+
+        <div className="px-6 pb-6 space-y-0 max-h-[70dvh] overflow-y-auto">
+          {/* Nombre */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
+            </svg>
+            <input
+              value={form.clientName}
+              onChange={e => setForm(f => ({ ...f, clientName: e.target.value }))}
+              placeholder="Nombre del cliente"
+              className={inputCls}
+              style={{ fontSize: '16px' }}
+            />
+          </div>
+
+          {/* Teléfono */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.07 13a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 2.91 2h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 21 16.92z"/>
+            </svg>
+            <input
+              value={form.clientPhone}
+              onChange={e => setForm(f => ({ ...f, clientPhone: e.target.value }))}
+              placeholder="Teléfono"
+              className={inputCls}
+              style={{ fontSize: '16px' }}
+            />
+          </div>
+
+          {/* Email */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/>
+            </svg>
+            <input
+              value={form.clientEmail}
+              onChange={e => setForm(f => ({ ...f, clientEmail: e.target.value }))}
+              placeholder="Correo electrónico"
+              type="email"
+              className={inputCls}
+              style={{ fontSize: '16px' }}
+            />
+          </div>
+
+          {/* Fecha */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+            <input
+              value={form.date}
+              onChange={e => setForm(f => ({ ...f, date: e.target.value }))}
+              placeholder="Fecha (ej: lunes, 7 de julio a las 09:00)"
+              className={inputCls}
+              style={{ fontSize: '16px' }}
+            />
+          </div>
+
+          {/* Hora */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>
+            </svg>
+            <div className="flex items-center gap-1">
+              <select
+                value={form.time.split(':')[0]}
+                onChange={e => setForm(f => ({ ...f, time: `${e.target.value}:${f.time.split(':')[1] || '00'}` }))}
+                className="font-body text-sm text-ec-dark bg-transparent border-0 focus:outline-none cursor-pointer"
+                style={{ fontSize: '16px' }}
+              >
+                {Array.from({ length: HOUR_END - HOUR_START }, (_, i) => HOUR_START + i).map(h => (
+                  <option key={h} value={String(h).padStart(2, '0')}>{String(h).padStart(2, '0')}</option>
+                ))}
+              </select>
+              <span className="text-ec-text-muted">:</span>
+              <select
+                value={form.time.split(':')[1] || '00'}
+                onChange={e => setForm(f => ({ ...f, time: `${f.time.split(':')[0]}:${e.target.value}` }))}
+                className="font-body text-sm text-ec-dark bg-transparent border-0 focus:outline-none cursor-pointer"
+                style={{ fontSize: '16px' }}
+              >
+                {['00', '15', '30', '45'].map(m => <option key={m} value={m}>{m}</option>)}
+              </select>
+            </div>
+          </div>
+
+          {/* Vehículo */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <rect x="1" y="9" width="22" height="10" rx="2"/><path d="M5 9V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v3"/><circle cx="7" cy="19" r="1"/><circle cx="17" cy="19" r="1"/>
+            </svg>
+            <select
+              value={form.vehicleType}
+              onChange={e => setForm(f => ({ ...f, vehicleType: e.target.value }))}
+              className={selectCls}
+              style={{ fontSize: '16px' }}
+            >
+              {VEHICLE_OPTIONS.map(v => <option key={v} value={v}>{v}</option>)}
+            </select>
+          </div>
+
+          {/* Servicio */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+            </svg>
+            <input
+              value={form.service}
+              onChange={e => setForm(f => ({ ...f, service: e.target.value }))}
+              placeholder="Servicio"
+              className={inputCls}
+              style={{ fontSize: '16px' }}
+            />
+          </div>
+
+          {/* Traslado */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M5 17H3a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v3"/><rect x="9" y="11" width="14" height="10" rx="1"/><circle cx="12" cy="21" r="1"/><circle cx="20" cy="21" r="1"/>
+            </svg>
+            <select
+              value={form.traslado}
+              onChange={e => setForm(f => ({ ...f, traslado: e.target.value }))}
+              className={selectCls}
+              style={{ fontSize: '16px' }}
+            >
+              {TRASLADO_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+            </select>
+          </div>
+
+          {/* Precio */}
+          <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
+            <svg className="text-ec-text-muted flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+            </svg>
+            <input
+              value={form.priceDisplay}
+              onChange={e => setForm(f => ({ ...f, priceDisplay: e.target.value }))}
+              placeholder="Precio (ej: $49.000)"
+              className={inputCls}
+              style={{ fontSize: '16px' }}
+            />
+          </div>
+
+          {/* Notas */}
+          <div className="flex items-start gap-3 py-3">
+            <svg className="text-ec-text-muted flex-shrink-0 mt-1" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            <textarea
+              value={form.notes}
+              onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+              placeholder="Notas internas"
+              rows={3}
+              className="w-full bg-transparent border-0 border-b border-black/[0.1] py-2 font-body text-sm text-ec-dark focus:outline-none focus:border-[#F8C840] transition-colors placeholder-black/25 resize-none"
+              style={{ fontSize: '16px' }}
+            />
+          </div>
+        </div>
+
+        <div className="px-6 pb-6 flex gap-3">
+          <button
+            onClick={onClose}
+            className="flex-1 py-3 border border-black/[0.1] text-ec-text-muted font-ui text-[10px] tracking-[0.2em] uppercase rounded-lg hover:bg-ec-cream transition-all"
+          >
+            Cancelar
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={saving || !form.clientName.trim()}
+            className="flex-1 py-3 bg-[#F8C840] text-white font-ui text-[10px] tracking-[0.2em] uppercase rounded-lg hover:bg-[#B8860B] disabled:opacity-40 transition-all"
+          >
+            {saving ? "Guardando..." : "Guardar cambios"}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
 export default function AdminAppointments() {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -220,6 +457,7 @@ export default function AdminAppointments() {
   const [showDetail, setShowDetail] = useState(false);
   const [registeringCAPI, setRegisteringCAPI] = useState(false);
   const [capiDone, setCapiDone] = useState({});
+  const [editTarget, setEditTarget] = useState(null);
 
   useEffect(() => { load(); }, []);
 
@@ -348,6 +586,26 @@ export default function AdminAppointments() {
     await db.appointments.update(id, { ...appt, origin });
     setAppointments(prev => prev.map(a => a.id === id ? { ...a, origin } : a));
     if (selected?.id === id) setSelected(prev => ({ ...prev, origin }));
+  };
+
+  const handleEditSave = async (updates) => {
+    const id = editTarget.id;
+    await db.appointments.update(id, {
+      clientName: updates.clientName,
+      clientPhone: updates.clientPhone,
+      clientEmail: updates.clientEmail,
+      service: updates.service,
+      vehicleType: updates.vehicleType,
+      date: updates.date,
+      time: updates.time,
+      traslado: updates.traslado || null,
+      notes: updates.notes || null,
+      price_display: updates.priceDisplay || null,
+    });
+    const merged = { ...editTarget, ...updates, priceDisplay: updates.priceDisplay };
+    setAppointments(prev => prev.map(a => a.id === id ? merged : a));
+    if (selected?.id === id) setSelected(merged);
+    setEditTarget(null);
   };
 
   const registerConversion = async (appt) => {
@@ -706,6 +964,15 @@ export default function AdminAppointments() {
                   {/* Acciones */}
                   <div className="border-t border-black/[0.06] pt-4 flex flex-col gap-2">
                     <button
+                      onClick={() => setEditTarget(selected)}
+                      className="w-full py-2.5 font-ui text-[9px] tracking-[0.15em] border border-[#F8C840] text-[#B8860B] uppercase flex items-center justify-center gap-2 rounded-sm hover:bg-[#FFFBF0] transition-all"
+                    >
+                      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
+                      </svg>
+                      Editar cita
+                    </button>
+                    <button
                       onClick={() => sendReminderEmail(selected)}
                       disabled={sending || selected.reminderSent}
                       className="w-full py-2.5 font-ui text-[9px] tracking-[0.15em] border uppercase flex items-center justify-center gap-2 rounded-sm transition-all disabled:opacity-40"
@@ -745,6 +1012,17 @@ export default function AdminAppointments() {
             onConfirm={handleDelete}
             onCancel={() => setDeleteTarget(null)}
             loading={deleting}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Edit modal */}
+      <AnimatePresence>
+        {editTarget && (
+          <EditAppointmentModal
+            appt={editTarget}
+            onClose={() => setEditTarget(null)}
+            onSave={handleEditSave}
           />
         )}
       </AnimatePresence>
