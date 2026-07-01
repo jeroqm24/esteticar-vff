@@ -595,7 +595,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
 
   // Capacity enforcement
   const newStart = (() => { const [h, m] = (form.hour || '09:00').split(':').map(Number); return h + (m || 0) / 60; })();
-  const newDuration = getServiceDuration(form.service);
+  const newDuration = allSelectedServices.reduce((sum, s) => sum + getServiceDuration(s), 0);
   const isCapacityBlocked = (() => {
     const dayAppts = appointments.filter(a => {
       const apptDate = parseAppointmentDate(a);
@@ -924,7 +924,9 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                 <>
                   <span className="font-ui text-[10px] tracking-[0.15em] uppercase text-ec-text-muted">Duración</span>
                   <span className="font-body text-sm text-ec-dark font-medium">
-                    {SERVICE_DURATION_DISPLAY[form.service] || "Consultar"}
+                    {allSelectedServices.length > 1
+                      ? `~${newDuration} horas`
+                      : (SERVICE_DURATION_DISPLAY[form.service] || "Consultar")}
                   </span>
                 </>
               )}
