@@ -23,7 +23,7 @@ const DEFAULT_SERVICES = [
   { name: "Lavado de Chasis", price: "$59.000", vehicle: "car" },
   { name: "Lavado de Techo y Parasoles", price: "$49.000", vehicle: "car" },
   { name: "Limpieza Técnica de Motor", price: "$49.000", vehicle: "car" },
-  { name: "Lavada Esencial Carro", price: "$49.000", vehicle: "car" },
+  { name: "Lavada Esencial Carro", price: "$49.000 (camioneta $59.000)", vehicle: "car" },
   { name: "Recubrimiento Cerámico", price: "Bajo cotización · protección 5 años", vehicle: "moto" },
   { name: "Porcelanizado", price: "Bajo cotización · protección 6m-1 año", vehicle: "moto" },
   { name: "Tratamiento 3 en 1 a Máquina", price: "$350.000", vehicle: "moto" },

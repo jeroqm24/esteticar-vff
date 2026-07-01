@@ -52,6 +52,7 @@ export const CAR_SERVICES = [
     name: "Lavada Esencial Carro",
     price: 49000,
     priceDisplay: "$49.000",
+    truckSurcharge: 10000,
     time: "2 horas",
     durationHours: 2,
     description: "Lavado exterior meticuloso con protocolo de dos baldes, secado con microfibra premium y limpieza de rines.",

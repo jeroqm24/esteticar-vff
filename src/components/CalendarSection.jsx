@@ -620,6 +620,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   })();
 
   const TRUCK_SURCHARGE = {
+    "Lavada Esencial Carro": 10000,
     "Tratamiento 3 en 1 Manual": 10000,
     "Tratamiento 3 en 1 a Máquina": 10000,
     "Mantenimiento Interior Sólo Cojinería": 30000,
