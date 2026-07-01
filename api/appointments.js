@@ -97,7 +97,7 @@ const key = req.headers['x-admin-key'];
     const ALLOWED = ['status', 'date', 'time', 'service', 'services', 'notes', 'traslado', 'pickup_option', 'pickup_price', 'total_amount', 'discount', 'client_name', 'client_phone', 'client_email', 'client_birthday', 'vehicle_type', 'vehicle_plate', 'duration_hours', 'origin', 'reminder_sent', 'price_display'];
     const safe = Object.fromEntries(Object.entries(updates).filter(([k]) => ALLOWED.includes(k)));
     if (Object.keys(safe).length === 0) return res.status(400).json({ error: 'No valid fields' });
-    let query = supabaseAdmin.from('appointments').update({ ...safe, updated_at: new Date().toISOString() });
+    let query = supabaseAdmin.from('appointments').update(safe);
     query = id ? query.eq('id', id) : query.eq('confirmation_code', confirmation_code);
     const { error } = await query;
     if (error) return res.status(500).json({ error: error.message });
