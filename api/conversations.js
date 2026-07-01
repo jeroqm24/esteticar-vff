@@ -56,13 +56,27 @@ const sendFBMessage = async (recipientId, text) => {
   } catch { return false; }
 };
 
-const sendWAAudio = async (to, audioUrl) => {
+// WA: sube el buffer directo a Meta Media API → recibe media_id → envía sin necesitar URL pública
+const sendWAAudio = async (to, buffer, mimeType) => {
   if (!WA_TOKEN || !PHONE_ID) return false;
   try {
+    const cleanMime = (mimeType || 'audio/ogg').split(';')[0];
+    const form = new FormData();
+    form.append('messaging_product', 'whatsapp');
+    form.append('type', cleanMime);
+    form.append('file', new Blob([buffer], { type: cleanMime }),
+      cleanMime.includes('ogg') ? 'voice.ogg' : 'voice.webm');
+    const upload = await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/media`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${WA_TOKEN}` },
+      body: form,
+    });
+    const { id: mediaId } = await upload.json();
+    if (!mediaId) return false;
     const r = await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'audio', audio: { link: audioUrl } }),
+      body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'audio', audio: { id: mediaId } }),
     });
     return r.ok;
   } catch { return false; }
@@ -139,29 +153,37 @@ export default async function handler(req, res) {
       if (!audioBase64) return res.status(400).json({ error: 'Missing audio' });
 
       const buffer = Buffer.from(audioBase64, 'base64');
-      const ext = (mimeType || '').includes('ogg') ? 'ogg' : 'webm';
-      const filename = `${Date.now()}-${phone.replace(/[^a-z0-9]/gi, '_')}.${ext}`;
 
-      await supabaseAdmin.storage.createBucket('audio-admin', { public: true }).catch(() => {});
-
-      const { error: uploadError } = await supabaseAdmin.storage
-        .from('audio-admin')
-        .upload(filename, buffer, { contentType: mimeType || 'audio/webm', upsert: true });
-
-      if (uploadError) return res.status(500).json({ error: 'Upload failed: ' + uploadError.message });
-
-      const { data: { publicUrl } } = supabaseAdmin.storage.from('audio-admin').getPublicUrl(filename);
+      // Subir a Supabase Storage (para IG/FB y panel; no-bloqueante si falla)
+      let publicUrl = null;
+      try {
+        const ext = (mimeType || '').includes('ogg') ? 'ogg' : 'webm';
+        const filename = `${Date.now()}-${phone.replace(/[^a-z0-9]/gi, '_')}.${ext}`;
+        await supabaseAdmin.storage.createBucket('audio-admin', { public: true }).catch(() => {});
+        const { error: upErr } = await supabaseAdmin.storage
+          .from('audio-admin')
+          .upload(filename, buffer, { contentType: (mimeType || 'audio/webm').split(';')[0], upsert: true });
+        if (!upErr) {
+          const { data } = supabaseAdmin.storage.from('audio-admin').getPublicUrl(filename);
+          publicUrl = data.publicUrl;
+        }
+      } catch {}
 
       const { data: conv } = await supabaseAdmin.from('conversations').select('history').eq('phone', phone).single();
       const history = Array.isArray(conv?.history) ? conv.history : [];
-      history.push({ role: 'admin', content: '🎵 Audio', audioUrl: publicUrl, timestamp: new Date().toISOString() });
+      history.push({ role: 'admin', content: '🎵 Audio', audioUrl: publicUrl || '', timestamp: new Date().toISOString() });
       if (history.length > 80) history.splice(0, history.length - 80);
       await supabaseAdmin.from('conversations').upsert({ phone, history, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
 
       let sent = false;
-      if (phone.startsWith('ig_')) sent = await sendIGAudio(phone.replace('ig_', ''), publicUrl);
-      else if (phone.startsWith('fb_')) sent = await sendFBAudio(phone.replace('fb_', ''), publicUrl);
-      else if (!phone.startsWith('web_')) sent = await sendWAAudio(phone, publicUrl);
+      if (phone.startsWith('ig_')) {
+        if (publicUrl) sent = await sendIGAudio(phone.replace('ig_', ''), publicUrl);
+      } else if (phone.startsWith('fb_')) {
+        if (publicUrl) sent = await sendFBAudio(phone.replace('fb_', ''), publicUrl);
+      } else if (!phone.startsWith('web_')) {
+        // WA: sube buffer directo a Meta → no necesita URL pública ni formato específico
+        sent = await sendWAAudio(phone, buffer, mimeType);
+      }
 
       return res.status(200).json({ ok: true, sent, audioUrl: publicUrl });
     }
