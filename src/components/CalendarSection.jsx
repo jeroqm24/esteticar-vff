@@ -63,8 +63,13 @@ const SERVICE_DURATIONS = {
 };
 
 const getServiceDuration = (service) => {
-  const key = Object.keys(SERVICE_DURATIONS).find(k => service?.includes(k));
-  return SERVICE_DURATIONS[key] || SERVICE_DURATIONS.default;
+  if (!service) return SERVICE_DURATIONS.default;
+  const svcs = service.split(',').map(s => s.trim()).filter(Boolean);
+  const total = svcs.reduce((sum, svc) => {
+    const key = Object.keys(SERVICE_DURATIONS).find(k => svc.includes(k) || k.includes(svc));
+    return sum + (SERVICE_DURATIONS[key] || 0);
+  }, 0);
+  return total || SERVICE_DURATIONS.default;
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────
@@ -358,8 +363,8 @@ function DayTimeline({ day, appointments, isAdmin, onAddAppointment, onUpdateSta
                         const hasDelivery = trasladoStr.includes('entrega') || trasladoStr.includes('entregar');
                         const hasTraslado = hasPickup || hasDelivery;
 
-                        // Timeline calculation
-                        const entryH = parseAppointmentHour(appt);
+                        // Timeline calculation (fractional hours so minutes are preserved)
+                        const entryH = parseAppointmentTime(appt);
                         const exitH = entryH + duration;
                         const fmtH = (h) => { const hh = Math.floor(h); const mm = Math.round((h - hh) * 60); return `${hh}:${String(mm).padStart(2,'0')}`; };
 
