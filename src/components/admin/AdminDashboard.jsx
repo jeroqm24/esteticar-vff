@@ -37,7 +37,7 @@ function AdminLogin({ onSuccess }) {
   };
 
   return (
-    <div className="min-h-screen bg-ec-cream flex items-center justify-center px-4">
+    <div className="h-full bg-ec-cream flex items-center justify-center px-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -219,7 +219,7 @@ export default function AdminDashboard({ onClose }) {
   };
 
   if (authLoading) return (
-    <div className="min-h-screen bg-ec-cream flex items-center justify-center">
+    <div className="h-full bg-ec-cream flex items-center justify-center">
       <div className="w-6 h-6 border-2 border-ec-gold border-t-transparent rounded-full animate-spin" />
     </div>
   );
@@ -232,7 +232,7 @@ export default function AdminDashboard({ onClose }) {
   };
 
   return (
-    <div className="h-[100dvh] bg-ec-cream flex flex-col lg:flex-row">
+    <div className="h-full bg-ec-cream flex flex-col lg:flex-row">
 
       {/* ── SIDEBAR (desktop only) ── */}
       <div className="hidden lg:flex relative z-20 w-72 xl:w-80 border-r border-black/[0.06] bg-white h-full flex-col p-8 shadow-[4px_0_30px_rgba(0,0,0,0.03)] flex-shrink-0">

@@ -16,17 +16,18 @@ function App() {
   return (
     <Router>
       {adminMode && (
-        <div
-          className="fixed inset-0 z-[200] bg-ec-cream"
-          style={{ overflowY: "auto", WebkitOverflowScrolling: "touch" }}
-        >
+        <div className="fixed inset-0 z-[200] bg-ec-cream overflow-hidden">
           <AdminDashboard onClose={() => setAdminMode(false)} />
         </div>
       )}
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/portafolio" element={<PortfolioPage />} />
-        <Route path="/admin" element={<AdminDashboard onClose={() => { }} />} />
+        <Route path="/admin" element={
+          <div className="fixed inset-0 bg-ec-cream overflow-hidden">
+            <AdminDashboard onClose={() => { }} />
+          </div>
+        } />
       </Routes>
     </Router>
   );
