@@ -56,17 +56,174 @@ const sendFBMessage = async (recipientId, text) => {
   } catch { return false; }
 };
 
+// ── WebM/Opus → OGG/Opus remuxer (pure JS, no re-encoding) ──────────────────
+// WhatsApp soporta audio/ogg pero NO audio/webm. Chrome solo graba webm.
+// Ambos usan paquetes Opus idénticos — solo difiere el contenedor.
+
+const OGG_CRC_TABLE = (() => {
+  const t = new Uint32Array(256);
+  for (let i = 0; i < 256; i++) {
+    let r = i << 24;
+    for (let j = 0; j < 8; j++) r = (r & 0x80000000) ? ((r << 1) ^ 0x04c11db7) : (r << 1);
+    t[i] = r >>> 0;
+  }
+  return t;
+})();
+
+function oggCrc32(buf) {
+  let crc = 0;
+  for (let i = 0; i < buf.length; i++) crc = ((crc << 8) ^ OGG_CRC_TABLE[((crc >>> 24) ^ buf[i]) & 0xFF]) >>> 0;
+  return crc;
+}
+
+function readEbmlVint(buf, offset) {
+  const b = buf[offset];
+  if (b & 0x80) return [b & 0x7F, 1];
+  if (b & 0x40) return [((b & 0x3F) << 8) | buf[offset + 1], 2];
+  if (b & 0x20) return [((b & 0x1F) << 16) | (buf[offset + 1] << 8) | buf[offset + 2], 3];
+  if (b & 0x10) return [((b & 0x0F) << 24) | (buf[offset + 1] << 16) | (buf[offset + 2] << 8) | buf[offset + 3], 4];
+  return [0, 1];
+}
+
+function buildOggPage(packetData, granule, serial, seqno, headerType) {
+  // Segment table: split packet into ≤255-byte segments
+  const segs = [];
+  for (let o = 0; o < packetData.length || segs.length === 0; o += 255) {
+    segs.push(Math.min(255, packetData.length - o));
+    if (packetData.length - o <= 255) break;
+  }
+  // If packet size is exact multiple of 255, add terminating 0-segment
+  if (packetData.length > 0 && packetData.length % 255 === 0) segs.push(0);
+
+  const hdrSize = 27 + segs.length;
+  const page = Buffer.alloc(hdrSize + packetData.length, 0);
+  let o = 0;
+  page.write('OggS', o);       o += 4;
+  page[o++] = 0;                // stream structure version
+  page[o++] = headerType;       // 0=normal, 2=BOS, 4=EOS
+  page.writeBigInt64LE(BigInt(granule), o); o += 8;
+  page.writeInt32LE(serial, o); o += 4;
+  page.writeInt32LE(seqno, o);  o += 4;
+  const crcOffset = o;          o += 4; // filled after
+  page[o++] = segs.length;
+  for (const s of segs) page[o++] = s;
+  packetData.copy(page, o);
+  page.writeUInt32LE(oggCrc32(page), crcOffset);
+  return page;
+}
+
+function buildOpusTags() {
+  const vendor = Buffer.from('webm-to-ogg');
+  const out = Buffer.alloc(8 + 4 + vendor.length + 4);
+  let o = 0;
+  out.write('OpusTags', o); o += 8;
+  out.writeUInt32LE(vendor.length, o); o += 4;
+  vendor.copy(out, o);     o += vendor.length;
+  out.writeUInt32LE(0, o); // 0 user comments
+  return out;
+}
+
+function remuxWebmToOgg(inputBuffer) {
+  try {
+    const buf = Buffer.isBuffer(inputBuffer) ? inputBuffer : Buffer.from(inputBuffer);
+
+    // Find "OpusHead" magic bytes → CodecPrivate in WebM
+    const MAGIC = Buffer.from('OpusHead');
+    let headStart = -1;
+    for (let i = 0; i <= buf.length - 19; i++) {
+      if (buf.slice(i, i + 8).equals(MAGIC)) { headStart = i; break; }
+    }
+    if (headStart < 0) return null;
+
+    const opusHead = buf.slice(headStart, headStart + 19);
+    const preSkip = opusHead.readUInt16LE(10);
+
+    // Scan for SimpleBlock (EBML ID 0xA3) and Cluster timecode (0xE7)
+    const packets = [];
+    let clusterTimecode = 0;
+    let i = 0;
+    while (i < buf.length) {
+      if (buf[i] === 0xE7) {
+        // Timecode element (cluster base time, ms)
+        i++;
+        const [sz, szLen] = readEbmlVint(buf, i); i += szLen;
+        if (sz > 0 && sz <= 8 && i + sz <= buf.length) {
+          let tc = 0;
+          for (let b = 0; b < sz; b++) tc = (tc * 256) + buf[i + b];
+          clusterTimecode = tc;
+        }
+        i += sz;
+        continue;
+      }
+      if (buf[i] === 0xA3) {
+        // SimpleBlock
+        i++;
+        if (i >= buf.length) break;
+        const [blockSize, bsLen] = readEbmlVint(buf, i); i += bsLen;
+        if (blockSize < 4 || blockSize > 200000 || i + blockSize > buf.length) { i++; continue; }
+        const blockEnd = i + blockSize;
+        const [, trackLen] = readEbmlVint(buf, i);
+        const relTc = buf.readInt16BE(i + trackLen); // signed int16 BE
+        const absMs = clusterTimecode + relTc;
+        const opusStart = i + trackLen + 3; // track vint + 2-byte timecode + 1-byte flags
+        if (opusStart < blockEnd) {
+          packets.push({ ms: absMs, data: buf.slice(opusStart, blockEnd) });
+        }
+        i = blockEnd;
+        continue;
+      }
+      i++;
+    }
+
+    if (packets.length === 0) return null;
+
+    const serial = 1;
+    let seq = 0;
+    const pages = [
+      buildOggPage(opusHead,        0, serial, seq++, 2), // BOS
+      buildOggPage(buildOpusTags(), 0, serial, seq++, 0),
+    ];
+    for (let p = 0; p < packets.length; p++) {
+      const granule = packets[p].ms * 48 + preSkip; // 48 samples/ms at 48kHz
+      const isLast = p === packets.length - 1;
+      pages.push(buildOggPage(packets[p].data, granule, serial, seq++, isLast ? 4 : 0));
+    }
+    return Buffer.concat(pages);
+  } catch {
+    return null;
+  }
+}
+
 // WA: sube el buffer directo a Meta Media API → recibe media_id → envía sin necesitar URL pública
 const sendWAAudio = async (to, buffer, mimeType) => {
   if (!WA_TOKEN || !PHONE_ID) return false;
   try {
-    const fullMime = mimeType || 'audio/ogg; codecs=opus';
-    const baseMime = fullMime.split(';')[0].trim();
+    const isWebm = (mimeType || '').includes('webm');
+    let uploadBuffer = buffer;
+    let uploadMime = mimeType || 'audio/ogg; codecs=opus';
+    let filename = 'voice.ogg';
+
+    if (isWebm) {
+      // WhatsApp no soporta audio/webm — convertir a OGG/Opus (mismo codec, diferente contenedor)
+      const ogg = remuxWebmToOgg(buffer);
+      if (ogg) {
+        uploadBuffer = ogg;
+        uploadMime = 'audio/ogg; codecs=opus';
+        filename = 'voice.ogg';
+      } else {
+        // Fallback: intentar enviar igual aunque probablemente falle en Meta
+        filename = 'voice.webm';
+      }
+    } else if (uploadMime.includes('mp4')) {
+      filename = 'voice.mp4';
+    } else if (uploadMime.includes('mpeg') || uploadMime.includes('mp3')) {
+      filename = 'voice.mp3';
+    }
+
     const form = new FormData();
     form.append('messaging_product', 'whatsapp');
-    form.append('type', fullMime);
-    form.append('file', new Blob([buffer], { type: fullMime }),
-      baseMime.includes('ogg') ? 'voice.ogg' : 'voice.webm');
+    form.append('type', uploadMime);
+    form.append('file', new Blob([uploadBuffer], { type: uploadMime }), filename);
     const upload = await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/media`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${WA_TOKEN}` },
