@@ -880,8 +880,8 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                 </select>
                 <button
                   type="button"
-                  onClick={() => setForm(f => ({ ...f, extraServices: f.extraServices.filter((_, j) => j !== i) }))}
-                  className="w-6 h-6 flex items-center justify-center rounded-full text-red-400 hover:bg-red-50 transition-colors flex-shrink-0 text-sm"
+                  onClick={e => { e.preventDefault(); e.stopPropagation(); setForm(f => ({ ...f, extraServices: f.extraServices.filter((_, j) => j !== i) })); }}
+                  className="w-8 h-8 flex items-center justify-center rounded-full text-red-400 hover:bg-red-50 active:bg-red-100 transition-colors flex-shrink-0 text-base"
                 >✕</button>
               </div>
             ))}
