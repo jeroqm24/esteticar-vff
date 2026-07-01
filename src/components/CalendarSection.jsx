@@ -73,29 +73,25 @@ const parseAppointmentHour = (appt) => Math.floor(parseAppointmentTime(appt));
 
 // Returns fractional hour (e.g. 8.25 for 8:15) for capacity calculations
 const parseAppointmentTime = (appt) => {
-  const src = appt.date || '';
-  const match = src.match(/(\d{1,2}):(\d{2})\s*(a\.?m\.?|p\.?m\.?)?/i);
-  if (match) {
+  const parseTimeStr = (s) => {
+    const match = s && s.match(/(\d{1,2}):(\d{2})\s*(a\.?m\.?|p\.?m\.?)?/i);
+    if (!match) return null;
     let h = parseInt(match[1]);
     const m = parseInt(match[2]) || 0;
     const period = (match[3] || '').toLowerCase().replace(/\./g, '');
     if (period === 'pm' && h < 12) h += 12;
     if (period === 'am' && h === 12) h = 0;
     return h + m / 60;
-  }
+  };
+  // Priorizar appt.time (campo dedicado, más confiable) sobre el texto de appt.date
   if (appt.time) {
-    const t = appt.time.match(/(\d{1,2}):(\d{2})\s*(a\.?m\.?|p\.?m\.?)?/i);
-    if (t) {
-      let h = parseInt(t[1]);
-      const m = parseInt(t[2]) || 0;
-      const period = (t[3] || '').toLowerCase().replace(/\./g, '');
-      if (period === 'pm' && h < 12) h += 12;
-      if (period === 'am' && h === 12) h = 0;
-      return h + m / 60;
-    }
+    const t = parseTimeStr(appt.time);
+    if (t !== null) return t;
     const bare = appt.time.match(/(\d{1,2})/);
     if (bare) return parseInt(bare[1]);
   }
+  const fromDate = parseTimeStr(appt.date);
+  if (fromDate !== null) return fromDate;
   return 9;
 };
 
