@@ -604,7 +604,6 @@ export default function AdminAppointments() {
         date: updates.date,
         time: updates.time,
         traslado: updates.traslado || null,
-        notes: updates.notes || null,
         price_display: updates.priceDisplay || null,
       });
       const merged = { ...editTarget, ...updates, priceDisplay: updates.priceDisplay };
