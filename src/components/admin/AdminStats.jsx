@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { db } from "../../lib/storage";
-import { format, startOfMonth, endOfMonth, subMonths, eachDayOfInterval } from "date-fns";
+import { format, startOfMonth, endOfMonth, startOfWeek, endOfWeek, subMonths, eachDayOfInterval } from "date-fns";
 import { es } from "date-fns/locale";
 import { BRAND } from "../../lib/constants";
 
@@ -107,6 +107,129 @@ function QuickAction({ icon, label, onClick }) {
   );
 }
 
+const parsePrice = (str) => parseInt(String(str || "").replace(/\D/g, ""), 10) || 0;
+const formatCOP = (n) => n >= 1000 ? `$${(n / 1000).toFixed(0)}K` : `$${n}`;
+
+const FILTERS = [
+  { id: "today",  label: "Hoy" },
+  { id: "week",   label: "Semana" },
+  { id: "month",  label: "Este mes" },
+  { id: "custom", label: "Personalizado" },
+];
+
+function RevenueSection({ allAppointments }) {
+  const [filter, setFilter] = useState("month");
+  const [customFrom, setCustomFrom] = useState(format(new Date(), "yyyy-MM-dd"));
+  const [customTo,   setCustomTo]   = useState(format(new Date(), "yyyy-MM-dd"));
+
+  const getRange = () => {
+    const now = new Date();
+    if (filter === "today")  return { from: format(now, "yyyy-MM-dd"), to: format(now, "yyyy-MM-dd") };
+    if (filter === "week")   return { from: format(startOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd"), to: format(endOfWeek(now, { weekStartsOn: 1 }), "yyyy-MM-dd") };
+    if (filter === "month")  return { from: format(startOfMonth(now), "yyyy-MM-dd"), to: format(endOfMonth(now), "yyyy-MM-dd") };
+    return { from: customFrom, to: customTo };
+  };
+
+  const { from, to } = getRange();
+
+  const filtered = allAppointments.filter((a) => {
+    const s = (a.status || "").toLowerCase();
+    if (s === "cancelada" || s === "cancelled") return false;
+    const d = (a.created_date || a.createdDate || "").slice(0, 10);
+    return d >= from && d <= to;
+  });
+
+  const total = filtered.reduce((sum, a) => sum + parsePrice(a.priceDisplay || a.price_display), 0);
+
+  return (
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 }}
+      className="border border-black/[0.06] bg-white overflow-hidden rounded-sm shadow-[0_4px_30px_rgba(0,0,0,0.06)]"
+    >
+      {/* Header */}
+      <div className="px-4 py-4 sm:px-8 sm:py-6 border-b border-black/[0.06]">
+        <div className="flex items-center justify-between gap-3 mb-4">
+          <h3 className="font-heading text-xl text-ec-dark">Ingresos</h3>
+          <p className="font-heading text-2xl text-ec-gold">{formatCOP(total)}</p>
+        </div>
+        {/* Filter chips */}
+        <div className="flex flex-wrap gap-2">
+          {FILTERS.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={`font-ui text-[10px] tracking-[0.15em] uppercase px-3 py-1.5 rounded-sm border transition-all duration-200 ${
+                filter === f.id
+                  ? "bg-ec-gold text-white border-ec-gold"
+                  : "bg-transparent text-ec-text-muted border-black/[0.1] hover:border-ec-gold/40"
+              }`}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+        {/* Date pickers for custom range */}
+        {filter === "custom" && (
+          <div className="flex items-center gap-2 mt-3">
+            <input
+              type="date"
+              value={customFrom}
+              max={customTo}
+              onChange={(e) => setCustomFrom(e.target.value)}
+              className="font-body text-xs text-ec-dark bg-ec-cream border border-black/[0.1] rounded-sm px-2 py-1.5 focus:outline-none focus:border-ec-gold"
+            />
+            <span className="font-ui text-[10px] text-ec-text-muted">hasta</span>
+            <input
+              type="date"
+              value={customTo}
+              min={customFrom}
+              onChange={(e) => setCustomTo(e.target.value)}
+              className="font-body text-xs text-ec-dark bg-ec-cream border border-black/[0.1] rounded-sm px-2 py-1.5 focus:outline-none focus:border-ec-gold"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* Appointment list */}
+      <div className="divide-y divide-black/[0.04]">
+        {filtered.length === 0 ? (
+          <div className="px-4 py-10 text-center">
+            <p className="font-body text-sm text-ec-text-muted font-light">Sin citas en este período</p>
+          </div>
+        ) : (
+          filtered.map((a) => {
+            const price = parsePrice(a.priceDisplay || a.price_display);
+            return (
+              <div key={a.id} className="px-4 py-3 sm:px-8 sm:py-4 flex items-center gap-3 hover:bg-ec-cream/40 transition-colors">
+                <div className="flex-1 min-w-0">
+                  <p className="font-heading text-base text-ec-dark truncate">{a.clientName || "Cliente"}</p>
+                  <p className="font-body text-xs text-ec-text-muted font-light truncate">{a.service || "—"}</p>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p className="font-ui text-sm tracking-wider text-ec-gold">
+                    {price > 0 ? `$${price.toLocaleString("es-CO")}` : "Sin precio"}
+                  </p>
+                  <p className="font-ui text-[9px] tracking-wider text-ec-text-muted mt-0.5">
+                    {(a.created_date || a.createdDate || "").slice(0, 10)}
+                  </p>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      {filtered.length > 0 && (
+        <div className="px-4 py-3 sm:px-8 sm:py-4 border-t border-black/[0.06] flex items-center justify-between">
+          <span className="font-ui text-[10px] tracking-[0.2em] text-ec-text-muted uppercase">
+            {filtered.length} cita{filtered.length !== 1 ? "s" : ""}
+          </span>
+          <span className="font-heading text-lg text-ec-gold">{formatCOP(total)}</span>
+        </div>
+      )}
+    </motion.div>
+  );
+}
+
 export default function AdminStats({ onNavigate, onNewAppointment }) {
   const exportData = async () => {
     const all = await db.appointments.list();
@@ -120,7 +243,8 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
     a.click();
     URL.revokeObjectURL(url);
   };
-  const [stats, setStats] = useState({ total: 0, thisMonth: 0, pending: 0, revenue: 0, recent: [], dailyData: [] });
+
+  const [stats, setStats] = useState({ total: 0, thisMonth: 0, pending: 0, recent: [], dailyData: [], allAppointments: [] });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => { loadStats(); }, []);
@@ -130,48 +254,25 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
     const now = new Date();
     const start = format(startOfMonth(now), "yyyy-MM-dd");
     const end = format(endOfMonth(now), "yyyy-MM-dd");
-    // Usar created_date (ISO) para filtrar — el campo date está en formato texto español
     const thisMonth = all.filter((a) => {
       const d = (a.created_date || a.createdDate || "").slice(0, 10);
       return d >= start && d <= end;
     });
     const pending = all.filter((a) => a.status === "pending" || a.status === "confirmed");
-    const parsePrice = (str) => parseInt(String(str || "").replace(/\D/g, ""), 10) || 0;
-    // Ingresos: citas confirmadas con precio (el sistema solo tiene confirmada/cancelada)
-    const revenue = all
-      .filter((a) => {
-        const s = (a.status || '').toLowerCase();
-        return s !== 'cancelada' && s !== 'cancelled';
-      })
-      .reduce((sum, a) => sum + parsePrice(a.priceDisplay || a.price_display), 0);
 
-    // Generate sparkline data for the last 14 days
-    const days = eachDayOfInterval({
-      start: subMonths(now, 1),
-      end: now,
-    });
+    const days = eachDayOfInterval({ start: subMonths(now, 1), end: now });
     const dailyData = days.map((day) => {
       const dayStr = format(day, "yyyy-MM-dd");
       return all.filter((a) => (a.created_date || a.createdDate || "").slice(0, 10) === dayStr).length;
-    });
-
-    // Compute revenue sparkline (last 7 days)
-    const last7 = days.slice(-7);
-    const revenueData = last7.map((day) => {
-      const dayStr = format(day, "yyyy-MM-dd");
-      return all
-        .filter((a) => { const s = (a.status||'').toLowerCase(); return (a.created_date||a.createdDate||'').slice(0,10) === dayStr && s !== 'cancelada' && s !== 'cancelled'; })
-        .reduce((s, a) => s + parsePrice(a.priceDisplay || a.price_display), 0);
     });
 
     setStats({
       total: all.length,
       thisMonth: thisMonth.length,
       pending: pending.length,
-      revenue,
       recent: all.slice(0, 5),
       dailyData,
-      revenueData,
+      allAppointments: all,
     });
     setLoading(false);
   };
@@ -187,7 +288,6 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
   return (
     <div className="space-y-6 sm:space-y-12">
       {/* Header */}
-      {/* Logo header — solo en desktop (en móvil ya está en el header del admin) */}
       <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="hidden sm:flex items-center gap-4">
         <img src={BRAND.logo} alt="" className="h-14 object-contain flex-shrink-0" />
         <div className="min-w-0">
@@ -197,18 +297,19 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
           </p>
         </div>
       </motion.div>
-      {/* Fecha solo en móvil */}
       <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="sm:hidden font-body text-xs text-ec-text-muted capitalize font-light">
         {format(new Date(), "EEEE d 'de' MMMM, yyyy", { locale: es })}
       </motion.p>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
         <StatCard label="Citas Totales" value={stats.total} index={0} sparkData={stats.dailyData} />
         <StatCard label="Este Mes" value={stats.thisMonth} index={1} trend={stats.thisMonth > 0 ? 12 : 0} />
         <StatCard label="Por Atender" value={stats.pending} index={2} sub="Pendientes + Confirmadas" />
-        <StatCard label="Ingresos" value={`$${(stats.revenue / 1000).toFixed(0)}K`} sub="Servicios completados" index={3} sparkData={stats.revenueData} />
       </div>
+
+      {/* Revenue section with filters */}
+      <RevenueSection allAppointments={stats.allAppointments} />
 
       {/* Quick Actions */}
       <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
