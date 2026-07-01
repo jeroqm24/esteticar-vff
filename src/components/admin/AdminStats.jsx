@@ -130,9 +130,15 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
     const now = new Date();
     const start = format(startOfMonth(now), "yyyy-MM-dd");
     const end = format(endOfMonth(now), "yyyy-MM-dd");
-    const thisMonth = all.filter((a) => a.date >= start && a.date <= end);
+    // Usar created_date (ISO) para filtrar — el campo date está en formato texto español
+    const thisMonth = all.filter((a) => {
+      const d = (a.created_date || a.createdDate || "").slice(0, 10);
+      return d >= start && d <= end;
+    });
     const pending = all.filter((a) => a.status === "pending" || a.status === "confirmed");
-    const revenue = all.filter((a) => a.status === "completed").reduce((sum, a) => sum + (a.total_amount || 0), 0);
+    const parsePrice = (str) => parseInt(String(str || "").replace(/\D/g, ""), 10) || 0;
+    const revenue = all.filter((a) => a.status === "completada" || a.status === "completed")
+      .reduce((sum, a) => sum + parsePrice(a.priceDisplay || a.price_display), 0);
 
     // Generate sparkline data for the last 14 days
     const days = eachDayOfInterval({
@@ -141,14 +147,16 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
     });
     const dailyData = days.map((day) => {
       const dayStr = format(day, "yyyy-MM-dd");
-      return all.filter((a) => a.date === dayStr).length;
+      return all.filter((a) => (a.created_date || a.createdDate || "").slice(0, 10) === dayStr).length;
     });
 
     // Compute revenue sparkline (last 7 days)
     const last7 = days.slice(-7);
     const revenueData = last7.map((day) => {
       const dayStr = format(day, "yyyy-MM-dd");
-      return all.filter((a) => a.date === dayStr && a.status === "completed").reduce((s, a) => s + (a.total_amount || 0), 0);
+      return all
+        .filter((a) => (a.created_date || a.createdDate || "").slice(0, 10) === dayStr && (a.status === "completada" || a.status === "completed"))
+        .reduce((s, a) => s + parsePrice(a.priceDisplay || a.price_display), 0);
     });
 
     setStats({
