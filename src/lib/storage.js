@@ -215,23 +215,13 @@ export const db = {
   conversations: {
     list: async () => {
       try {
-        const { data, error } = await supabase
-          .from('conversations')
-          .select('phone, session_id, history, client_name, updated_at, created_at, lead_type, bot_paused, vehicle_type, vehicle_plate, client_email, last_service, direccion, objection, remarketing_status')
-          .order('updated_at', { ascending: false })
-          .limit(300);
-        if (error) throw error;
+        const res = await fetch('/api/conversations', {
+          headers: { 'x-admin-key': 'Esteticar11.' },
+        });
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
         return (data || []).filter(r => Array.isArray(r.history) && r.history.length > 0);
-      } catch {
-        try {
-          const { data } = await supabase
-            .from('conversations')
-            .select('phone, session_id, history, client_name, updated_at, lead_type, bot_paused, vehicle_type, remarketing_status, last_service')
-            .order('updated_at', { ascending: false })
-            .limit(300);
-          return (data || []).filter(r => Array.isArray(r.history) && r.history.length > 0);
-        } catch { return []; }
-      }
+      } catch { return []; }
     },
     update: async (phone, updates) => {
       try {
@@ -249,6 +239,22 @@ export const db = {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
           body: JSON.stringify({ phone, text }),
+        });
+        return await res.json();
+      } catch { return { ok: false }; }
+    },
+    sendAudio: async (phone, audioBlob) => {
+      try {
+        const audioBase64 = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result.split(',')[1]);
+          reader.onerror = reject;
+          reader.readAsDataURL(audioBlob);
+        });
+        const res = await fetch('/api/conversations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
+          body: JSON.stringify({ phone, type: 'audio', audioBase64, mimeType: audioBlob.type || 'audio/webm' }),
         });
         return await res.json();
       } catch { return { ok: false }; }

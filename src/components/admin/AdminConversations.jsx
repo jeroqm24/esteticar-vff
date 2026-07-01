@@ -26,6 +26,7 @@ function getPreview(history) {
   const last = [...history].reverse().find(m => m.role === "user" || m.role === "admin");
   if (!last) return "Sin mensajes";
   const prefix = last.role === "admin" ? "Tú: " : "";
+  if (last.audioUrl) return prefix + "🎵 Audio";
   const text = (last.content || "")
     .replace(/__BOOKING_CONFIRMED__[\s\S]*?__END_BOOKING__/g, "✅ Cita")
     .replace(/__ESCALATE__:[^\n]*/g, "")
@@ -175,14 +176,24 @@ function MessageBubble({ msg }) {
 
   // Admin → derecha
   if (isAdmin) {
+    const ts = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }) : "";
+    if (msg.audioUrl) {
+      return (
+        <div className="flex justify-end mb-1.5">
+          <div className="max-w-[80%] px-3 py-2 rounded-2xl rounded-br-sm bg-[#E3E8FF] border border-indigo-200">
+            <div className="text-[9px] font-ui font-bold text-indigo-500 mb-1 uppercase tracking-wider">Admin</div>
+            <audio controls src={msg.audioUrl} className="h-9 max-w-[220px]" />
+            <div className="text-[10px] mt-0.5 text-right text-indigo-400">{ts}</div>
+          </div>
+        </div>
+      );
+    }
     return (
       <div className="flex justify-end mb-1.5">
         <div className="max-w-[75%] px-3 py-2 rounded-2xl rounded-br-sm text-[13px] leading-relaxed bg-[#E3E8FF] text-[#1e2a6a] border border-indigo-200">
           <div className="text-[9px] font-ui font-bold text-indigo-500 mb-1 uppercase tracking-wider">Admin</div>
           {clean}
-          <div className="text-[10px] mt-0.5 text-right text-indigo-400">
-            {msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" }) : ""}
-          </div>
+          <div className="text-[10px] mt-0.5 text-right text-indigo-400">{ts}</div>
         </div>
       </div>
     );
@@ -347,6 +358,12 @@ export default function AdminConversations({ initialPhone }) {
   const bottomRef = useRef(null);
   const replyRef = useRef(null);
   const sendingRef = useRef(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState(null);
+  const [audioPreviewUrl, setAudioPreviewUrl] = useState(null);
+  const [sendingAudio, setSendingAudio] = useState(false);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
 
   const handleResolved = async () => {
     if (!selected || resolving) return;
@@ -471,6 +488,63 @@ export default function AdminConversations({ initialPhone }) {
     sendingRef.current = false;
     setSending(false);
     setTimeout(() => replyRef.current?.focus(), 100);
+  };
+
+  const handleStartRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      audioChunksRef.current = [];
+      const mimeType = MediaRecorder.isTypeSupported('audio/ogg; codecs=opus')
+        ? 'audio/ogg; codecs=opus'
+        : 'audio/webm; codecs=opus';
+      const mr = new MediaRecorder(stream, { mimeType });
+      mr.ondataavailable = e => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
+      mr.onstop = () => {
+        const blob = new Blob(audioChunksRef.current, { type: mimeType.split(';')[0] });
+        setAudioBlob(blob);
+        setAudioPreviewUrl(URL.createObjectURL(blob));
+        stream.getTracks().forEach(t => t.stop());
+      };
+      mr.start();
+      mediaRecorderRef.current = mr;
+      setIsRecording(true);
+    } catch { /* mic not available or permission denied */ }
+  };
+
+  const handleStopRecording = () => {
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+  };
+
+  const handleCancelAudio = () => {
+    if (isRecording) { mediaRecorderRef.current?.stop(); setIsRecording(false); }
+    setAudioBlob(null);
+    setAudioPreviewUrl(null);
+  };
+
+  const handleSendAudio = async () => {
+    if (!audioBlob || !selected || sendingRef.current) return;
+    sendingRef.current = true;
+    setSendingAudio(true);
+    const blob = audioBlob;
+    const previewUrl = audioPreviewUrl;
+    setAudioBlob(null);
+    setAudioPreviewUrl(null);
+
+    const optimistic = { role: 'admin', content: '🎵 Audio', audioUrl: previewUrl || '', timestamp: new Date().toISOString() };
+    const newHistory = [...(Array.isArray(selected.history) ? selected.history : []), optimistic];
+    setSelected(prev => ({ ...prev, history: newHistory }));
+    setConversations(prev => prev.map(c => c.phone === selected.phone ? { ...c, history: newHistory, updated_at: new Date().toISOString() } : c));
+
+    const result = await db.conversations.sendAudio(selected.phone, blob);
+    if (result?.audioUrl) {
+      setSelected(prev => ({
+        ...prev,
+        history: (prev.history || []).map(m => m === optimistic ? { ...m, audioUrl: result.audioUrl } : m),
+      }));
+    }
+    sendingRef.current = false;
+    setSendingAudio(false);
   };
 
   const handleDelete = async () => {
@@ -849,6 +923,32 @@ export default function AdminConversations({ initialPhone }) {
                   )}
                 </AnimatePresence>
 
+                {/* Audio preview bar */}
+                {audioPreviewUrl && !isRecording && (
+                  <div className="flex items-center gap-2 px-3 py-2 bg-indigo-50 border-t border-indigo-100">
+                    <audio controls src={audioPreviewUrl} className="flex-1 h-9" />
+                    <button
+                      onClick={handleSendAudio}
+                      disabled={sendingAudio}
+                      className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-full transition-all active:scale-95"
+                      style={{ background: sendingAudio ? "#CBD5E1" : "#075E54" }}
+                      title="Enviar audio"
+                    >
+                      {sendingAudio
+                        ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                      }
+                    </button>
+                    <button
+                      onClick={handleCancelAudio}
+                      className="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-full bg-white border border-black/[0.08] text-ec-text-muted hover:text-red-500 transition-colors"
+                      title="Cancelar"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                )}
+
                 <div className="flex items-end gap-2 px-3 py-2.5">
                   {/* Canned toggle */}
                   <button
@@ -859,29 +959,55 @@ export default function AdminConversations({ initialPhone }) {
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
                   </button>
 
-                  <textarea
-                    ref={replyRef}
-                    value={replyText}
-                    onChange={e => setReplyText(e.target.value)}
-                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
-                    placeholder={selected.bot_paused ? "Escribe tu respuesta…" : "Escribe (el bot seguirá activo)…"}
-                    rows={1}
-                    className="flex-1 px-4 py-2.5 rounded-2xl border border-black/[0.08] bg-white focus:border-[#128C7E] focus:outline-none font-body resize-none leading-relaxed"
-                    style={{ fontSize: '16px', minHeight: "40px", maxHeight: "120px", overflow: "auto" }}
-                  />
+                  {isRecording ? (
+                    <div className="flex-1 flex items-center gap-2 px-4 py-2.5 rounded-2xl border border-red-300 bg-red-50">
+                      <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+                      <span className="text-[13px] text-red-600 font-body">Grabando audio…</span>
+                    </div>
+                  ) : (
+                    <textarea
+                      ref={replyRef}
+                      value={replyText}
+                      onChange={e => setReplyText(e.target.value)}
+                      onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSend(); } }}
+                      placeholder={selected.bot_paused ? "Escribe tu respuesta…" : "Escribe (el bot seguirá activo)…"}
+                      rows={1}
+                      className="flex-1 px-4 py-2.5 rounded-2xl border border-black/[0.08] bg-white focus:border-[#128C7E] focus:outline-none font-body resize-none leading-relaxed"
+                      style={{ fontSize: '16px', minHeight: "40px", maxHeight: "120px", overflow: "auto" }}
+                    />
+                  )}
 
-                  <button
-                    onClick={handleSend}
-                    disabled={!replyText.trim() || sending}
-                    className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full transition-all active:scale-95"
-                    style={{ background: replyText.trim() && !sending ? "#075E54" : "#CBD5E1" }}
-                    title={isWhatsApp(selected.phone) ? "Enviar por WhatsApp" : "Enviar"}
-                  >
-                    {sending
-                      ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-                    }
-                  </button>
+                  {isRecording ? (
+                    <button
+                      onClick={handleStopRecording}
+                      className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full bg-red-500 hover:bg-red-600 transition-colors active:scale-95"
+                      title="Detener grabación"
+                    >
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="white"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        onClick={handleSend}
+                        disabled={!replyText.trim() || sending}
+                        className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full transition-all active:scale-95"
+                        style={{ background: replyText.trim() && !sending ? "#075E54" : "#CBD5E1" }}
+                        title={isWhatsApp(selected.phone) ? "Enviar por WhatsApp" : "Enviar"}
+                      >
+                        {sending
+                          ? <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                          : <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+                        }
+                      </button>
+                      <button
+                        onClick={handleStartRecording}
+                        className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full bg-white border border-black/[0.08] text-ec-text-muted hover:text-indigo-600 hover:border-indigo-300 transition-colors active:scale-95"
+                        title="Grabar audio"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><rect x="9" y="2" width="6" height="11" rx="3"/><path d="M5 10a7 7 0 0 0 14 0"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="9" y1="22" x2="15" y2="22"/></svg>
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 {!isWhatsApp(selected.phone) && (

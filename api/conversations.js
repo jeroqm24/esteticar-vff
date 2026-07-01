@@ -56,6 +56,44 @@ const sendFBMessage = async (recipientId, text) => {
   } catch { return false; }
 };
 
+const sendWAAudio = async (to, audioUrl) => {
+  if (!WA_TOKEN || !PHONE_ID) return false;
+  try {
+    const r = await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${WA_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ messaging_product: 'whatsapp', to, type: 'audio', audio: { link: audioUrl } }),
+    });
+    return r.ok;
+  } catch { return false; }
+};
+
+const sendIGAudio = async (recipientId, audioUrl) => {
+  try {
+    const { data } = await supabaseAdmin.from('ig_tokens').select('access_token').order('updated_at', { ascending: false }).limit(1).single();
+    const token = data?.access_token;
+    if (!token) return false;
+    const r = await fetch(`https://graph.instagram.com/v21.0/me/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipient: { id: recipientId }, message: { attachment: { type: 'audio', payload: { url: audioUrl, is_reusable: false } } } }),
+    });
+    return r.ok;
+  } catch { return false; }
+};
+
+const sendFBAudio = async (recipientId, audioUrl) => {
+  if (!FB_PAGE_TOKEN) return false;
+  try {
+    const r = await fetch(`https://graph.facebook.com/v20.0/me/messages`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${FB_PAGE_TOKEN}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ recipient: { id: recipientId }, message: { attachment: { type: 'audio', payload: { url: audioUrl, is_reusable: false } } } }),
+    });
+    return r.ok;
+  } catch { return false; }
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
@@ -64,6 +102,17 @@ export default async function handler(req, res) {
 
   const key = req.headers['x-admin-key'];
   if (key !== ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
+
+  // ── GET: list conversations (service_role → bypasses RLS) ──
+  if (req.method === 'GET') {
+    const { data, error } = await supabaseAdmin
+      .from('conversations')
+      .select('phone, session_id, history, client_name, updated_at, created_at, lead_type, bot_paused, vehicle_type, vehicle_plate, client_email, last_service, direccion, objection, remarketing_status')
+      .order('updated_at', { ascending: false })
+      .limit(300);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json(data || []);
+  }
 
   // ── PATCH: update fields (whitelist only) ──
   if (req.method === 'PATCH') {
@@ -80,10 +129,45 @@ export default async function handler(req, res) {
     return res.status(200).json({ ok: true });
   }
 
-  // ── POST: admin sends message ──
+  // ── POST: admin sends message or audio ──
   if (req.method === 'POST') {
-    const { phone, text } = req.body || {};
-    if (!phone || !text?.trim()) return res.status(400).json({ error: 'Missing fields' });
+    const { phone, type } = req.body || {};
+    if (!phone) return res.status(400).json({ error: 'Missing phone' });
+
+    if (type === 'audio') {
+      const { audioBase64, mimeType } = req.body;
+      if (!audioBase64) return res.status(400).json({ error: 'Missing audio' });
+
+      const buffer = Buffer.from(audioBase64, 'base64');
+      const ext = (mimeType || '').includes('ogg') ? 'ogg' : 'webm';
+      const filename = `${Date.now()}-${phone.replace(/[^a-z0-9]/gi, '_')}.${ext}`;
+
+      await supabaseAdmin.storage.createBucket('audio-admin', { public: true }).catch(() => {});
+
+      const { error: uploadError } = await supabaseAdmin.storage
+        .from('audio-admin')
+        .upload(filename, buffer, { contentType: mimeType || 'audio/webm', upsert: true });
+
+      if (uploadError) return res.status(500).json({ error: 'Upload failed: ' + uploadError.message });
+
+      const { data: { publicUrl } } = supabaseAdmin.storage.from('audio-admin').getPublicUrl(filename);
+
+      const { data: conv } = await supabaseAdmin.from('conversations').select('history').eq('phone', phone).single();
+      const history = Array.isArray(conv?.history) ? conv.history : [];
+      history.push({ role: 'admin', content: '🎵 Audio', audioUrl: publicUrl, timestamp: new Date().toISOString() });
+      if (history.length > 80) history.splice(0, history.length - 80);
+      await supabaseAdmin.from('conversations').upsert({ phone, history, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
+
+      let sent = false;
+      if (phone.startsWith('ig_')) sent = await sendIGAudio(phone.replace('ig_', ''), publicUrl);
+      else if (phone.startsWith('fb_')) sent = await sendFBAudio(phone.replace('fb_', ''), publicUrl);
+      else if (!phone.startsWith('web_')) sent = await sendWAAudio(phone, publicUrl);
+
+      return res.status(200).json({ ok: true, sent, audioUrl: publicUrl });
+    }
+
+    const { text } = req.body;
+    if (!text?.trim()) return res.status(400).json({ error: 'Missing fields' });
 
     const { data: conv } = await supabaseAdmin
       .from('conversations')
