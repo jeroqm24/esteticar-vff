@@ -336,7 +336,12 @@ function EditAppointmentModal({ appt, onClose, onSave }) {
             <div className="flex items-center gap-1">
               <select
                 value={form.time.split(':')[0]}
-                onChange={e => setForm(f => ({ ...f, time: `${e.target.value}:${f.time.split(':')[1] || '00'}` }))}
+                onChange={e => {
+                  const h = e.target.value;
+                  const m = form.time.split(':')[1] || '00';
+                  const newTime = `${h}:${m}`;
+                  setForm(f => ({ ...f, time: newTime, date: f.date.replace(/a las \d{1,2}:\d{2}/, `a las ${newTime}`) }));
+                }}
                 className="font-body text-sm text-ec-dark bg-transparent border-0 focus:outline-none cursor-pointer"
                 style={{ fontSize: '16px' }}
               >
@@ -347,7 +352,12 @@ function EditAppointmentModal({ appt, onClose, onSave }) {
               <span className="text-ec-text-muted">:</span>
               <select
                 value={form.time.split(':')[1] || '00'}
-                onChange={e => setForm(f => ({ ...f, time: `${f.time.split(':')[0]}:${e.target.value}` }))}
+                onChange={e => {
+                  const m = e.target.value;
+                  const h = form.time.split(':')[0];
+                  const newTime = `${h}:${m}`;
+                  setForm(f => ({ ...f, time: newTime, date: f.date.replace(/a las \d{1,2}:\d{2}/, `a las ${newTime}`) }));
+                }}
                 className="font-body text-sm text-ec-dark bg-transparent border-0 focus:outline-none cursor-pointer"
                 style={{ fontSize: '16px' }}
               >
