@@ -589,35 +589,35 @@ export default function AdminConversations({ initialPhone }) {
         {/* ── Lista de conversaciones ── */}
         <div className={`${selected ? "hidden lg:flex" : "flex"} w-full lg:w-80 xl:w-96 flex-shrink-0 flex-col border-r border-black/[0.06] bg-white`}>
           {/* Header */}
-          <div className="px-4 pt-4 pb-3 border-b border-black/[0.06] bg-white">
+          <div className="px-4 pt-5 pb-3 bg-white">
             <div className="flex items-center justify-between mb-3">
-              <h2 className="font-heading text-[17px] text-ec-dark">Conversaciones</h2>
-              <button onClick={load} className="w-8 h-8 flex items-center justify-center text-ec-text-muted active:text-ec-gold rounded-full active:bg-ec-cream" title="Recargar">
-                <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <h2 className="text-[26px] font-bold text-black tracking-tight leading-none">Conversaciones</h2>
+              <button onClick={load} className="w-10 h-10 flex items-center justify-center bg-[#25D366] text-white rounded-full active:opacity-75 transition-opacity" title="Recargar">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                   <polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
                 </svg>
               </button>
             </div>
             <div className="relative">
-              <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-ec-text-muted pointer-events-none" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <svg className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8696A0] pointer-events-none" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
               <input
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder="Buscar por nombre o teléfono…"
-                className="w-full pl-9 pr-3 py-2.5 border border-black/[0.08] rounded-xl bg-[#F0F2F5] focus:border-ec-gold focus:outline-none font-body"
-                style={{ fontSize: '16px' }}
+                className="w-full pl-10 pr-4 py-2.5 rounded-full bg-[#F0F2F5] focus:outline-none font-body border-0"
+                style={{ fontSize: '15px' }}
               />
             </div>
             {/* Filter tabs */}
-            <div className="flex gap-1 mt-3 overflow-x-auto pb-0.5">
+            <div className="flex gap-1.5 mt-3 overflow-x-auto pb-0.5 scrollbar-hide">
               {FILTERS.map(f => (
                 <button
                   key={f.id}
                   onClick={() => setFilter(f.id)}
-                  className={`flex-shrink-0 px-2.5 py-1 rounded-full font-ui text-[10px] whitespace-nowrap transition-colors ${
+                  className={`flex-shrink-0 px-3 py-1.5 rounded-full font-ui text-[12px] whitespace-nowrap transition-colors border ${
                     filter === f.id
-                      ? "bg-ec-dark text-white"
-                      : "bg-ec-cream text-ec-text-muted hover:bg-ec-gold/10 hover:text-ec-gold"
+                      ? "bg-black text-white border-black"
+                      : "bg-white text-[#555] border-[#DDD] hover:border-gray-400"
                   }`}
                 >
                   {f.label}
@@ -631,21 +631,29 @@ export default function AdminConversations({ initialPhone }) {
                       return false;
                     };
                     const n = conversations.filter(fn).length;
-                    return n > 0 ? <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-white/20 text-[8px]">{n}</span> : null;
+                    return n > 0 ? <span className="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-white/20 text-[9px]">{n}</span> : null;
                   })()}
                 </button>
               ))}
             </div>
           </div>
 
+          {/* Counter */}
+          <div className="px-4 py-1.5 text-[12px] text-[#8696A0] font-body border-b border-black/[0.05] bg-white">
+            {filtered.length} conversaciones
+          </div>
+
           {/* List */}
           <div className="flex-1 overflow-y-auto">
             {loading ? (
-              <div className="flex items-center justify-center h-32 text-ec-text-muted text-sm font-body">Cargando…</div>
+              <div className="flex items-center justify-center h-40 text-[#8696A0] text-sm font-body">Cargando…</div>
             ) : filtered.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-32 gap-2 text-ec-text-muted">
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                <span className="text-sm font-body">Sin conversaciones</span>
+              <div className="flex flex-col items-center justify-center flex-1 gap-4 text-center px-8 py-16">
+                <svg width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="#BDBDBD" strokeWidth="0.8"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+                <div>
+                  <p className="text-[18px] font-bold text-black mb-1.5">Sin conversaciones</p>
+                  <p className="text-[13px] text-[#8696A0] font-body leading-snug">Cuando recibas mensajes de tus clientes, aparecerán aquí para que puedas gestionarlos.</p>
+                </div>
               </div>
             ) : filtered.map(conv => {
               const isActive = selected?.phone === conv.phone;
