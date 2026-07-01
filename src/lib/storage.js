@@ -109,13 +109,20 @@ export const db = {
         const SNAKE = ['status','date','time','service','vehicle_type','client_name','client_phone','client_email','client_birthday','traslado','notes','total_amount','discount','origin','reminder_sent','pickup_option','pickup_price','duration_hours','price_display'];
         SNAKE.forEach(k => { if (data[k] !== undefined) updates[k] = data[k]; });
 
-        await fetch('/api/appointments', {
+        const res = await fetch('/api/appointments', {
           method: 'PATCH',
           headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
           body: JSON.stringify({ id, updates }),
         });
+        if (!res.ok) {
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || `HTTP ${res.status}`);
+        }
         return true;
-      } catch { return false; }
+      } catch (e) {
+        console.error('[update appointment]', e);
+        throw e;
+      }
     },
     delete: async (id) => {
       try {

@@ -38,8 +38,12 @@ const calcEntrega = (appt) => {
   if (!appt?.time) return null;
   const [h] = appt.time.split(":").map(Number);
   if (isNaN(h)) return null;
-  const key = Object.keys(SERVICE_DURATIONS).find(k => appt.service?.includes(k));
-  const dur = SERVICE_DURATIONS[key] || SERVICE_DURATIONS.default;
+  const svcs = (appt.service || "").split(",").map(s => s.trim()).filter(Boolean);
+  let dur = svcs.reduce((sum, svc) => {
+    const key = Object.keys(SERVICE_DURATIONS).find(k => svc.includes(k) || k.includes(svc));
+    return sum + (SERVICE_DURATIONS[key] || 0);
+  }, 0);
+  if (!dur) dur = SERVICE_DURATIONS.default;
   const exitH = Math.min(h + dur, 23);
   const suffix = exitH < 12 ? "a.m." : "p.m.";
   const h12 = exitH % 12 || 12;
@@ -590,22 +594,26 @@ export default function AdminAppointments() {
 
   const handleEditSave = async (updates) => {
     const id = editTarget.id;
-    await db.appointments.update(id, {
-      clientName: updates.clientName,
-      clientPhone: updates.clientPhone,
-      clientEmail: updates.clientEmail,
-      service: updates.service,
-      vehicleType: updates.vehicleType,
-      date: updates.date,
-      time: updates.time,
-      traslado: updates.traslado || null,
-      notes: updates.notes || null,
-      price_display: updates.priceDisplay || null,
-    });
-    const merged = { ...editTarget, ...updates, priceDisplay: updates.priceDisplay };
-    setAppointments(prev => prev.map(a => a.id === id ? merged : a));
-    if (selected?.id === id) setSelected(merged);
-    setEditTarget(null);
+    try {
+      await db.appointments.update(id, {
+        clientName: updates.clientName,
+        clientPhone: updates.clientPhone,
+        clientEmail: updates.clientEmail,
+        service: updates.service,
+        vehicleType: updates.vehicleType,
+        date: updates.date,
+        time: updates.time,
+        traslado: updates.traslado || null,
+        notes: updates.notes || null,
+        price_display: updates.priceDisplay || null,
+      });
+      const merged = { ...editTarget, ...updates, priceDisplay: updates.priceDisplay };
+      setAppointments(prev => prev.map(a => a.id === id ? merged : a));
+      if (selected?.id === id) setSelected(merged);
+      setEditTarget(null);
+    } catch (e) {
+      alert('Error al guardar: ' + (e.message || 'desconocido'));
+    }
   };
 
   const registerConversion = async (appt) => {
