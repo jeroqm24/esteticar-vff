@@ -27,7 +27,7 @@ const SERVICE_DURATIONS = {
   "Limpieza Técnica de Motor": 1,
   "Lavado de Techo": 1,
   "Lavado de Chasis": 1,
-  "Lavada Esencial": 1,
+  "Lavada Esencial": 2,
   "Brillado de Farolas": 1,
   "Brillado de Tanque": 1,
   "Descontaminación de Tubería": 1,

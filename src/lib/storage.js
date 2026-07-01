@@ -57,6 +57,10 @@ const toApptRow = (d) => {
   if (d.placa) row.placa = d.placa;
   if (d.origin) row.origin = d.origin;
   if (d.leadType) row.lead_type = d.leadType;
+  if (d.services) row.services = d.services;
+  if (d.totalAmount) row.total_amount = d.totalAmount;
+  if (d.discount) row.discount = d.discount;
+  if (d.duration_hours) row.duration_hours = d.duration_hours;
   return row;
 };
 

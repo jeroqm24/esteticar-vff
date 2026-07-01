@@ -55,7 +55,7 @@ const SERVICE_DURATIONS = {
   "Limpieza Técnica de Motor": 1,
   "Lavado de Techo": 1,                   // catches "y Parasoles"
   "Lavado de Chasis": 1,
-  "Lavada Esencial": 1,                   // catches Carro y Moto
+  "Lavada Esencial": 2,                   // catches Carro y Moto
   "Brillado de Farolas": 1,
   "Brillado de Tanque": 1,
   "Descontaminación de Tubería": 1,
@@ -550,7 +550,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   const toDateInput = (d) => format(d instanceof Date ? d : new Date(), "yyyy-MM-dd");
 
   const SERVICE_DURATION_DISPLAY = {
-    "Lavada Esencial Carro": "1-2 horas",
+    "Lavada Esencial Carro": "2-2.5 horas",
     "Brillado a Máquina": "2-3 horas",
     "Lavado de Chasis": "2 horas",
     "Lavado de Techo y Parasoles": "1-2 horas",
@@ -564,7 +564,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
     "Tratamiento 3 en 1 Manual": "4-5 horas",
     "Tratamiento 3 en 1 a Máquina": "5-6 horas",
     "Limpieza Técnica de Motor": "2 horas",
-    "Lavada Esencial Moto": "1-2 horas",
+    "Lavada Esencial Moto": "2-2.5 horas",
     "Brillado de Farolas": "1 hora",
     "Brillado de Tanque": "1-2 horas",
     "Descontaminación de Tubería": "1-2 horas",
@@ -576,6 +576,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
     clientPhone: "",
     clientBirthday: "",
     service: defaultService,
+    extraServices: [],
     vehicleType: "Carro",
     hour: defaultHour ? `${String(defaultHour).padStart(2,'0')}:00` : "09:00",
     status: "confirmada",
@@ -590,6 +591,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
   const rawPrice = SERVICE_PRICES[form.service];
   const isCotizacion = rawPrice === null;
   const isVariableDuration = form.service?.includes("Recubrimiento") || form.service?.includes("Porcelanizado");
+  const allSelectedServices = [form.service, ...(form.extraServices || [])];
 
   // Capacity enforcement
   const newStart = (() => { const [h, m] = (form.hour || '09:00').split(':').map(Number); return h + (m || 0) / 60; })();
@@ -628,7 +630,13 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
     "Mantenimiento Interior": 30000,
   };
   const truckExtra = form.vehicleType === "Camioneta" ? (TRUCK_SURCHARGE[form.service] || 0) : 0;
-  const basePrice = isCotizacion ? (parseInt(form.manualPrice) || 0) : ((rawPrice || 0) + truckExtra);
+  const extraServicesTotal = (form.extraServices || []).reduce((sum, s) => {
+    const p = SERVICE_PRICES[s];
+    if (p === null || p === undefined) return sum;
+    const te = form.vehicleType === "Camioneta" ? (TRUCK_SURCHARGE[s] || 0) : 0;
+    return sum + p + te;
+  }, 0);
+  const basePrice = isCotizacion ? (parseInt(form.manualPrice) || 0) : ((rawPrice || 0) + truckExtra + extraServicesTotal);
   const finalPrice = Math.max(0, basePrice - (Number(form.discount) || 0));
   const hasDiscount = form.discount > 0;
 
@@ -638,7 +646,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
 
   const handleVehicleChange = (vehicleType) => {
     const services = vehicleType === "Moto" ? MOTO_SERVICES : CAR_SERVICES;
-    setForm(f => ({ ...f, vehicleType, service: services[0], discount: 0, manualPrice: "" }));
+    setForm(f => ({ ...f, vehicleType, service: services[0], extraServices: [], discount: 0, manualPrice: "" }));
   };
 
   const allServices = form.vehicleType === "Moto" ? MOTO_SERVICES : CAR_SERVICES;
@@ -651,10 +659,16 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
     const dateStr = format(selectedDay, "EEEE, d 'de' MMMM", { locale: es });
     const fullDate = `${dateStr} a las ${form.hour}`;
     try {
+      const servicesPayload = allSelectedServices.map(s => {
+        const p = SERVICE_PRICES[s];
+        const te = form.vehicleType === "Camioneta" ? (TRUCK_SURCHARGE[s] || 0) : 0;
+        const sp = p === null || p === undefined ? null : p + te;
+        return { id: s, name: s, priceDisplay: sp === null ? "Por cotización" : formatCOP(sp) };
+      });
       await onSave({
         clientName: form.clientName,
         clientPhone: form.clientPhone,
-        service: form.service,
+        service: allSelectedServices.join(", "),
         vehicleType: form.vehicleType,
         hour: form.hour,
         status: form.status,
@@ -668,6 +682,8 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
         confirmationCode: `EST-M${Math.floor(Math.random() * 9000) + 1000}`,
         channel: "manual",
         created_date: new Date().toISOString(),
+        services: servicesPayload,
+        totalAmount: finalPrice,
       });
     } catch {
       setSaving(false);
@@ -841,6 +857,44 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
                 {allServices.map(s => <option key={s} value={s}>{s}</option>)}
               </select>
             </div>
+          </div>
+
+          {/* Extra services row */}
+          <div className="py-3 border-b border-black/[0.05]">
+            {(form.extraServices || []).map((es, i) => (
+              <div key={i} className="flex items-center gap-2 mb-2">
+                <select
+                  value={es}
+                  onChange={e => {
+                    const updated = [...form.extraServices];
+                    updated[i] = e.target.value;
+                    setForm(f => ({ ...f, extraServices: updated }));
+                  }}
+                  className="flex-1 font-body text-sm text-ec-dark bg-transparent border-0 border-b border-black/[0.1] focus:outline-none focus:border-[#F8C840] transition-colors cursor-pointer"
+                  style={{ fontSize: '16px' }}
+                >
+                  {allServices.filter(s => s !== form.service && !(form.extraServices || []).some((x, j) => j !== i && x === s)).map(s => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, extraServices: f.extraServices.filter((_, j) => j !== i) }))}
+                  className="w-6 h-6 flex items-center justify-center rounded-full text-red-400 hover:bg-red-50 transition-colors flex-shrink-0 text-sm"
+                >✕</button>
+              </div>
+            ))}
+            <button
+              type="button"
+              onClick={() => {
+                const used = [form.service, ...(form.extraServices || [])];
+                const next = allServices.find(s => !used.includes(s));
+                if (next) setForm(f => ({ ...f, extraServices: [...(f.extraServices || []), next] }));
+              }}
+              className="font-ui text-[10px] tracking-[0.15em] uppercase text-[#F8C840] hover:text-[#B8860B] transition-colors flex items-center gap-1"
+            >
+              <span className="text-base leading-none">+</span> Agregar servicio
+            </button>
           </div>
 
           {/* Duration row */}
