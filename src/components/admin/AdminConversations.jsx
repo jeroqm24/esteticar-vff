@@ -500,7 +500,7 @@ export default function AdminConversations({ initialPhone }) {
       const mr = new MediaRecorder(stream, { mimeType });
       mr.ondataavailable = e => { if (e.data.size > 0) audioChunksRef.current.push(e.data); };
       mr.onstop = () => {
-        const blob = new Blob(audioChunksRef.current, { type: mimeType.split(';')[0] });
+        const blob = new Blob(audioChunksRef.current, { type: mimeType });
         setAudioBlob(blob);
         setAudioPreviewUrl(URL.createObjectURL(blob));
         stream.getTracks().forEach(t => t.stop());

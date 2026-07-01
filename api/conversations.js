@@ -60,12 +60,13 @@ const sendFBMessage = async (recipientId, text) => {
 const sendWAAudio = async (to, buffer, mimeType) => {
   if (!WA_TOKEN || !PHONE_ID) return false;
   try {
-    const cleanMime = (mimeType || 'audio/ogg').split(';')[0];
+    const fullMime = mimeType || 'audio/ogg; codecs=opus';
+    const baseMime = fullMime.split(';')[0].trim();
     const form = new FormData();
     form.append('messaging_product', 'whatsapp');
-    form.append('type', cleanMime);
-    form.append('file', new Blob([buffer], { type: cleanMime }),
-      cleanMime.includes('ogg') ? 'voice.ogg' : 'voice.webm');
+    form.append('type', fullMime);
+    form.append('file', new Blob([buffer], { type: fullMime }),
+      baseMime.includes('ogg') ? 'voice.ogg' : 'voice.webm');
     const upload = await fetch(`https://graph.facebook.com/v20.0/${PHONE_ID}/media`, {
       method: 'POST',
       headers: { Authorization: `Bearer ${WA_TOKEN}` },

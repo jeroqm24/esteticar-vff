@@ -685,6 +685,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
         services: servicesPayload,
         totalAmount: finalPrice,
       });
+      setSaving(false);
     } catch {
       setSaving(false);
     }
