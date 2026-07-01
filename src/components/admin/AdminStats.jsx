@@ -137,7 +137,12 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
     });
     const pending = all.filter((a) => a.status === "pending" || a.status === "confirmed");
     const parsePrice = (str) => parseInt(String(str || "").replace(/\D/g, ""), 10) || 0;
-    const revenue = all.filter((a) => a.status === "completada" || a.status === "completed")
+    // Ingresos: citas confirmadas con precio (el sistema solo tiene confirmada/cancelada)
+    const revenue = all
+      .filter((a) => {
+        const s = (a.status || '').toLowerCase();
+        return s !== 'cancelada' && s !== 'cancelled';
+      })
       .reduce((sum, a) => sum + parsePrice(a.priceDisplay || a.price_display), 0);
 
     // Generate sparkline data for the last 14 days
@@ -155,7 +160,7 @@ export default function AdminStats({ onNavigate, onNewAppointment }) {
     const revenueData = last7.map((day) => {
       const dayStr = format(day, "yyyy-MM-dd");
       return all
-        .filter((a) => (a.created_date || a.createdDate || "").slice(0, 10) === dayStr && (a.status === "completada" || a.status === "completed"))
+        .filter((a) => { const s = (a.status||'').toLowerCase(); return (a.created_date||a.createdDate||'').slice(0,10) === dayStr && s !== 'cancelada' && s !== 'cancelled'; })
         .reduce((s, a) => s + parsePrice(a.priceDisplay || a.price_display), 0);
     });
 
