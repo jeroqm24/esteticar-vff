@@ -708,7 +708,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
         animate={{ scale: 1, y: 0 }}
         exit={{ scale: 0.96, y: 16 }}
         transition={{ type: "spring", bounce: 0.15, duration: 0.4 }}
-        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden min-w-0"
+        className="bg-white w-full max-w-lg rounded-2xl shadow-2xl overflow-hidden min-w-0 max-h-[92dvh] flex flex-col"
         onClick={e => e.stopPropagation()}
       >
         {/* Color bar */}
@@ -727,7 +727,7 @@ function AddAppointmentModal({ day, defaultHour, appointments = [], onClose, onS
           <button onClick={onClose} className="mt-1 w-8 h-8 flex items-center justify-center rounded-full text-ec-text-muted hover:bg-ec-cream hover:text-ec-dark transition-all text-lg flex-shrink-0">✕</button>
         </div>
 
-        <div className="px-4 sm:px-6 pb-6 space-y-0">
+        <div className="px-4 sm:px-6 pb-6 space-y-0 overflow-y-auto flex-1">
 
           {/* Date & Time row */}
           <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
