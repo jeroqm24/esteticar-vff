@@ -1,7 +1,6 @@
 // api/blocks.js — Gestión de franjas bloqueadas (bot no puede agendar)
 
 import { createClient } from '@supabase/supabase-js';
-import { format, addDays } from 'date-fns';
 
 const supabaseAdmin = createClient(
   process.env.SUPABASE_URL,
@@ -19,7 +18,7 @@ export default async function handler(req, res) {
 
   // GET — lista bloques desde hoy en adelante
   if (req.method === 'GET') {
-    const today = format(new Date(), 'yyyy-MM-dd');
+    const today = new Date().toISOString().slice(0, 10);
     const { data, error } = await supabaseAdmin
       .from('blocked_slots')
       .select('*')
