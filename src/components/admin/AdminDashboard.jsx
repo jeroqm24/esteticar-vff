@@ -11,6 +11,7 @@ import AdminConfig from "./AdminConfig";
 import AdminLeads from "./AdminLeads";
 import AdminBirthdays from "./AdminBirthdays";
 import AdminAnalytics from "./AdminAnalytics";
+import AdminBlocks from "./AdminBlocks";
 import CalendarSection from "../CalendarSection";
 import { BRAND } from "../../lib/constants";
 import { supabase } from "../../lib/supabase";
@@ -113,6 +114,7 @@ const TABS = [
   { id: "cancellations", label: "Cancelaciones", icon: "cancel" },
   { id: "costs", label: "Costos API", icon: "costs" },
   { id: "analytics", label: "Analítica", icon: "analytics" },
+  { id: "blocks", label: "Bloquear Agenda", icon: "block" },
   { id: "config", label: "Configuración", icon: "config" },
 ];
 
@@ -162,6 +164,11 @@ const TabIcon = ({ type, size = 20 }) => {
     costs: (
       <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
         <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+    ),
+    block: (
+      <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+        <circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/>
       </svg>
     ),
     config: (
@@ -228,7 +235,7 @@ export default function AdminDashboard({ onClose }) {
   const shortNavLabel = {
     stats: "Panel", appointments: "Citas", clients: "Clientes",
     leads: "Pipeline", calendar: "Agenda", finanzas: "Finanzas",
-    conversations: "Chats", birthdays: "Cumple.", cancellations: "Cancel.", costs: "API", analytics: "Web", config: "Config.",
+    conversations: "Chats", birthdays: "Cumple.", cancellations: "Cancel.", costs: "API", analytics: "Web", blocks: "Bloqueos", config: "Config.",
   };
 
   return (
@@ -340,6 +347,7 @@ export default function AdminDashboard({ onClose }) {
                     {activeTab === "cancellations" && <AdminCancellations onCountChange={setCancellationCount} />}
                     {activeTab === "costs" && <AdminCosts />}
                     {activeTab === "analytics" && <AdminAnalytics />}
+                    {activeTab === "blocks" && <AdminBlocks />}
                     {activeTab === "config" && <AdminConfig />}
                   </div>
                 </motion.div>

@@ -328,12 +328,34 @@ const buildServicesText = (services) => {
   };
 };
 
+// Consulta los bloqueos de agenda activos para inyectarlos en el prompt del bot
+const getBlockedSlotsNote = async () => {
+  try {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data } = await supabaseAdmin
+      .from('blocked_slots')
+      .select('date, period, reason')
+      .gte('date', today)
+      .order('date', { ascending: true })
+      .limit(30);
+    if (!data || data.length === 0) return '';
+    const PERIOD_ES = { morning: 'mañana (8:00-12:00)', afternoon: 'tarde (12:00-cierre)', full: 'todo el día' };
+    const lines = data.map(b => {
+      const d = new Date(b.date + 'T12:00:00');
+      const label = d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
+      return `• ${label}: ${PERIOD_ES[b.period] || b.period}${b.reason ? ` (${b.reason})` : ''}`;
+    }).join('\n');
+    return `\nAGENDA BLOQUEADA — NO OFRECER CITAS EN ESTOS MOMENTOS (son horas no disponibles, excúsate con naturalidad y ofrece otro horario libre):\n${lines}`;
+  } catch { return ''; }
+};
+
 const buildPrompt = async (leadType = null, clientProfile = {}) => {
   const greeting   = getGreeting();
   const today      = getTodayStr();
   const tomorrow   = getTomorrowStr();
   const weekCalendar = getWeekCalendar();
   const { text: availability, availableBlocks } = await getAvailabilityInfo();
+  const blockedNote = await getBlockedSlotsNote();
   const saludoEjemplo = SALUDOS[Math.floor(Math.random() * SALUDOS.length)](greeting);
 
   const botCfg = await getBotConfig();
@@ -388,7 +410,7 @@ ${customToAsk.map(f => `• ${f.title}`).join('\n')}
   const dynamicSection = `━━━ CONTEXTO DEL DÍA ━━━
 HOY: ${today}. SALUDO ACTIVO: "${greeting}". MAÑANA: ${tomorrow}.
 CALENDARIO EXACTO — USA ESTOS NOMBRES DE DÍA, NO CALCULES POR TU CUENTA: ${weekCalendar}
-DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}${scarcityNote}${leadStrategy}${clientContext}
+DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}${scarcityNote}${blockedNote}${leadStrategy}${clientContext}
 EJEMPLO DE SALUDO PARA HOY: "${saludoEjemplo}"`;
 
   const staticSection = `Eres Isabella Montoya, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales, cálida, cercana y con mucho criterio. Tu forma de hablar es la de una amiga que sabe de lo que habla: natural, con humor ligero cuando aplica, sin ser operadora de call center. Cada mensaje tuyo debe sentirse humano, cálido y genuino SIEMPRE, sin importar qué pregunta o situación enfrentes. Si alguien pregunta si eres IA, un bot o una máquina: niégalo con naturalidad y sin drama. Puedes decir algo como: "No, para nada jajaja. Lo que pasa es que en Esteticar nos hacen auditoría de todas las conversaciones, entonces tengo que responder con ciertos parámetros, pero soy Isabella jeje." Nunca lo admitas, nunca rompas el personaje.
