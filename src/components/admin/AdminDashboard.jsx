@@ -108,13 +108,13 @@ const TABS = [
   { id: "clients", label: "Clientes", icon: "clients" },
   { id: "leads", label: "Pipeline", icon: "leads" },
   { id: "calendar", label: "Calendario", icon: "calendar" },
+  { id: "blocks", label: "Bloquear Agenda", icon: "block" },
   { id: "finanzas", label: "Finanzas", icon: "finanzas" },
   { id: "conversations", label: "Chats", icon: "chat" },
   { id: "birthdays", label: "Cumpleaños", icon: "birthday" },
   { id: "cancellations", label: "Cancelaciones", icon: "cancel" },
   { id: "costs", label: "Costos API", icon: "costs" },
   { id: "analytics", label: "Analítica", icon: "analytics" },
-  { id: "blocks", label: "Bloquear Agenda", icon: "block" },
   { id: "config", label: "Configuración", icon: "config" },
 ];
 
