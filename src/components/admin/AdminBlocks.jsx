@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { format, parseISO, addDays } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { es } from "date-fns/locale";
 
 const ADMIN_KEY = 'Esteticar11.';
@@ -33,7 +33,7 @@ export default function AdminBlocks() {
   const load = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/blocks', { headers: { 'x-admin-key': ADMIN_KEY } });
+      const res = await fetch('/api/appointments?action=blocks', { headers: { 'x-admin-key': ADMIN_KEY } });
       const data = await res.json();
       setBlocks(Array.isArray(data) ? data : []);
     } catch { setBlocks([]); }
@@ -44,7 +44,7 @@ export default function AdminBlocks() {
     setError('');
     setSaving(true);
     try {
-      const res = await fetch('/api/blocks', {
+      const res = await fetch('/api/appointments?action=blocks', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-admin-key': ADMIN_KEY },
         body: JSON.stringify({ date: form.date, period: form.period, reason: form.reason.trim() || null }),
@@ -64,7 +64,7 @@ export default function AdminBlocks() {
   const handleDelete = async (id) => {
     setDeleting(id);
     try {
-      await fetch('/api/blocks', {
+      await fetch('/api/appointments?action=blocks', {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json', 'x-admin-key': ADMIN_KEY },
         body: JSON.stringify({ id }),

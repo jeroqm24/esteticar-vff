@@ -58,6 +58,41 @@ const notifyManualBooking = async (row, drivers) => {
   } catch (_) {}
 };
 
+// Bloques de agenda — GET/POST/DELETE sobre blocked_slots
+const handleBlocks = async (req, res) => {
+  if (req.method === 'GET') {
+    const today = new Date().toISOString().slice(0, 10);
+    const { data, error } = await supabaseAdmin
+      .from('blocked_slots')
+      .select('*')
+      .gte('date', today)
+      .order('date', { ascending: true });
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json(data || []);
+  }
+  if (req.method === 'POST') {
+    const { date, period, reason } = req.body || {};
+    if (!date || !period) return res.status(400).json({ error: 'date y period son requeridos' });
+    if (!['morning', 'afternoon', 'full'].includes(period))
+      return res.status(400).json({ error: 'period debe ser morning, afternoon o full' });
+    const { data: existing } = await supabaseAdmin
+      .from('blocked_slots').select('id').eq('date', date).eq('period', period).single();
+    if (existing) return res.status(409).json({ error: 'Ya existe un bloqueo para esa fecha y franja' });
+    const { data, error } = await supabaseAdmin
+      .from('blocked_slots').insert({ date, period, reason: reason || null }).select().single();
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(201).json(data);
+  }
+  if (req.method === 'DELETE') {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id es requerido' });
+    const { error } = await supabaseAdmin.from('blocked_slots').delete().eq('id', id);
+    if (error) return res.status(500).json({ error: error.message });
+    return res.status(200).json({ ok: true });
+  }
+  return res.status(405).json({ error: 'Method not allowed' });
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
@@ -75,6 +110,9 @@ export default async function handler(req, res) {
 
 const key = req.headers['x-admin-key'];
   if (key !== ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
+
+  // Delegar a sub-handlers cuando action lo requiere
+  if (req.query.action === 'blocks') return handleBlocks(req, res);
 
   // GET: listar citas (con filtro de status opcional)
   if (req.method === 'GET') {
