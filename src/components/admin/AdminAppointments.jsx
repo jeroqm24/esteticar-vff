@@ -223,12 +223,26 @@ const TRASLADO_OPTIONS = [
 const HOUR_START = 8;
 const HOUR_END = 18;
 
+const CAR_SERVICES = [
+  "Lavada Esencial Carro","Brillado a Máquina","Lavado de Chasis","Lavado de Techo y Parasoles",
+  "Descontaminación de Vidrios (todos)","Descontaminación de Vidrios (parabrisas)",
+  "Restauración de Farolas","Lavado de Cojinería","Mantenimiento Interior Sólo Cojinería",
+  "Mantenimiento Interior Levantamiento del Alfombrado","Tratamiento 3 en 1 Manual",
+  "Tratamiento 3 en 1 a Máquina","Limpieza Técnica de Motor","Recubrimiento Cerámico","Porcelanizado",
+];
+const MOTO_SERVICES = [
+  "Lavada Esencial Moto","Brillado de Farolas","Brillado de Tanque",
+  "Descontaminación de Tubería","Limpieza Técnica de Motor","Recubrimiento Cerámico","Porcelanizado",
+];
+
 function EditAppointmentModal({ appt, onClose, onSave }) {
+  const allSvcs = (appt.service || "").split(",").map(s => s.trim()).filter(Boolean);
   const [form, setForm] = useState({
     clientName: appt.clientName || "",
     clientPhone: appt.clientPhone || "",
     clientEmail: appt.clientEmail || "",
-    service: appt.service || "",
+    service: allSvcs[0] || "",
+    extraServices: allSvcs.slice(1),
     vehicleType: appt.vehicleType || "Carro",
     date: appt.date || "",
     time: appt.time || "09:00",
@@ -241,7 +255,8 @@ function EditAppointmentModal({ appt, onClose, onSave }) {
   const handleSave = async () => {
     if (!form.clientName.trim()) return;
     setSaving(true);
-    await onSave(form);
+    const allSelected = [form.service, ...(form.extraServices || [])].filter(Boolean);
+    await onSave({ ...form, service: allSelected.join(", ") });
     setSaving(false);
   };
 
@@ -381,18 +396,66 @@ function EditAppointmentModal({ appt, onClose, onSave }) {
             </select>
           </div>
 
-          {/* Servicio */}
+          {/* Servicio principal */}
           <div className="flex items-center gap-3 py-3 border-b border-black/[0.05]">
             <svg className="text-ec-text-muted flex-shrink-0" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
               <polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
             </svg>
-            <input
+            <select
               value={form.service}
-              onChange={e => setForm(f => ({ ...f, service: e.target.value }))}
-              placeholder="Servicio"
-              className={inputCls}
+              onChange={e => setForm(f => ({ ...f, service: e.target.value, extraServices: [] }))}
+              className={selectCls}
               style={{ fontSize: '16px' }}
-            />
+            >
+              {(form.vehicleType === "Moto" ? MOTO_SERVICES : CAR_SERVICES).map(s => (
+                <option key={s} value={s}>{s}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Servicios adicionales */}
+          <div className="py-3 border-b border-black/[0.05]">
+            {(form.extraServices || []).map((es, i) => {
+              const allSvcsForType = form.vehicleType === "Moto" ? MOTO_SERVICES : CAR_SERVICES;
+              return (
+                <div key={i} className="mb-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="font-ui text-[10px] tracking-[0.12em] uppercase text-black/40">Servicio adicional</span>
+                    <button
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, extraServices: f.extraServices.filter((_, j) => j !== i) }))}
+                      className="font-ui text-[11px] text-red-400 hover:text-red-600 underline px-1"
+                    >Quitar</button>
+                  </div>
+                  <select
+                    value={es}
+                    onChange={e => {
+                      const updated = [...form.extraServices];
+                      updated[i] = e.target.value;
+                      setForm(f => ({ ...f, extraServices: updated }));
+                    }}
+                    className={selectCls}
+                    style={{ fontSize: '16px' }}
+                  >
+                    {allSvcsForType.filter(s => s !== form.service && !(form.extraServices || []).some((x, j) => j !== i && x === s)).map(s => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                </div>
+              );
+            })}
+            <button
+              type="button"
+              onClick={() => {
+                const allSvcsForType = form.vehicleType === "Moto" ? MOTO_SERVICES : CAR_SERVICES;
+                const used = [form.service, ...(form.extraServices || [])];
+                const next = allSvcsForType.find(s => !used.includes(s));
+                if (next) setForm(f => ({ ...f, extraServices: [...(f.extraServices || []), next] }));
+              }}
+              className="font-ui text-[10px] tracking-[0.15em] uppercase text-[#F8C840] hover:text-[#B8860B] transition-colors flex items-center gap-1"
+            >
+              <span className="text-base leading-none">+</span> Agregar servicio
+            </button>
           </div>
 
           {/* Traslado */}
