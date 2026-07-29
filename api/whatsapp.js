@@ -329,19 +329,16 @@ const buildServicesText = (services) => {
   };
 };
 
-// Consulta los bloqueos de agenda activos para inyectarlos en el prompt del bot
+// Consulta los bloqueos de agenda activos (guardados en bot_config) para inyectarlos en el prompt
 const getBlockedSlotsNote = async () => {
   try {
     const today = new Date().toISOString().slice(0, 10);
-    const { data } = await supabaseAdmin
-      .from('blocked_slots')
-      .select('date, period, reason')
-      .gte('date', today)
-      .order('date', { ascending: true })
-      .limit(30);
-    if (!data || data.length === 0) return '';
+    const { data } = await supabaseAdmin.from('bot_config').select('value').eq('key', 'blocked_slots').single();
+    const all = Array.isArray(data?.value) ? data.value : [];
+    const active = all.filter(b => b.date >= today).sort((a, b) => a.date.localeCompare(b.date)).slice(0, 30);
+    if (active.length === 0) return '';
     const PERIOD_ES = { morning: 'mañana (8:00-12:00)', afternoon: 'tarde (12:00-cierre)', full: 'todo el día' };
-    const lines = data.map(b => {
+    const lines = active.map(b => {
       const d = new Date(b.date + 'T12:00:00');
       const label = d.toLocaleDateString('es-CO', { weekday: 'long', day: 'numeric', month: 'long' });
       return `• ${label}: ${PERIOD_ES[b.period] || b.period}${b.reason ? ` (${b.reason})` : ''}`;

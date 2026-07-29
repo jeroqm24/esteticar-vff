@@ -58,36 +58,46 @@ const notifyManualBooking = async (row, drivers) => {
   } catch (_) {}
 };
 
-// Bloques de agenda — GET/POST/DELETE sobre blocked_slots
+// Bloqueos de agenda — guardados en bot_config key='blocked_slots' como array JSON
+const BLOCKS_KEY = 'blocked_slots';
+
+const getBlocks = async () => {
+  const { data } = await supabaseAdmin.from('bot_config').select('value').eq('key', BLOCKS_KEY).single();
+  return Array.isArray(data?.value) ? data.value : [];
+};
+
+const saveBlocks = async (blocks) => {
+  const { error } = await supabaseAdmin.from('bot_config')
+    .upsert({ key: BLOCKS_KEY, value: blocks }, { onConflict: 'key' });
+  return error;
+};
+
 const handleBlocks = async (req, res) => {
   if (req.method === 'GET') {
     const today = new Date().toISOString().slice(0, 10);
-    const { data, error } = await supabaseAdmin
-      .from('blocked_slots')
-      .select('*')
-      .gte('date', today)
-      .order('date', { ascending: true });
-    if (error) return res.status(500).json({ error: error.message });
-    return res.status(200).json(data || []);
+    const all = await getBlocks();
+    const active = all.filter(b => b.date >= today).sort((a, b) => a.date.localeCompare(b.date));
+    return res.status(200).json(active);
   }
   if (req.method === 'POST') {
     const { date, period, reason } = req.body || {};
     if (!date || !period) return res.status(400).json({ error: 'date y period son requeridos' });
     if (!['morning', 'afternoon', 'full'].includes(period))
       return res.status(400).json({ error: 'period debe ser morning, afternoon o full' });
-    const { data: existing } = await supabaseAdmin
-      .from('blocked_slots').select('id').eq('date', date).eq('period', period).single();
-    if (existing) return res.status(409).json({ error: 'Ya existe un bloqueo para esa fecha y franja' });
-    const { data, error } = await supabaseAdmin
-      .from('blocked_slots').insert({ date, period, reason: reason || null }).select().single();
-    if (error) return res.status(500).json({ error: error.message });
-    return res.status(201).json(data);
+    const all = await getBlocks();
+    if (all.some(b => b.date === date && b.period === period))
+      return res.status(409).json({ error: 'Ya existe un bloqueo para esa fecha y franja' });
+    const newBlock = { id: crypto.randomUUID(), date, period, reason: reason || null, created_at: new Date().toISOString() };
+    const err = await saveBlocks([...all, newBlock]);
+    if (err) return res.status(500).json({ error: err.message });
+    return res.status(201).json(newBlock);
   }
   if (req.method === 'DELETE') {
     const { id } = req.body || {};
     if (!id) return res.status(400).json({ error: 'id es requerido' });
-    const { error } = await supabaseAdmin.from('blocked_slots').delete().eq('id', id);
-    if (error) return res.status(500).json({ error: error.message });
+    const all = await getBlocks();
+    const err = await saveBlocks(all.filter(b => b.id !== id));
+    if (err) return res.status(500).json({ error: err.message });
     return res.status(200).json({ ok: true });
   }
   return res.status(405).json({ error: 'Method not allowed' });
