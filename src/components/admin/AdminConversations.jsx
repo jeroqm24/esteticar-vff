@@ -143,6 +143,7 @@ function ChannelBadge({ phone }) {
 }
 
 function MessageBubble({ msg, example, onStar }) {
+  if (msg.role === "system") return null;
   const isUser  = msg.role === "user";
   const isAdmin = msg.role === "admin";
   const isBot   = msg.role === "assistant";
@@ -272,6 +273,23 @@ function DeleteModal({ conv, onConfirm, onCancel }) {
   );
 }
 
+function AdSourceBadge({ history }) {
+  const adEntry = Array.isArray(history) ? history.find(m => m.type === 'ad_source') : null;
+  if (!adEntry) return null;
+  const srcLabel = adEntry.source_type === 'ad' ? 'Anuncio pagado' : adEntry.source_type || 'Anuncio';
+  return (
+    <div className="p-3 rounded-sm bg-purple-50 border border-purple-200">
+      <p className="font-ui text-[9px] tracking-widest text-purple-600 uppercase mb-1.5 flex items-center gap-1">
+        <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M19 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2zm-7 14l-5-5 1.41-1.41L12 14.17l7.59-7.59L21 8l-9 9z"/></svg>
+        Fuente del cliente
+      </p>
+      <p className="font-ui text-[11px] font-semibold text-purple-800">{srcLabel}</p>
+      {adEntry.headline && <p className="font-body text-[10px] text-purple-700 mt-0.5">"{adEntry.headline}"</p>}
+      {adEntry.source_id && <p className="font-ui text-[9px] text-purple-400 mt-1">ID: {adEntry.source_id}</p>}
+    </div>
+  );
+}
+
 function InfoSidebar({ conv, appointments }) {
   const fields = [
     { label: "Teléfono", value: isWhatsApp(conv.phone) ? conv.phone : null },
@@ -303,6 +321,8 @@ function InfoSidebar({ conv, appointments }) {
       </div>
 
       <div className="p-4 space-y-3">
+        <AdSourceBadge history={conv.history} />
+
         {apptCount > 0 && (
           <div className="p-3 rounded-sm bg-ec-gold/[0.08] border border-ec-gold/20">
             <p className="font-ui text-[10px] tracking-widest text-ec-gold uppercase mb-1">Citas registradas</p>
@@ -729,11 +749,14 @@ export default function AdminConversations({ initialPhone }) {
                           <span className="text-[11px] text-ec-text-muted font-ui whitespace-nowrap">{timeAgo(conv.updated_at)}</span>
                         </div>
                       </div>
-                      {/* Fila 2: canal + pausado */}
+                      {/* Fila 2: canal + pausado + anuncio */}
                       <div className="flex items-center gap-1.5 mb-1">
                         <ChannelBadge phone={conv.phone} />
                         {conv.bot_paused && (
                           <span className="text-[9px] font-ui text-orange-600 bg-orange-50 px-1.5 py-0.5 rounded-full">⏸ Pausado</span>
+                        )}
+                        {Array.isArray(conv.history) && conv.history.some(m => m.type === 'ad_source') && (
+                          <span className="text-[9px] font-ui text-purple-600 bg-purple-50 px-1.5 py-0.5 rounded-full">📢 Anuncio</span>
                         )}
                       </div>
                       {/* Fila 3: tipo de lead + estado */}

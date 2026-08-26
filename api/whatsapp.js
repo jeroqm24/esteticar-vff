@@ -1481,6 +1481,22 @@ export default async function handler(req, res) {
       }
 
       const history = conv.history || [];
+
+      // Rastrear anuncio de origen — solo WhatsApp Click-to-WhatsApp ads
+      if (platform === 'whatsapp' && message?.referral && !history.some(m => m.type === 'ad_source')) {
+        const ref = message.referral;
+        history.unshift({
+          role: 'system',
+          type: 'ad_source',
+          source_type: ref.source_type || 'ad',
+          source_id: ref.source_id || null,
+          headline: ref.headline || null,
+          body: ref.body || null,
+          media_type: ref.media_type || null,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
       history.push({ role: 'user', content: text, timestamp: new Date().toISOString() });
       if (history.length > MAX_TURNS) history.splice(0, history.length - MAX_TURNS);
 
