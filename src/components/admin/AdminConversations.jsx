@@ -142,7 +142,7 @@ function ChannelBadge({ phone }) {
   );
 }
 
-function MessageBubble({ msg }) {
+function MessageBubble({ msg, example, onStar }) {
   const isUser  = msg.role === "user";
   const isAdmin = msg.role === "admin";
   const isBot   = msg.role === "assistant";
@@ -188,8 +188,18 @@ function MessageBubble({ msg }) {
         </div>
       );
     }
+    const isApproved = example?.approved;
     return (
-      <div className="flex justify-end mb-1.5">
+      <div className="flex justify-end mb-1.5 group">
+        {onStar && example && (
+          <button
+            onClick={() => onStar(example.id, !isApproved)}
+            title={isApproved ? "Quitar del aprendizaje del bot" : "Usar como ejemplo para el bot"}
+            className={`self-end mb-2 mr-1 text-base opacity-0 group-hover:opacity-100 transition-opacity ${isApproved ? "text-amber-400" : "text-gray-300 hover:text-amber-300"}`}
+          >
+            {isApproved ? "★" : "☆"}
+          </button>
+        )}
         <div className="max-w-[75%] px-3 py-2 rounded-2xl rounded-br-sm text-[13px] leading-relaxed bg-[#E3E8FF] text-[#1e2a6a] border border-indigo-200">
           <div className="text-[9px] font-ui font-bold text-indigo-500 mb-1 uppercase tracking-wider">Admin</div>
           {clean}
@@ -364,6 +374,7 @@ export default function AdminConversations({ initialPhone }) {
   const [sendingAudio, setSendingAudio] = useState(false);
   const mediaRecorderRef = useRef(null);
   const audioChunksRef = useRef([]);
+  const [examples, setExamples] = useState([]);
 
   const handleResolved = async () => {
     if (!selected || resolving) return;
@@ -394,6 +405,10 @@ export default function AdminConversations({ initialPhone }) {
     if (!silent) setLoading(false);
     return data;
   }, [selected?.phone, initialPhone]);
+
+  useEffect(() => {
+    db.examples.list().then(setExamples);
+  }, []);
 
   useEffect(() => {
     load().then(data => {
@@ -495,6 +510,16 @@ export default function AdminConversations({ initialPhone }) {
     setConversations(prev => prev.map(c => c.phone === selected.phone ? { ...c, history: newHistory, updated_at: new Date().toISOString() } : c));
 
     await db.conversations.sendMessage(selected.phone, text);
+
+    // Auto-capturar ejemplo: última pregunta del cliente + esta respuesta del admin
+    const hist = Array.isArray(selected.history) ? selected.history : [];
+    const lastUserMsg = [...hist].reverse().find(m => m.role === "user");
+    if (lastUserMsg?.content) {
+      db.examples.save(lastUserMsg.content, text, optimistic.timestamp, selected.phone).then(saved => {
+        if (saved?.id) setExamples(prev => [...prev, saved]);
+      });
+    }
+
     sendingRef.current = false;
     setSending(false);
     setTimeout(() => replyRef.current?.focus(), 100);
@@ -580,6 +605,11 @@ export default function AdminConversations({ initialPhone }) {
   });
 
   const selectedHistory = Array.isArray(selected?.history) ? selected.history : [];
+
+  const handleToggleStar = async (id, approved) => {
+    setExamples(prev => prev.map(e => e.id === id ? { ...e, approved } : e));
+    await db.examples.toggle(id, approved);
+  };
 
   return (
     <div className="flex flex-col flex-1 min-h-0 overflow-hidden lg:rounded-sm lg:border lg:border-black/[0.06] lg:shadow-sm">
@@ -871,7 +901,12 @@ export default function AdminConversations({ initialPhone }) {
               {/* Messages + sidebar */}
               <div className="flex flex-1 min-h-0 overflow-hidden relative">
                 <div className="flex-1 overflow-y-auto px-4 py-3">
-                  {selectedHistory.map((msg, i) => <MessageBubble key={i} msg={msg} />)}
+                  {selectedHistory.map((msg, i) => {
+                    const ex = msg.role === "admin" && msg.timestamp
+                      ? examples.find(e => e.msgTimestamp === msg.timestamp && e.phone === selected.phone)
+                      : null;
+                    return <MessageBubble key={i} msg={msg} example={ex} onStar={ex !== undefined ? handleToggleStar : null} />;
+                  })}
                   <div ref={bottomRef} />
                 </div>
 

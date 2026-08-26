@@ -276,6 +276,43 @@ export const db = {
       } catch { }
     },
   },
+
+  examples: {
+    list: async () => {
+      try {
+        const res = await fetch('/api/conversations?action=examples', { headers: { 'x-admin-key': 'Esteticar11.' } });
+        return await res.json();
+      } catch { return []; }
+    },
+    save: async (question, answer, msgTimestamp, phone) => {
+      try {
+        const res = await fetch('/api/conversations?action=examples', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
+          body: JSON.stringify({ question, answer, msgTimestamp, phone }),
+        });
+        return await res.json();
+      } catch { return null; }
+    },
+    toggle: async (id, approved) => {
+      try {
+        await fetch('/api/conversations?action=examples', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
+          body: JSON.stringify({ id, approved }),
+        });
+      } catch {}
+    },
+    remove: async (id) => {
+      try {
+        await fetch('/api/conversations?action=examples', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json', 'x-admin-key': 'Esteticar11.' },
+          body: JSON.stringify({ id }),
+        });
+      } catch {}
+    },
+  },
 };
 
 // ═══════════════════════════════════════════════════════════════════

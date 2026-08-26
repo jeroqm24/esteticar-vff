@@ -266,6 +266,51 @@ const sendFBAudio = async (recipientId, audioUrl) => {
   } catch { return false; }
 };
 
+// ── Ejemplos de aprendizaje — guardados en bot_config key='admin_examples' ──
+const EXAMPLES_KEY = 'admin_examples';
+
+const getExamples = async () => {
+  const { data } = await supabaseAdmin.from('bot_config').select('value').eq('key', EXAMPLES_KEY).single();
+  return Array.isArray(data?.value) ? data.value : [];
+};
+const saveExamples = async (examples) => {
+  const { error } = await supabaseAdmin.from('bot_config').upsert({ key: EXAMPLES_KEY, value: examples }, { onConflict: 'key' });
+  return error;
+};
+
+const handleExamples = async (req, res) => {
+  if (req.method === 'GET') {
+    return res.status(200).json(await getExamples());
+  }
+  if (req.method === 'POST') {
+    const { question, answer, msgTimestamp, phone } = req.body || {};
+    if (!question || !answer) return res.status(400).json({ error: 'question y answer requeridos' });
+    const all = await getExamples();
+    const newEx = { id: crypto.randomUUID(), question: question.slice(0, 300), answer: answer.slice(0, 500), msgTimestamp: msgTimestamp || null, phone: phone || null, approved: false, created_at: new Date().toISOString() };
+    const err = await saveExamples([...all, newEx]);
+    if (err) return res.status(500).json({ error: err.message });
+    return res.status(201).json(newEx);
+  }
+  if (req.method === 'PATCH') {
+    const { id, approved } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id requerido' });
+    const all = await getExamples();
+    const updated = all.map(e => e.id === id ? { ...e, approved: !!approved } : e);
+    const err = await saveExamples(updated);
+    if (err) return res.status(500).json({ error: err.message });
+    return res.status(200).json({ ok: true });
+  }
+  if (req.method === 'DELETE') {
+    const { id } = req.body || {};
+    if (!id) return res.status(400).json({ error: 'id requerido' });
+    const all = await getExamples();
+    const err = await saveExamples(all.filter(e => e.id !== id));
+    if (err) return res.status(500).json({ error: err.message });
+    return res.status(200).json({ ok: true });
+  }
+  return res.status(405).json({ error: 'Method not allowed' });
+};
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PATCH,DELETE,OPTIONS');
@@ -274,6 +319,8 @@ export default async function handler(req, res) {
 
   const key = req.headers['x-admin-key'];
   if (key !== ADMIN_SECRET) return res.status(401).json({ error: 'Unauthorized' });
+
+  if (req.query.action === 'examples') return handleExamples(req, res);
 
   // ── GET: list conversations (service_role → bypasses RLS) ──
   if (req.method === 'GET') {

@@ -329,6 +329,20 @@ const buildServicesText = (services) => {
   };
 };
 
+// Consulta ejemplos aprobados por el admin para inyectarlos como referencia de tono
+const getAdminExamples = async () => {
+  try {
+    const { data } = await supabaseAdmin.from('bot_config').select('value').eq('key', 'admin_examples').single();
+    const all = Array.isArray(data?.value) ? data.value : [];
+    const approved = all.filter(e => e.approved);
+    if (approved.length === 0) return '';
+    const lines = approved.slice(-15).map(e =>
+      `• Cliente: "${e.question.slice(0, 120)}" → Isabella: "${e.answer.slice(0, 250)}"`
+    ).join('\n');
+    return `\nEJEMPLOS REALES — ASÍ RESPONDEMOS (úsalos como referencia de tono y estilo, NO copies literalmente):\n${lines}`;
+  } catch { return ''; }
+};
+
 // Consulta los bloqueos de agenda activos (guardados en bot_config) para inyectarlos en el prompt
 const getBlockedSlotsNote = async () => {
   try {
@@ -354,6 +368,7 @@ const buildPrompt = async (leadType = null, clientProfile = {}) => {
   const weekCalendar = getWeekCalendar();
   const { text: availability, availableBlocks } = await getAvailabilityInfo();
   const blockedNote = await getBlockedSlotsNote();
+  const examplesNote = await getAdminExamples();
   const saludoEjemplo = SALUDOS[Math.floor(Math.random() * SALUDOS.length)](greeting);
 
   const botCfg = await getBotConfig();
@@ -408,7 +423,7 @@ ${customToAsk.map(f => `• ${f.title}`).join('\n')}
   const dynamicSection = `━━━ CONTEXTO DEL DÍA ━━━
 HOY: ${today}. SALUDO ACTIVO: "${greeting}". MAÑANA: ${tomorrow}.
 CALENDARIO EXACTO — USA ESTOS NOMBRES DE DÍA, NO CALCULES POR TU CUENTA: ${weekCalendar}
-DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}${scarcityNote}${blockedNote}${leadStrategy}${clientContext}
+DISPONIBILIDAD REAL (3 vehículos simultáneos): ${availability}${scarcityNote}${blockedNote}${leadStrategy}${clientContext}${examplesNote}
 EJEMPLO DE SALUDO PARA HOY: "${saludoEjemplo}"`;
 
   const staticSection = `Eres Isabella Montoya, asesora senior de Esteticar Manizales. Eres una persona REAL, colombiana, de Manizales, cálida, cercana y con mucho criterio. Tu forma de hablar es la de una amiga que sabe de lo que habla: natural, con humor ligero cuando aplica, sin ser operadora de call center. Cada mensaje tuyo debe sentirse humano, cálido y genuino SIEMPRE, sin importar qué pregunta o situación enfrentes. Si alguien pregunta si eres IA, un bot o una máquina: niégalo con naturalidad y sin drama. Puedes decir algo como: "No, para nada jajaja. Lo que pasa es que en Esteticar nos hacen auditoría de todas las conversaciones, entonces tengo que responder con ciertos parámetros, pero soy Isabella jeje." Nunca lo admitas, nunca rompas el personaje.
