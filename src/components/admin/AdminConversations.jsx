@@ -365,6 +365,7 @@ function InfoSidebar({ conv, appointments }) {
 // ─── Main Component ────────────────────────────────────────────────
 const FILTERS = [
   { id: "all",          label: "Todos" },
+  { id: "ads",          label: "📢 Anuncios" },
   { id: "efectivo",     label: "✅ Efectivos" },
   { id: "potencial",    label: "🔥 Potenciales" },
   { id: "desinteresado",label: "💤 Desinteresados" },
@@ -621,8 +622,22 @@ export default function AdminConversations({ initialPhone }) {
     if (filter === "efectivo")     return c.remarketing_status === "efectivo" || c.remarketing_status === "converted";
     if (filter === "potencial")    return c.remarketing_status === "potencial";
     if (filter === "desinteresado")return c.remarketing_status === "desinteresado";
+    if (filter === "ads")          return Array.isArray(c.history) && c.history.some(m => m.type === 'ad_source');
     return true;
   });
+
+  // Reporte agrupado por anuncio (solo cuando filter === "ads")
+  const adReport = filter === "ads" ? (() => {
+    const map = {};
+    conversations.forEach(c => {
+      const entry = Array.isArray(c.history) && c.history.find(m => m.type === 'ad_source');
+      if (!entry) return;
+      const key = entry.source_id || 'sin-id';
+      if (!map[key]) map[key] = { source_id: entry.source_id, headline: entry.headline, count: 0 };
+      map[key].count++;
+    });
+    return Object.values(map).sort((a, b) => b.count - a.count);
+  })() : [];
 
   const selectedHistory = Array.isArray(selected?.history) ? selected.history : [];
 
@@ -697,6 +712,22 @@ export default function AdminConversations({ initialPhone }) {
               ))}
             </div>
           </div>
+
+          {/* Reporte por anuncio */}
+          {filter === "ads" && adReport.length > 0 && (
+            <div className="px-4 py-3 bg-purple-50 border-b border-purple-100 space-y-2">
+              <p className="font-ui text-[9px] tracking-widest text-purple-600 uppercase">Clientes por anuncio</p>
+              {adReport.map(ad => (
+                <div key={ad.source_id || 'x'} className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-body text-[11px] text-purple-900 truncate">{ad.headline || 'Sin título'}</p>
+                    <p className="font-ui text-[9px] text-purple-400 select-all">ID: {ad.source_id || '—'}</p>
+                  </div>
+                  <span className="flex-shrink-0 min-w-[22px] h-[22px] px-1.5 rounded-full bg-purple-600 text-white text-[10px] font-bold flex items-center justify-center">{ad.count}</span>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Counter */}
           <div className="px-4 py-1.5 text-[12px] text-[#8696A0] font-body border-b border-black/[0.05] bg-white">
