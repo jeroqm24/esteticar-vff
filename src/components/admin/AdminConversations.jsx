@@ -416,6 +416,16 @@ export default function AdminConversations({ initialPhone }) {
     return () => clearInterval(interval);
   }, [load]);
 
+  // Seleccionar conversación específica cuando llega desde deep-link (Telegram)
+  useEffect(() => {
+    if (!initialPhone || selected || conversations.length === 0) return;
+    const match = conversations.find(c => c.phone === initialPhone);
+    if (match) {
+      setSelected(match);
+      markSeen(match.phone);
+    }
+  }, [initialPhone, conversations, selected]);
+
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [selected?.history?.length]);

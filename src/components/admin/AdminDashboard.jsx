@@ -22,6 +22,7 @@ function AdminLogin({ onSuccess }) {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPwd, setShowPwd] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem("ec_remember") !== "false");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,6 +34,11 @@ function AdminLogin({ onSuccess }) {
       setError("Correo o contraseña incorrectos");
       setPwd("");
     } else {
+      localStorage.setItem("ec_remember", rememberMe ? "true" : "false");
+      if (!rememberMe) {
+        // Limpiar tokens de localStorage para que la sesión no persista entre tabs/reinicios
+        Object.keys(localStorage).filter(k => k.startsWith("sb-")).forEach(k => localStorage.removeItem(k));
+      }
       onSuccess();
     }
   };
@@ -90,6 +96,15 @@ function AdminLogin({ onSuccess }) {
               )}
             </button>
           </div>
+          <label className="flex items-center gap-2.5 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(e) => setRememberMe(e.target.checked)}
+              className="w-4 h-4 accent-ec-gold rounded"
+            />
+            <span className="font-body text-xs text-ec-text-muted">Mantener sesión iniciada</span>
+          </label>
           {error && (
             <p className="text-red-500 text-xs font-body text-center">{error}</p>
           )}
