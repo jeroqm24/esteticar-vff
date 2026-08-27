@@ -1317,7 +1317,23 @@ export default async function handler(req, res) {
       if (body.object === 'whatsapp_business_account') {
         const message = body.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
         if (!message) return res.status(200).send('OK');
-        if (message.type !== 'text' && message.type !== 'audio') return res.status(200).send('OK');
+        // Tipos no soportados (imagen, sticker, video, doc, ubicación, reacción…)
+        // Isabella responde pidiendo que escriban para que la conversación aparezca en el panel
+        if (message.type !== 'text' && message.type !== 'audio') {
+          // Ignorar reacciones silenciosamente (no merecen respuesta)
+          if (message.type === 'reaction') return res.status(200).send('OK');
+          const unsupportedFrom = message.from;
+          await markRead(message.id).catch(() => {});
+          await sendMessage(unsupportedFrom,
+            'Hola! 😊 Aquí en Esteticar Manizales con gusto te atendemos. Solo necesito que me escribas tu mensaje — no puedo ver imágenes ni archivos por este canal. Cuéntame, ¿en qué te puedo ayudar?'
+          );
+          // Guardar el saludo en el historial para que la conversación aparezca en el panel
+          const { data: uc } = await supabaseAdmin.from('conversations').select('history').eq('phone', unsupportedFrom).single();
+          const uh = Array.isArray(uc?.history) ? uc.history : [];
+          uh.push({ role: 'assistant', content: 'Hola! 😊 Aquí en Esteticar Manizales con gusto te atendemos. Solo necesito que me escribas tu mensaje — no puedo ver imágenes ni archivos por este canal. Cuéntame, ¿en qué te puedo ayudar?', timestamp: new Date().toISOString() });
+          await supabaseAdmin.from('conversations').upsert({ phone: unsupportedFrom, history: uh, updated_at: new Date().toISOString() }, { onConflict: 'phone' });
+          return res.status(200).send('OK');
+        }
         from        = message.from;
         msgId       = message.id;
         platform    = 'whatsapp';
