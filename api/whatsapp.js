@@ -489,7 +489,7 @@ Lunes a viernes: 8:00 a.m. a 5:00 p.m. Sábados: 8:00 a.m. a 2:00 p.m. Domingos:
 MEDIODÍA CERRADO: de 12:00 m. a 12:59 p.m. NO se agendan citas. Si alguien pide las 12, ofrece las 11:00 a.m. o la 1:00 p.m. Ejemplo: "A las 12 no podemos porque es nuestro cierre de mediodía, pero a las 11 o a la 1 p.m. te atendemos perfecto. ¿Cuál te queda mejor?"
 Si alguien pide domingo: "Los domingos estamos cerrados, pero el lunes te atendemos desde las 8 con todo el gusto. Te queda bien?"
 Si alguien pide un día festivo: "Ese día es festivo y estamos cerrados, pero el siguiente día hábil te atendemos desde las 8."
-Si preguntan ubicación: "Estamos en la Cra 27 #48-26, Manizales. Acá te comparto la ubicación: https://share.google/anYeV3uqMeVzowa6C"
+Si preguntan ubicación: "Estamos en la Carrera 27 #48-26, Manizales. Acá te comparto la ubicación: https://share.google/anYeV3uqMeVzowa6C"
 
 ━━━ CONOCIMIENTO DE VEHÍCULOS — OBLIGATORIO ━━━
 REGLA CRÍTICA: NUNCA asumas la marca si el cliente no la dice. Si dice solo el modelo, confirma antes de seguir: "Una Pulsar NS 125 de Bajaj, perfecto." Si no estás segura, pregunta: "De qué marca es?"
@@ -1122,7 +1122,7 @@ const buildCalendarUrl = (booking) => {
     const start = `${year}${pad(month)}${pad(day)}T${pad(hour)}${pad(min)}00`;
     const endHour = Math.min(hour + dur, 23);
     const end   = `${year}${pad(month)}${pad(day)}T${pad(endHour)}${pad(min)}00`;
-    return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Cita en Esteticar — ' + booking.service)}&dates=${start}/${end}&details=${encodeURIComponent('Servicio: ' + booking.service + '\nCódigo: ' + booking.confirmationCode + '\nPrecio: ' + booking.priceDisplay)}&location=${encodeURIComponent('Cra 27 #48-26, Manizales')}`;
+    return `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent('Cita en Esteticar — ' + booking.service)}&dates=${start}/${end}&details=${encodeURIComponent('Servicio: ' + booking.service + '\nCódigo: ' + booking.confirmationCode + '\nPrecio: ' + booking.priceDisplay)}&location=${encodeURIComponent('Carrera 27 #48-26, Manizales')}`;
   } catch { return null; }
 };
 
@@ -1850,7 +1850,7 @@ export default async function handler(req, res) {
   </td></tr>
   <tr><td style="background:#0A0A0A;padding:24px 40px;text-align:center">
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#C9A84C;letter-spacing:3px;text-transform:uppercase;margin-bottom:6px">Esteticar</div>
-    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Cra 27 #48-26 · Manizales, Colombia</div>
+    <div style="font-family:Arial,sans-serif;font-size:11px;color:#555;margin-bottom:4px">Carrera 27 #48-26 · Manizales, Colombia</div>
     <div style="font-family:Arial,sans-serif;font-size:11px;color:#444">www.esteticarmanizales.com</div>
   </td></tr>
 </table>
