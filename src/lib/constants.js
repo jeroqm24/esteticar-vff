@@ -355,7 +355,7 @@ export const TEAM = [
     authority: "Gestión operativa y atención al cliente de primer nivel. Isabella garantiza que cada proceso cumpla con los estándares Esteticar.",
     image: "/team-sara.webp",
   },
-{
+  {
     name: "Federico Cárdenas",
     role: "Experto Técnico",
     authority: "Maestro en protección cerámica e interiores. Formación continua en las últimas técnicas del sector.",
