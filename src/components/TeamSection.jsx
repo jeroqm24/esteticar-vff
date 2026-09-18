@@ -126,7 +126,7 @@ export default function TeamSection() {
           </motion.div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 justify-items-center lg:max-w-4xl lg:mx-auto">
           {TEAM.map((member, i) => (
             <TeamMember key={member.name} member={member} index={i} />
           ))}
