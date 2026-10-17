@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import LandingPage from "./components/LandingPage";
-import PortfolioPage from "./components/PortfolioPage";
-import AdminDashboard from "./components/admin/AdminDashboard";
+
+const PortfolioPage = lazy(() => import("./components/PortfolioPage"));
+const AdminDashboard = lazy(() => import("./components/admin/AdminDashboard"));
 
 function App() {
   const [adminMode, setAdminMode] = useState(false);
@@ -17,9 +18,12 @@ function App() {
     <Router>
       {adminMode && (
         <div className="fixed inset-0 z-[200] bg-ec-cream overflow-hidden">
-          <AdminDashboard onClose={() => setAdminMode(false)} />
+          <Suspense fallback={null}>
+            <AdminDashboard onClose={() => setAdminMode(false)} />
+          </Suspense>
         </div>
       )}
+      <Suspense fallback={<div className="fixed inset-0 bg-ec-cream" />}>
       <Routes>
         <Route path="/" element={<LandingPage />} />
         <Route path="/portafolio" element={<PortfolioPage />} />
@@ -29,6 +33,7 @@ function App() {
           </div>
         } />
       </Routes>
+      </Suspense>
     </Router>
   );
 }
