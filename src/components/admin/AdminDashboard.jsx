@@ -35,10 +35,7 @@ function AdminLogin({ onSuccess }) {
       setPwd("");
     } else {
       localStorage.setItem("ec_remember", rememberMe ? "true" : "false");
-      if (!rememberMe) {
-        // Limpiar tokens de localStorage para que la sesión no persista entre tabs/reinicios
-        Object.keys(localStorage).filter(k => k.startsWith("sb-")).forEach(k => localStorage.removeItem(k));
-      }
+      sessionStorage.setItem("ec_session_alive", "1");
       onSuccess();
     }
   };
