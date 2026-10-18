@@ -10,9 +10,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping Supabase
+        env:
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
         run: |
           curl -sf --max-time 15 \
-            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcXRrcGlka2h0aXd6enV0dGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzQ0NDgsImV4cCI6MjA5MzE1MDQ0OH0.YE9SO9FzOhmXwQY-4Kx2wnocX6Oln0uaeAA4-fE8MhI" \
-            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRwcXRrcGlka2h0aXd6enV0dGp0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc1NzQ0NDgsImV4cCI6MjA5MzE1MDQ0OH0.YE9SO9FzOhmXwQY-4Kx2wnocX6Oln0uaeAA4-fE8MhI" \
-            "https://tpqtkpidkhtiwzzuttjt.supabase.co/rest/v1/appointments?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY" \
+            "https://nziybzrpscyyuywwebnm.supabase.co/rest/v1/appointments?select=id&limit=1" \
             && echo "Keepalive OK" || echo "Keepalive FAILED"
